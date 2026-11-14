@@ -120,6 +120,8 @@ function go(v, push = true) {
   if (push && ownNav) { pendingView = v; return; }
   // Layers closed by a tab change keep their steps; back skips them (popstate: step deeper than open layers → back again).
   if (push) histDepth = Math.min(histDepth, layerDepth(S));
+  // Leaving Inställningar folds its sections again ('extra' belongs to Ärenden).
+  if (view === 'settings' && v !== 'settings') for (const k of [...setOpen]) if (k !== 'extra') setOpen.delete(k);
   view = v;
   if (location.hash !== '#' + v) {
     if (push) history.pushState({ app: 1, depth: histDepth }, '', '#' + v); else history.replaceState({ app: 1, depth: histDepth }, '', '#' + v);
