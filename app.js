@@ -6,6 +6,7 @@ import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
 import { viewOverview } from './views/overview.js';
 import { viewArchive, archiveList } from './views/archive.js';
+import { viewTrash } from './views/trash.js';
 import { viewSettings } from './views/settings.js';
 import { initData, saveBackup, maybeAskBackup, readBackup, openImport } from './views/data.js';
 
@@ -71,7 +72,7 @@ document.getElementById('del-ok').addEventListener('click', () => { const a = de
 document.getElementById('del-dialog').addEventListener('close', () => { delAction = null; });
 
 /* ---------- Router (mobile only, see ../STIL.md) ---------- */
-const VIEWS = { cases: viewCases, overview: viewOverview, archive: viewArchive, settings: viewSettings };
+const VIEWS = { cases: viewCases, overview: viewOverview, archive: viewArchive, settings: () => (S.trash && !S.tedit ? viewTrash() : viewSettings()) };
 let view = CONFIG.startView;
 function render() {
   app.dataset.view = view;
@@ -140,7 +141,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -149,7 +150,7 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false;
+  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false;
   go(t.dataset.view);
 });
 
@@ -163,6 +164,10 @@ app.addEventListener('click', (ev) => {
   switch (act) {
     // Ärenden
     case 'filter': S.filter = id; break;
+    case 'afilter': S.afilter = id; break;
+    case 'tfilter': S.tfilter = id; break;
+    case 'trashopen': S.trash = true; S.exp = null; render(); scrollTo(0, 0); return;
+    case 'trashclose': S.trash = false; break;
     case 'pickopen': S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); return;
     case 'pickclose': S.pick = false; S.draft = null; break;
     case 'ptype': {   // choose type: its form opens below; values already typed in fields with the same id are kept

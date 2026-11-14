@@ -350,9 +350,3 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .step-open small { color: var(--muted); font-size: .8rem; }
 .step-when { flex: none; font-size: .85rem; font-weight: 600; color: var(--primary); }
 .all-steps li.late .step-when { color: var(--error, #b3261e); }
-.trash { margin-top: 16px; }
-.trash > summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 500; }
-.trash-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; }
-.trash-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--outline-variant); }
-.trash-list .case-main { flex: 1; min-width: 0; display: grid; }
-.trash-list .case-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -18,7 +18,7 @@ export function caseRow(c) {
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna ärendet.
 export const showVal = (fd, v) => fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
-function caseSummary(c, t, cat) {
+export function caseSummary(c, t, cat, actions) {
   const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined);
   const log = (c.l || []).slice(-3).reverse();
   return el('div', { class: `case-sum c-${cat.color}` },
@@ -26,7 +26,18 @@ function caseSummary(c, t, cat) {
     c.o?.some((x) => x[2] != null) ? el('dl', { class: 'sum-old' }, c.o.filter((x) => x[2] != null).map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
     c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (dd ? ` · ${shortDate(dd)}` : '') }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
-    el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
+    actions || el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
+}
+// Category chips over a list of cases (Ärenden, Arkiv, Papperskorg). key = the S property holding the filter, act = its data-act.
+// Returns [chips, filtered list]; a filter whose category is now empty falls back to Alla.
+export function catFilter(all, key, act) {
+  const counts = new Map();
+  for (const c of all) { const k = typeOf(S.state, c)?.cat; counts.set(k, (counts.get(k) || 0) + 1); }
+  if (S[key] !== 'all' && !counts.get(S[key])) S[key] = 'all';
+  const chip = (id, label, color) => el('button', { class: 'chip' + (color ? ` c-${color}` : '') + (S[key] === id ? ' on' : ''), 'data-act': act, 'data-id': id, 'aria-pressed': String(S[key] === id), text: label });
+  const chips = el('div', { class: 'chips cat-chips', role: 'group', 'aria-label': 'Kategori' }, chip('all', `Alla ${all.length}`),
+    S.state.cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color)));
+  return [chips, S[key] === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S[key])];
 }
 
 // Nytt ärende in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).
@@ -119,15 +130,9 @@ export function viewCases() {
   if (S.pick) return picker();
   if (S.tedit) return typeEditor();
   if (S.open) return caseEditor();
-  const all = openCases(S.state), cats = S.state.cats;
-  if (S.filter !== 'all' && !all.some((c) => typeOf(S.state, c)?.cat === S.filter)) S.filter = 'all';   // category emptied (closed, moved): back to Alla
-  const list = S.filter === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S.filter);
-  const chip = (id, label, color) => el('button', { class: 'chip' + (color ? ` c-${color}` : '') + (S.filter === id ? ' on' : ''), 'data-act': 'filter', 'data-id': id, 'aria-pressed': String(S.filter === id), text: label });
-  const counts = new Map();
-  for (const c of all) { const k = typeOf(S.state, c)?.cat; counts.set(k, (counts.get(k) || 0) + 1); }
+  const all = openCases(S.state), [chips, list] = catFilter(all, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
   return [
-    el('div', { class: 'chips cat-chips', role: 'group', 'aria-label': 'Kategori' }, chip('all', `Alla ${all.length}`),
-      cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color))),
+    chips,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
       : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna ärenden i den här kategorin.' : 'Inga öppna ärenden. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
     el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Nytt ärende' }),

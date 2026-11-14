@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS } from '../store.js';
+import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData } from './data.js';
 
@@ -78,6 +78,12 @@ export function viewSettings() {
       el('label', { class: 'goal-row' }, el('span', { text: 'Visa i Aktuellt' }),
         el('select', { 'data-act': 'alertdays', 'aria-label': 'Dagar innan' }, ALERT_DAYS.map((d) => el('option', { value: d, selected: d === (S.state.alertDays ?? 7), text: d === 1 ? '1 dag innan' : `${d} dagar innan` })))),
       el('p', { class: 'muted small', text: 'Datum i öppna ärenden som närmar sig syns under Aktuellt i Överblick, med en röd siffra på fliken. Fält som är deadline (t.ex. Klart senast) syns även när datumet passerat. Välj deadline per fält under Ärendetyper.' })),
+    sec('trash', 'Papperskorg', `${S.state.trash.length} ärenden · ${trashLabel(S.state.trashDays).toLowerCase()}`,
+      el('p', { class: 'muted small', text: 'Ärenden du tar bort hamnar här. Vill du spara ett ärende: arkivera det i stället.' }),
+      el('button', { class: 'link', 'data-act': 'trashopen', text: `Visa papperskorgen (${S.state.trash.length})` }),
+      el('label', { class: 'goal-row' }, el('span', { text: 'Raderas automatiskt' }),
+        el('select', { 'data-act': 'trashdays', 'aria-label': 'Raderas automatiskt' }, TRASH_DAYS.map((d) => el('option', { value: d, selected: d === S.state.trashDays, text: trashLabel(d) })))),
+      el('button', { class: 'link danger', 'data-act': 'tempty', disabled: !S.state.trash.length, text: 'Töm papperskorgen' })),
     group('app', 'Allmänt', 'Data, hjälp',
       sec('data', 'Data', 'Backup, import, radera',
         el('p', { class: 'small', text: 'All data sparas bara i den här webbläsaren (localStorage). Rensar du webbplatsdata eller avinstallerar appen försvinner den – spara en backup-fil då och då.' }),
@@ -107,3 +113,5 @@ export function viewSettings() {
     el('p', { class: 'muted small center', text: `Stress kontroll v${self.APP_VERSION} · inga externa anrop` }),
   ];
 }
+
+export const trashLabel = (d) => (d ? `Efter ${d === 365 ? '1 år' : d + ' dagar'}` : 'Aldrig');

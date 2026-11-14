@@ -114,7 +114,9 @@ T.test('ta bort ärende: till papperskorgen, ångra, återställ från Arkiv', a
   await T.wait(50);
   q('.case-row[data-id="c2"]').click();
   q('[data-act="cdel"]').click(); await T.wait();
-  await tab('archive');
+  await tab('settings');
+  q('[data-act="trashopen"]').click(); await T.wait();
+  q('[data-act="cexp"][data-id="c2"]').click(); await T.wait();
   q('[data-act="trest"][data-id="c2"]').click(); await T.wait();
   T.eq([stored().cases.length, stored().trash.length], [n, 0]);
   await tab('cases');

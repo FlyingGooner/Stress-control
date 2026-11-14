@@ -12,6 +12,9 @@ export const S = {
   tedit: null,         // Inställningar: case type draft being edited (a layer) or null
   teditOrig: '',       // JSON copy of the draft when the editor opened (unsaved changes → "Släng ändringarna?")
   filter: 'all',       // Ärenden: category filter
+  afilter: 'all',      // Arkiv: category filter
+  tfilter: 'all',      // Papperskorg: category filter
+  trash: false,        // Inställningar: Papperskorg open (a layer)
   q: '',               // Arkiv: search text
   installPrompt: null,
 };

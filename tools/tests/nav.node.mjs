@@ -47,3 +47,8 @@ test('delmålslistan är ett lager; ett ärende öppnat från den ligger överst
   assert.equal(topLayer(S), 'open'); assert.equal(layerDepth(S), 2);
   closeTop(S); assert.equal(topLayer(S), 'steps'); closeTop(S); assert.equal(topLayer(S), null);
 });
+test('bakåt: papperskorgen är ett lager', () => {
+  const S = { trash: true };
+  assert.equal(topLayer(S), 'trash'); assert.equal(layerDepth(S), 1);
+  assert.equal(closeTop(S), true); assert.equal(S.trash, false); assert.equal(closeTop(S), false);
+});
