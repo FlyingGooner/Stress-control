@@ -3,15 +3,21 @@
 const KEY = 'sk.data';
 export const EXPORT_APP = 'stress-kontroll', EXPORT_FORMAT = 1;
 export const MAX_IMPORT_CHARS = 2000000;
-export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 50, logKeep: 200, typeSteps: 10, people: 20 };   // log: new notes per case; logKeep: older data with more is kept, never cut
+export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 50, logKeep: 200, typeSteps: 10, people: 20, pfields: 20 };   // log: new notes per case; logKeep: older data with more is kept, never cut
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
 export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', choice: 'Val i lista', days: 'Dagar (VAB m.m.)' };
 // Dagar: [[datum, arbetade timmar 0–24, ansökt 0|1]] – a list of days (VAB, föräldrapenning) ticked off one by one.
 export const DAYS_MAX = 60, WEEK_HOURS = 40, OPTS_MAX = 30;
-// Personer: optional details. rel = relation, born = date, the rest text [key, label, max length, multi-line].
-export const RELS = { me: 'Jag', partner: 'Partner', child: 'Barn', parent: 'Förälder', other: 'Annan' };
-export const PERSON_TEXT = [['tel', 'Telefon', 30], ['mail', 'E-post', 80], ['work', 'Arbetsgivare eller skola', 60], ['note', 'Anteckning', 500, 1]];
+// Personer: egenskaper (pfields) are shared by all people, like a type's fields; each person keeps its values in p.v.
+// The user renames, reorders, adds and removes them. Kinds: all but days and dt.
+export const PERSON_KINDS = ['text', 'note', 'date', 'num', 'check', 'choice'];
+export const REL_CHILD = 'Barn';   // a person whose Relation is Barn has no working hours
+export const PERSON_FIELDS = [
+  { id: 'rel', name: 'Relation', kind: 'choice', opts: ['Jag', 'Partner', 'Barn', 'Förälder', 'Annan'] }, { id: 'born', name: 'Född', kind: 'date' },
+  { id: 'tel', name: 'Telefon', kind: 'text' }, { id: 'mail', name: 'E-post', kind: 'text' }, { id: 'work', name: 'Arbetsgivare eller skola', kind: 'text' },
+  { id: 'note', name: 'Anteckning', kind: 'note' }];
+const OLD_RELS = { me: 'Jag', partner: 'Partner', child: 'Barn', parent: 'Förälder', other: 'Annan' };   // 0.2.52 stored keys, not names
 // Försäkringskassan's benefits for private persons (forsakringskassan.se), the most common first. Own choices are added to the type.
 export const FK_OPTS = ['VAB (tillfällig föräldrapenning)', 'Föräldrapenning', 'Sjukpenning', 'Sjukersättning', 'Aktivitetsersättning', 'Rehabiliteringspenning',
   'Graviditetspenning', 'Närståendepenning', 'Smittbärarpenning', 'Bostadsbidrag', 'Underhållsstöd', 'Barnbidrag', 'Omvårdnadsbidrag', 'Merkostnadsersättning',
@@ -79,7 +85,7 @@ export const DEFAULT_TYPES = [
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 5, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 6, pfields: clone(PERSON_FIELDS), people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -88,13 +94,16 @@ function cleanCat(c) {
   const name = cleanText(c.name, 30);
   return name ? { id: c.id, name, color: COLORS.includes(c.color) ? c.color : 'gray' } : null;
 }
+export function cleanFields(list, kinds, max) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : []).filter((f) => isObj(f) && okId(f.id) && !seen.has(f.id) && seen.add(f.id) && kinds.includes(f.kind) && cleanText(f.name, 40))
+    .slice(0, max).map((f) => ({ id: f.id, name: cleanText(f.name, 40), kind: f.kind, ...(f.due && (f.kind === 'date' || f.kind === 'dt') ? { due: 1 } : {}), ...(f.kind === 'choice' ? { opts: cleanOpts(f.opts) } : {}) }));
+}
 export function cleanType(t, catIds) {
   if (!isObj(t) || !okId(t.id)) return null;
   const name = cleanText(t.name, 30);
   if (!name) return null;
-  const seen = new Set();
-  const fields = (Array.isArray(t.fields) ? t.fields : []).filter((f) => isObj(f) && okId(f.id) && !seen.has(f.id) && seen.add(f.id) && KINDS[f.kind] && cleanText(f.name, 40))
-    .slice(0, LIM.fields).map((f) => ({ id: f.id, name: cleanText(f.name, 40), kind: f.kind, ...(f.due && (f.kind === 'date' || f.kind === 'dt') ? { due: 1 } : {}), ...(f.kind === 'choice' ? { opts: cleanOpts(f.opts) } : {}) }));
+  const fields = cleanFields(t.fields, Object.keys(KINDS), LIM.fields);
   const out = { id: t.id, name, icon: cleanText(t.icon, 8) || '📌', cat: catIds.has(t.cat) ? t.cat : [...catIds][0], on: t.on ? 1 : 0, fields };
   const steps = (Array.isArray(t.steps) ? t.steps : []).map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
   if (steps.length) out.steps = steps;
@@ -168,14 +177,16 @@ export function validate(raw) {
     }
   } else s.types.forEach((t) => { if (!catIds.has(t.cat)) t.cat = s.cats[0].id; });
   const types = new Map(s.types.map((t) => [t.id, t]));
+  if (Array.isArray(raw.pfields)) s.pfields = cleanFields(raw.pfields, PERSON_KINDS, LIM.pfields);
   if (Array.isArray(raw.people)) {   // Personer: who does a case (case.p)
     const seen = new Set();
     s.people = raw.people.filter((x) => isObj(x) && okId(x.id) && cleanText(x.name, 30) && !seen.has(x.id) && seen.add(x.id)).slice(0, LIM.people).map((x) => {
       const p = { id: x.id, name: cleanText(x.name, 30) };
       if (typeof x.h === 'number' && x.h >= 1 && x.h <= 80 && x.h !== WEEK_HOURS) p.h = Math.round(x.h * 10) / 10;
-      if (Object.hasOwn(RELS, x.rel)) p.rel = x.rel;
-      if (validDate(x.born)) p.born = x.born;
-      for (const [k, , max, multi] of PERSON_TEXT) { const v = cleanText(x[k], max, !!multi); if (v) p[k] = v; }
+      const raw = isObj(x.v) ? x.v : { ...x, rel: OLD_RELS[x.rel] ?? x.rel };   // 0.2.52 kept details on the person itself
+      const v = {};
+      for (const f of s.pfields) { const y = cleanValue(f.kind, raw[f.id]); if (y !== undefined) v[f.id] = y; }
+      if (Object.keys(v).length) p.v = v;
       return p;
     });
   }
@@ -310,7 +321,7 @@ export function newCase(state, typeId, title, today) {
   return c;
 }
 // Input text → value by kind; undefined = empty, false = invalid.
-function parseInput(kind, input) {
+export function parseInput(kind, input) {
   if (kind === 'num') { const t = String(input ?? '').replace(/\s/g, '').replace(',', '.'); if (t === '') return undefined; const v = cleanValue('num', Number(t)); return v === undefined ? false : v; }
   if (kind === 'check') return input ? 1 : undefined;
   const v = cleanValue(kind, input); return v === undefined && String(input ?? '').trim() ? false : v;
@@ -524,8 +535,9 @@ export function importText(text) {
 // Same rules as validate() above – change validate(), change here and in docs/DATA.md.
 export const EXPORT_README = 'Backup från Stress kontroll. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
-  version: 'tal, 5 (äldre: typen Försäkringskassan läggs till vid import)',
-  people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}), rel?: ${Object.keys(RELS).join(' | ')}, born?: datum, tel? ≤ 30, mail? ≤ 80, work? ≤ 60, note? ≤ 500 }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
+  version: 'tal, 6 (äldre: typen Försäkringskassan läggs till vid import)',
+  people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}), v?: { egenskaps-id: värde efter egenskapens kind } }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
+  pfields: `personers egenskaper, samma form som types[].fields men kind: ${PERSON_KINDS.join(' | ')}, ≤ ${LIM.pfields} (saknas = standard: Relation, Född, Telefon, E-post, Arbetsgivare eller skola, Anteckning)`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
@@ -535,8 +547,9 @@ export const EXPORT_SCHEMA = {
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
-  version: 5,
-  people: [{ id: 'p1', name: 'Anna', h: 30 }],
+  version: 6,
+  pfields: [{ id: 'rel', name: 'Relation', kind: 'choice', opts: ['Jag', 'Barn'] }],
+  people: [{ id: 'p1', name: 'Anna', h: 30, v: { rel: 'Jag' } }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],
   types: [{ id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1, fields: [{ id: 's1', name: 'Symptom', kind: 'text' }, { id: 's3', name: 'Kontaktat vården', kind: 'check' }] }],
   cases: [{ id: 'c1', t: 'sym', title: 'Ont i knät', p: 'p1', c: '2026-11-10', u: '2026-11-12', f: { s1: 'Värk vid trappor', s3: 1 }, s: [['Ring vårdcentralen', 1], ['Gå på besöket', 0]], l: [['2026-11-12', 'Fick tid 18/11']] }],

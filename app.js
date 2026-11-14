@@ -1,13 +1,13 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, RELS, PERSON_TEXT, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
 import { viewOverview } from './views/overview.js';
 import { viewArchive, archiveList } from './views/archive.js';
 import { viewTrash } from './views/trash.js';
-import { viewSettings } from './views/settings.js';
+import { viewSettings, personHint } from './views/settings.js';
 import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, setRemember } from './views/data.js';
 
 const CONFIG = { startView: 'cases' };
@@ -357,6 +357,18 @@ app.addEventListener('click', (ev) => {
       if (!S.pick) persist(); render(); return;
     }
     case 'owncancel': S.own = null; break;
+    case 'pfnew': {
+      if (S.state.pfields.length >= LIM.pfields) return;
+      let n = 1; while (S.state.pfields.some((f) => f.id === 'e' + n)) n++;
+      S.state.pfields.push({ id: 'e' + n, name: 'Ny egenskap', kind: 'text' }); persist(); render();
+      app.querySelector('.props-ed .field-edit:last-child input')?.select(); return;
+    }
+    case 'pfup': { const f = S.state.pfields, i = Number(t.dataset.i); if (i > 0) { [f[i - 1], f[i]] = [f[i], f[i - 1]]; persist(); } break; }
+    case 'pfdel': {
+      const f = S.state.pfields[Number(t.dataset.i)]; if (!f) return;
+      withUndo(`${f.name} togs bort`, () => { S.state.pfields = S.state.pfields.filter((q) => q !== f); for (const x of S.state.people) if (x.v) { delete x.v[f.id]; if (!Object.keys(x.v).length) delete x.v; } });
+      return;
+    }
     case 'pnew': {
       if (S.state.people.length >= LIM.people) return;
       const id = 'p' + uid(); S.state.people.push({ id, name: 'Ny person' }); setOpen.add('p-' + id); persist(); render();
@@ -451,14 +463,23 @@ app.addEventListener('change', (ev) => {
       if (!ok) { errText('dy-e-' + t.dataset.id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
       if (!S.pick) persist(); render(); return;
     }
-    case 'pset': {   // Personer: relation, born and the text details
-      const x = S.state.people.find((p) => p.id === t.dataset.id), k = t.dataset.key; if (!x) return;
-      const spec = PERSON_TEXT.find((s) => s[0] === k);
-      const v = k === 'rel' ? (Object.hasOwn(RELS, t.value) ? t.value : '') : k === 'born' ? (validDate(t.value) ? t.value : '') : spec ? cleanText(t.value, spec[2], !!spec[3]) : null;
-      if (v === null) return;
-      if (v) x[k] = v; else delete x[k];
-      persist(); if (!spec) render(); return;   // text: no re-render, so focus stays in the next field
+    case 'pval': {   // a person's egenskap: saved on change; invalid input → old value back
+      const x = S.state.people.find((p) => p.id === t.dataset.id), f = S.state.pfields.find((q) => q.id === t.dataset.key); if (!x || !f) return;
+      const v = parseInput(f.kind, t.type === 'checkbox' ? t.checked : t.value);
+      if (v === false) { snackbar(`Kontrollera ${f.name.toLowerCase()}`, null, null, 2500); render(); return; }
+      const vals = { ...(x.v || {}) }; if (v === undefined) delete vals[f.id]; else vals[f.id] = v;
+      if (Object.keys(vals).length) x.v = vals; else delete x.v;
+      persist(); if (['choice', 'date', 'check'].includes(f.kind)) render(); else { const h = t.closest('details')?.querySelector('.p-hint'); if (h) h.textContent = personHint(x); }
+      return;
     }
+    case 'pfname': { const f = S.state.pfields[Number(t.dataset.i)], v = cleanText(t.value, 40); if (f && v) { f.name = v; persist(); render(); } else if (f) t.value = f.name; return; }
+    case 'pfkind': {   // changing kind keeps values that still fit
+      const f = S.state.pfields[Number(t.dataset.i)]; if (!f || !PERSON_KINDS.includes(t.value)) return;
+      f.kind = t.value; if (f.kind === 'choice') f.opts ||= []; else delete f.opts;
+      for (const x of S.state.people) if (x.v && f.id in x.v) { const y = cleanValue(f.kind, x.v[f.id]); if (y === undefined) delete x.v[f.id]; else x.v[f.id] = y; if (!Object.keys(x.v).length) delete x.v; }
+      persist(); render(); return;
+    }
+    case 'pfopts': { const f = S.state.pfields[Number(t.dataset.i)]; if (f) { f.opts = [...new Set(t.value.split('\n').map((x) => cleanText(x, 60)).filter(Boolean))].slice(0, OPTS_MAX); persist(); render(); } return; }
     case 'phours': {
       const x = S.state.people.find((p) => p.id === t.dataset.id), v = Number(String(t.value).replace(',', '.'));
       if (!x) return;
