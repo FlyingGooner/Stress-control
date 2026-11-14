@@ -6,9 +6,9 @@
 
 **Skriv ner det – och släpp det.**
 
-### [▶ Öppna appen](https://flyinggooner.github.io/stress-control/)
+### [▶ Öppna appen](https://flyinggooner.github.io/Stress-control/)
 
-[📱 Presentation av appen](https://flyinggooner.github.io/stress-control/docs/presentation.html)
+[📱 Presentation av appen](https://flyinggooner.github.io/Stress-control/docs/presentation.html)
 
 </div>
 
@@ -41,11 +41,11 @@ Saker som snurrar i huvudet tar energi. När ett symptom, en jobbansökan eller 
 ## Installera på mobilen
 
 **Android (Chrome)**
-1. Öppna [appen](https://flyinggooner.github.io/stress-control/) i Chrome.
+1. Öppna [appen](https://flyinggooner.github.io/Stress-control/) i Chrome.
 2. Tryck på menyn **⋮** → **Installera app** (eller *Lägg till på startskärmen*).
 
 **iPhone (Safari)**
-1. Öppna [appen](https://flyinggooner.github.io/stress-control/) i Safari.
+1. Öppna [appen](https://flyinggooner.github.io/Stress-control/) i Safari.
 2. Tryck på **Dela** → **Lägg till på hemskärmen**.
 
 Versionsnumret syns uppe till höger i appen. Nya versioner hämtas automatiskt.
