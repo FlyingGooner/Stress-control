@@ -178,24 +178,29 @@ export function load() {
   let t;
   try { t = localStorage.getItem(KEY); } catch { return defaults(); }
   if (!t) return defaults();
-  try { const raw = JSON.parse(t); rawRest = isObj(raw) && raw.arch ? raw : null; return validate(raw); } catch {
+  try { const raw = JSON.parse(t); rawRest = isObj(raw) && raw.arch ? raw : null; archLoaded = !rawRest; return validate(raw); } catch {
     failed = true;
     try { localStorage.setItem(BROKEN_KEY, t); } catch { /* no room: the next save still overwrites, but the user is warned */ }
     return defaults();
   }
 }
+// The archive is read in the background after the first screen. Until then archReady() is false: save() writes the whole
+// (small) state to sk.data with arch: 1, and anything closed or removed meanwhile wins over sk.arch when loaded.
+let archLoaded = true;
+export const archReady = () => archLoaded;
+// Merges the archive into the current state (which may have changed since start). Returns the new state.
 export async function loadFull(state) {
-  if (!rawRest) { lastArch = archText(state); lastRef = state; lastSig = archSig(state); return state; }
+  if (!rawRest) { lastArch = ''; lastRef = null; archLoaded = true; return state; }   // sk.data is complete (first start, older version): the first save packs the archive
   let t = null;
   try { t = localStorage.getItem(ARCH_KEY); } catch { /* blocked */ }
   try {
-    const a = t ? JSON.parse(await unpack(t)) : [[], []];
-    const full = validate({ ...rawRest, cases: [...(rawRest.cases || []), ...(Array.isArray(a[0]) ? a[0] : [])], trash: Array.isArray(a[1]) ? a[1] : [] });
-    lastArch = archText(full); lastRef = full; lastSig = archSig(full); return full;
+    const u = t ? await unpack(t) : '[[],[]]', a = JSON.parse(u);
+    const full = validate({ ...state, cases: [...state.cases, ...(Array.isArray(a[0]) ? a[0] : [])], trash: [...state.trash, ...(Array.isArray(a[1]) ? a[1] : [])] });
+    lastArch = u; lastRef = null; archLoaded = true; rawRest = null; return full;   // lastArch = what is on disk: extras get packed on the next save
   } catch {
     failed = true;
     try { localStorage.setItem(ARCH_BROKEN, t); } catch { /* no room */ }
-    return state;
+    archLoaded = true; rawRest = null; return state;
   }
 }
 const archText = (state) => JSON.stringify([state.cases.filter((c) => c.x), state.trash]);
@@ -205,6 +210,7 @@ const trySet = (k, v) => { try { localStorage.setItem(k, v); return true; } catc
 // counts in it, or archTouched (the caller edited a closed or removed case in place, or changed types).
 const archSig = (state) => { let n = 0, first = ''; for (const c of state.cases) if (c.x) { n++; first ||= c.id; } return `${n}|${first}|${state.trash.length}|${state.trash.at(-1)?.id}`; };
 export function save(state, archTouched = false) {
+  if (!archLoaded) return trySet(KEY, JSON.stringify({ ...state, arch: 1 }));
   const sig = archSig(state), rest = JSON.stringify({ ...state, cases: state.cases.filter((c) => !c.x), trash: [], arch: 1 });
   if (!archTouched && state === lastRef && sig === lastSig) return trySet(KEY, rest);
   lastRef = state; lastSig = sig;

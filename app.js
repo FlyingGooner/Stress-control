@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -78,6 +78,8 @@ document.getElementById('del-ok').addEventListener('click', () => { const a = de
 document.getElementById('del-dialog').addEventListener('close', () => { delAction = null; });
 
 /* ---------- Router (mobile only, see ../STIL.md) ---------- */
+// Actions that read or change the whole data (archive included): wait until it is loaded (a moment after start).
+const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'tsave', 'tdel', 'trashopen', 'tempty', 'aclean', 'tfromcase']);
 const VIEWS = { cases: viewCases, overview: viewOverview, archive: viewArchive, settings: () => (S.trash && !S.tedit ? viewTrash() : viewSettings()) };
 let view = CONFIG.startView;
 function render() {
@@ -163,6 +165,7 @@ tabbar.addEventListener('click', (ev) => {
 /* ---------- Actions: one click handler, data-act on the element ---------- */
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
+  if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; }
   if (!t || (S.navPending && ev.isTrusted)) return;
   const { act, id } = t.dataset;
   const cs = () => S.state.cases.find((x) => x.id === S.open);
@@ -388,7 +391,7 @@ app.addEventListener('toggle', (ev) => {
 app.addEventListener('change', (ev) => {
   const t = ev.target;
   switch (t.dataset.act) {
-    case 'importfile': readBackup(t); return;
+    case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
     case 'dstep': { const d = S.draft; if (!d) return; const i = Number(t.dataset.i); d.skip = (d.skip || []).filter((x) => x !== i); if (!t.checked) d.skip.push(i); return; }
     case 'dv': {   // a field in Nytt ärende: kept in the draft until Skapa
       const d = S.draft; if (!d) return;
@@ -472,14 +475,15 @@ document.addEventListener('visibilitychange', () => {
   setTimeout(maybeAskBackup, 300);
 });
 
-// Start: the packed archive is read first (async, a few ms), so nothing can be saved before all data is loaded.
-loadFull(S.state).catch(() => S.state).then((full) => {
+// Start: open cases show at once; the packed archive (closed cases, Papperskorg) is read in the background.
+go(location.hash.slice(1), false);
+initData({ persist, render, status, snackbar, view: () => view });
+setTimeout(() => loadFull(S.state).catch(() => S.state).then((full) => {
   S.state = full; updateOnline();
   if (purgeTrash(S.state, today())) persist();   // Papperskorg: cases past their time are deleted at start
-  go(location.hash.slice(1), false);
-  initData({ persist, render, status, snackbar, view: () => view });
+  if (!document.activeElement?.matches?.('input, textarea, select')) render();
   setTimeout(maybeAskBackup, 800);
-});
+}), 0);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   const hadController = !!navigator.serviceWorker.controller;

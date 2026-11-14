@@ -1,10 +1,11 @@
 // Vy: Arkiv – stängda ärenden, senast stängda först, filter per kategori och sök i rubrik. Ett ärende öppnas i samma lager som från Ärenden.
-import { closedCases } from '../store.js';
+import { closedCases, archReady } from '../store.js';
 import { S, el } from '../ui.js';
 import { caseRow, caseEditor, catFilter } from './cases.js';
 import { typeEditor } from './settings.js';
 
 export function archiveList() {
+  if (!archReady()) return el('p', { class: 'muted small', text: 'Läser in arkivet…' });
   const [, byCat] = catFilter(closedCases(S.state), 'afilter', 'afilter');
   const q = S.q.trim().toLowerCase(), list = byCat.filter((c) => !q || c.title.toLowerCase().includes(q));
   const shown = list.slice(0, S.alimit), more = list.length - shown.length;

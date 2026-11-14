@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -175,5 +175,21 @@ T.test('lagring: arkivet packas och läses tillbaka, öppna ärenden okomprimera
   T.eq([back.cases.length, back.trash.length], [299, 1]);
   T.eq(back.cases.find((c) => c.id === 'c2'), validate(s).cases.find((c) => c.id === 'c2'));
   T.eq(trashArchivedBefore(back, '2026-03-01', '2026-11-14'), 199);
+  delete globalThis.localStorage;
+});
+T.test('lagring: arkivet läses in efteråt; det som stängs innan dess går inte förlorat', async () => {
+  const mem = new Map();
+  globalThis.localStorage = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => { mem.set(k, String(v)); } };
+  const s = defaults();
+  for (let i = 0; i < 20; i++) s.cases.push({ id: 'c' + i, t: 'sym', title: 'Ä ' + i, c: '2026-01-01', u: '2026-01-01', ...(i < 15 ? { x: '2026-02-01' } : {}) });
+  await loadFull(s); save(s); await new Promise((r) => setTimeout(r, 30));
+  const early = load();   // new start: only open cases
+  T.eq([early.cases.length, archReady()], [5, false]);
+  early.cases[0].x = '2026-11-14'; save(early);   // closed before the archive is in
+  const again = load(); T.eq(again.cases.length, 5, 'stängt ärende ligger kvar i sk.data');
+  const full = await loadFull(early);
+  T.eq([full.cases.length, full.cases.filter((c) => c.x).length, archReady()], [20, 16, true]);
+  save(full); await new Promise((r) => setTimeout(r, 30));
+  T.eq((await loadFull(load())).cases.filter((c) => c.x).length, 16, 'packat efter inläsning');
   delete globalThis.localStorage;
 });
