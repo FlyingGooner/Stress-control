@@ -5,7 +5,7 @@ const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '20
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
   const d = defaults();
   T.eq(d.cats.map((c) => c.name), ['Hälsa', 'Ekonomi', 'Hem', 'Jobb', 'Relationer', 'Övrigt']);
-  T.eq(d.types.filter((t) => t.on).map((t) => t.id), ['sym', 'task', 'job', 'eco', 'home']);
+  T.eq(d.types.filter((t) => t.on).map((t) => t.id), ['sym', 'task', 'job', 'eco', 'home', 'fk']);
   T.ok(d.types.length >= 13, 'fler förslag i inställningarna');
 });
 T.test('symptomtypens fält i rätt ordning', () => {
