@@ -9,7 +9,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Ärenden
 - Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.
-- Fel typ? Byt den i listan överst i ärendet. Alla typer som är påslagna i Inställningar finns med. Värden följer med till fält med samma namn; det som inte passar sparas i loggen.
+- Fel typ? Byt den i listan överst i ärendet. Alla typer som är påslagna i Inställningar finns med. Värden följer med till fält med samma namn. Finns det fält som inte passar frågar appen om de ska behållas eller tas bort. Behållna visas under "Från tidigare typ" i ärendet och flyttas tillbaka om du byter till en typ som har dem; där kan du också ta bort dem en och en eller alla.
 - Allt sparas direkt när du lämnar ett fält.
 - Delmål bockar du av. Många typer lägger in förslag på delmål, t.ex. Ring vårdcentralen.
 - Logg: skriv en kort anteckning med dagens datum, t.ex. Ringde, fick tid 18/11.

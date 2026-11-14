@@ -15,12 +15,13 @@ export function caseRow(c) {
     open ? caseSummary(c, t, cat) : null);
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna ärendet.
-const showVal = (fd, v) => fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
+export const showVal = (fd, v) => fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
 function caseSummary(c, t, cat) {
   const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined);
   const log = (c.l || []).slice(-3).reverse();
   return el('div', { class: `case-sum c-${cat.color}` },
     fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+    c.o?.length ? el('dl', { class: 'sum-old' }, c.o.map(([n, k, v]) => [el('dt', { text: n + ' (tidigare typ)' }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
     c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
     el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
@@ -72,6 +73,13 @@ export function caseEditor() {
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
     el('p', { class: 'muted small', text: `Skapat ${longDate(c.c)}` + (c.x ? ` · stängt ${longDate(c.x)}` : '') }),
     (t?.fields || []).map((fd) => fieldInput(c, fd)),
+    c.o?.length ? el('section', { class: 'old-fields' },
+      el('h2', { class: 'sub-h', text: 'Från tidigare typ' }),
+      el('p', { class: 'muted small', text: 'Fält som inte finns i den här typen. De flyttas tillbaka om du byter till en typ som har dem.' }),
+      el('ul', {}, c.o.map(([n, k, v, fr], i) => el('li', {},
+        el('span', {}, el('small', { text: `${n} · ${fr}` }), el('span', { text: showVal({ kind: k }, v) })),
+        el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' })))),
+      el('button', { class: 'link', 'data-act': 'oclear', text: 'Rensa alla' })) : null,
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     el('h2', { class: 'sub-h', text: all ? `Delmål ${done}/${all}` : 'Delmål' }),
     el('ul', { class: 'steps' }, (c.s || []).map(([x, d], i) => el('li', { class: d ? 'done' : '' },

@@ -300,3 +300,14 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .icon-in { width: 3.2em; flex: none; text-align: center; font-size: 1.2rem; }
 #t-name { flex: 1; min-width: 0; }
 #t-steps { width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-md); background: var(--surface); color: var(--fg); font: inherit; }
+
+/* Type change: question + fields from an earlier type */
+.ty-list { margin: 8px 0 12px; padding-left: 18px; display: grid; gap: 4px; }
+.dlg-stack { flex-direction: column; align-items: stretch; gap: 4px; }
+.old-fields { margin-top: 16px; padding: 10px 12px; border: 1px dashed var(--outline-variant); border-radius: var(--r-md); }
+.old-fields .sub-h { margin-top: 0; }
+.old-fields ul { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.old-fields li { display: flex; align-items: center; gap: 8px; }
+.old-fields li > span { display: grid; flex: 1; min-width: 0; }
+.old-fields small, .sum-old dt { color: var(--muted); }
+.ty-drop { color: var(--error, #b3261e); }

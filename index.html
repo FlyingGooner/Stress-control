@@ -95,6 +95,18 @@
       </div>
     </form>
   </dialog>
+  <dialog id="type-dialog" aria-labelledby="ty-title">
+    <form method="dialog">
+      <h2 id="ty-title">Byta typ?</h2>
+      <p class="muted" id="ty-text"></p>
+      <ul class="ty-list" id="ty-list"></ul>
+      <div class="dlg-actions dlg-stack">
+        <button type="submit" class="primary" value="keep" id="ty-keep">Behåll som gamla fält</button>
+        <button type="submit" class="btn-text ty-drop" value="drop" id="ty-drop">Ta bort dem</button>
+        <button type="submit" class="btn-text" value="cancel" autofocus>Avbryt</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="discard-dialog" aria-labelledby="dd-title">
     <form method="dialog">
       <h2 id="dd-title">Släng ändringarna?</h2>

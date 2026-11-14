@@ -1,9 +1,9 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, changeType, cleanType, LIM, COLORS, KINDS } from './store.js';
-import { today, S, setOpen, longDate, shortDate } from './ui.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, changeType, typeChangeLoss, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
-import { viewCases } from './views/cases.js';
+import { viewCases, showVal } from './views/cases.js';
 import { viewOverview } from './views/overview.js';
 import { viewArchive, archiveList } from './views/archive.js';
 import { viewSettings } from './views/settings.js';
@@ -202,6 +202,8 @@ app.addEventListener('click', (ev) => {
       if ((c.s || []).length >= LIM.steps) { errText('c-error', `Max ${LIM.steps} delmål.`); return; }
       (c.s ||= []).push([x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
     }
+    case 'odel': { const c = cs(); if (!c?.o) return; const n = c.o[Number(t.dataset.i)]?.[0]; withUndo(`${n} togs bort`, () => { c.o.splice(Number(t.dataset.i), 1); if (!c.o.length) delete c.o; touch(c); }); return; }
+    case 'oclear': { const c = cs(); if (!c?.o) return; withUndo('Gamla fält borttagna', () => { delete c.o; touch(c); }); return; }
     case 'sdel': { const c = cs(); if (!c?.s) return; c.s.splice(Number(t.dataset.i), 1); if (!c.s.length) delete c.s; touch(c); persist(); break; }
     case 'ladd': {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
@@ -299,7 +301,20 @@ app.addEventListener('change', (ev) => {
     }
     case 'ctype': {   // change type afterwards: values follow by field name, the rest goes to the log
       const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      if (changeType(S.state, c, t.value, today())) { persist(); render(); }
+      const to = S.state.types.find((x) => x.id === t.value); if (!to) return;
+      const loss = typeChangeLoss(S.state, c, to.id);
+      if (!loss.length) { if (changeType(S.state, c, to.id, today())) { persist(); render(); } return; }
+      document.getElementById('ty-title').textContent = `Byta till ${to.name}?`;
+      document.getElementById('ty-text').textContent = loss.length === 1 ? `Det här fältet finns inte i ${to.name}:` : `De här ${loss.length} fälten finns inte i ${to.name}:`;
+      document.getElementById('ty-list').replaceChildren(...loss.map((x) => el('li', {}, el('b', { text: x.n + ': ' }), el('span', { text: showVal({ kind: x.k }, x.v) }))));
+      const dlg = document.getElementById('type-dialog');
+      dlg.onclose = () => {
+        dlg.onclose = null;
+        if (dlg.returnValue === 'keep') { changeType(S.state, c, to.id, today()); persist(); render(); snackbar('Bytt typ – gamla fält finns under fälten', null, null, 3000); }
+        else if (dlg.returnValue === 'drop') withUndo(`Bytt till ${to.name}, ${loss.length} ${loss.length === 1 ? 'värde' : 'värden'} borttagna`, () => changeType(S.state, c, to.id, today(), true));
+        else render();   // Avbryt: the list shows the old type again
+      };
+      dlg.returnValue = ''; dlg.showModal();
       return;
     }
     case 'fv': {   // a case field: saved directly; invalid input gives a message and is not saved

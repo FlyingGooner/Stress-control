@@ -109,6 +109,9 @@ function cleanCase(c, types) {
     for (const fd of type.fields) { const v = cleanValue(fd.kind, c.f[fd.id]); if (v !== undefined) f[fd.id] = v; }
     if (Object.keys(f).length) out.f = f;
   }
+  const o = (Array.isArray(c.o) ? c.o : []).filter((x) => Array.isArray(x) && Object.hasOwn(KINDS, x[1]) && cleanText(x[0], 40)).slice(0, LIM.fields)
+    .map((x) => [cleanText(x[0], 40), x[1], cleanValue(x[1], x[2]), cleanText(x[3], 30)]).filter((x) => x[2] !== undefined);
+  if (o.length) out.o = o;
   const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => [cleanText(x[0], 80), x[1] ? 1 : 0]);
   if (s.length) out.s = s;
   const l = (Array.isArray(c.l) ? c.l : []).filter((x) => Array.isArray(x) && validDate(x[0]) && cleanText(x[1], 500, true)).slice(-LIM.log).map((x) => [x[0], cleanText(x[1], 500, true)]);
@@ -194,20 +197,32 @@ export function setField(state, c, fieldId, input, today) {
   c.u = today;
   return true;
 }
-// Changes a case's type. Values move to a field with the same name and kind (else same id and kind);
-// values that fit nowhere are kept as a log line, so nothing is lost. Returns false for an unknown type.
-export function changeType(state, c, typeId, today) {
-  const from = typeOf(state, c), to = state.types.find((x) => x.id === typeId);
-  if (!to || to.id === c.t) return false;
-  const f = {}, lost = [];
-  for (const [k, v] of Object.entries(c.f || {})) {
-    const fd = from?.fields.find((x) => x.id === k);
-    const dst = (fd && to.fields.find((x) => x.name === fd.name && x.kind === fd.kind)) || to.fields.find((x) => x.id === k && x.kind === fd?.kind);
-    if (dst && !(dst.id in f)) f[dst.id] = v; else lost.push(`${fd?.name ?? k}: ${v === 1 && fd?.kind === 'check' ? 'ja' : v}`);
+// Changing type. A value moves to a field with the same name and kind in the new type (else same id and kind).
+// Values that fit nowhere are kept in c.o ("från tidigare typ": [name, kind, value, from-type]) and stay visible in
+// the case; if a later type has a matching field they move back in. With drop = true the new leftovers are removed.
+function typePlan(state, c, to) {
+  const from = typeOf(state, c), f = {}, rest = [];
+  const pool = [...Object.entries(c.f || {}).map(([k, v]) => { const fd = from?.fields.find((x) => x.id === k); return fd && { id: k, n: fd.name, k: fd.kind, v, from: from.name, cur: 1 }; }).filter(Boolean),
+    ...(c.o || []).map(([n, k, v, fr]) => ({ n, k, v, from: fr }))];
+  for (const x of pool) {
+    const dst = to.fields.find((d) => d.name === x.n && d.kind === x.k && !(d.id in f)) || (x.id && to.fields.find((d) => d.id === x.id && d.kind === x.k && !(d.id in f)));
+    if (dst) f[dst.id] = x.v; else rest.push(x);
   }
+  return { f, rest };
+}
+// The values that would end up outside the fields if the case changed to typeId (for the question before the change).
+export function typeChangeLoss(state, c, typeId) {
+  const to = state.types.find((x) => x.id === typeId);
+  return to ? typePlan(state, c, to).rest.filter((x) => x.cur) : [];
+}
+export function changeType(state, c, typeId, today, drop = false) {
+  const to = state.types.find((x) => x.id === typeId);
+  if (!to || to.id === c.t) return false;
+  const { f, rest } = typePlan(state, c, to);
+  const o = rest.filter((x) => !(drop && x.cur)).slice(0, LIM.fields).map((x) => [x.n, x.k, x.v, x.from]);
   c.t = to.id;
   if (Object.keys(f).length) c.f = f; else delete c.f;
-  if (lost.length) { (c.l ||= []).push([today, cleanText(`Från ${from?.name ?? 'okänd typ'}: ` + lost.join('; '), 500, true)]); if (c.l.length > LIM.log) c.l.shift(); }
+  if (o.length) c.o = o; else delete c.o;
   c.u = today;
   return true;
 }
@@ -246,7 +261,7 @@ export const EXPORT_SCHEMA = {
   version: 'tal, 1',
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')} }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}) }, max ${LIM.cases}`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: värden från tidigare typ [[fältnamn ≤ 40, kind, värde, från typnamn ≤ 30]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
