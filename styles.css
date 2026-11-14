@@ -181,6 +181,8 @@ main .help-wrap { margin-top: 10px; }
 main .set-group-wrap > .card + .card, main .set-group-wrap > .set-sec + .set-sec { margin-top: 10px; }
 .set-group-wrap[open] { padding-bottom: 4px; }
 .save-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+.log-add { justify-content: space-between; align-items: center; gap: 12px; }
+.log-add .step-date { flex: 0 1 auto; }
 .goal-row .weigh-save { flex: none; }
 
 /* Inget i vyerna får bli bredare än skärmen (sidledsrullning på mobil, 2026-11-10). */

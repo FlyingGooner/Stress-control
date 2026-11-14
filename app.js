@@ -270,7 +270,9 @@ app.addEventListener('click', (ev) => {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
       if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
       if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per ärende – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
-      (c.l ||= []).push([today(), x]); touch(c); persist(); break;
+      const ld = document.getElementById('l-date')?.value, d = validDate(ld) && ld <= today() ? ld : today();
+      const l = (c.l ||= []); let i = l.length; while (i > 0 && l[i - 1][0] > d) i--;   // kept in date order: an earlier date goes in its place
+      l.splice(i, 0, [d, x]); touch(c); persist(); break;
     }
     case 'ldel': {
       const c = cs(), i = Number(t.dataset.i); if (!c?.l?.[i]) return;
