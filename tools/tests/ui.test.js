@@ -50,7 +50,7 @@ T.test('stäng → Arkiv; öppna igen', async () => {
   T.ok(q(`.case-row[data-id="${id}"]`), 'i arkivet');
   q('#arch-q').value = 'yrsel'; q('#arch-q').dispatchEvent(new Event('input', { bubbles: true }));
   T.eq(qa('#arch-list .case-row').length, 1);
-  q(`.case-row[data-id="${id}"]`).click(); q('.case-sum [data-act="copen"]').click();
+  q(`.case-row[data-id="${id}"]`).click();
   q('[data-act="creopen"]').click();
   T.ok(!('x' in stored().cases[0]), 'öppet igen');
   q('[data-act="cclose"]').click();
@@ -58,7 +58,7 @@ T.test('stäng → Arkiv; öppna igen', async () => {
 });
 T.test('bakåt stänger ärendet och går till föregående flik', async () => {
   await tab('cases');
-  q('.case-row[data-id="c1"]').click(); q('.case-sum [data-act="copen"]').click();
+  q('.case-row[data-id="c1"]').click();
   T.ok(q('#c-title'), 'ärendet öppet');
   history.back();
   await T.until(() => !q('#c-title') && q('.case-row'), 'bakåt stänger ärendet');

@@ -7,12 +7,13 @@ const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' :
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
 export function caseRow(c) {
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id;
-  return el('li', {}, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open) },
+  return el('li', { class: `case-li c-${cat.color}` + (open ? ' open' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'copen', 'data-id': c.id },
     el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
       el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängt ' + shortDate(c.x) : 'ändrat ' + ago(c.u)}` })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
-    el('span', { class: 'case-chev', 'aria-hidden': 'true', text: '▾' })),
+    ),
+    el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
     open ? caseSummary(c, t, cat) : null);
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna ärendet.

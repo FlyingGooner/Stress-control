@@ -4,7 +4,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Kom igång
 - Det som snurrar i huvudet tar energi. Skriv ner det som ett ärende med nästa steg – då kan du släppa tanken, appen håller reda på den.
-- Tryck på ett ärende i listan för att se en sammanfattning (ifyllda fält, delmål, senaste anteckningar). Tryck Öppna ärendet för att ändra.
+- Tryck på ett ärende i listan för att öppna det. Pilen ▾ till höger fäller ut en sammanfattning (ifyllda fält, delmål, senaste anteckningar) utan att öppna ärendet.
 - Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa ärende. Ärendet sparas som öppet i listan. Resten kan du fylla i senare.
 
 ## Ärenden
