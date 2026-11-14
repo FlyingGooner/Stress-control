@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -101,4 +101,23 @@ T.test('extra fält i ett ärende: lägg till, fyll i, tomt värde behålls, fö
   s.types.push({ id: 'y', name: 'Y', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'p', name: 'Pris', kind: 'num' }, { id: 'n', name: 'Not', kind: 'text' }, { id: 'a', name: 'Symptom', kind: 'text' }] });
   changeType(s, c, 'y', '2026-11-14');
   T.eq(c.f, { p: 1250.5, a: 'Knä' }); T.eq(c.o, [['Kontaktat vården', 'check', 1, 'Symptom']]);
+});
+T.test('aktuellt: datum inom påminnelsetiden, passerade deadlines, inte stängda', () => {
+  const s = defaults();
+  s.cases = [
+    { id: 'a', t: 'task', title: 'Snart', c: '2026-11-01', u: '2026-11-01', f: { d: '2026-11-18' } },
+    { id: 'b', t: 'task', title: 'Sen', c: '2026-11-01', u: '2026-11-01', f: { d: '2026-11-10' } },
+    { id: 'c', t: 'task', title: 'Långt bort', c: '2026-11-01', u: '2026-11-01', f: { d: '2026-12-30' } },
+    { id: 'd', t: 'sym', title: 'Började förr', c: '2026-11-01', u: '2026-11-01', f: { s2: '2026-11-01', s5: '2026-11-14T09:00' } },
+    { id: 'e', t: 'task', title: 'Stängd', c: '2026-11-01', u: '2026-11-01', x: '2026-11-02', f: { d: '2026-11-15' } },
+    { id: 'f', t: 'task', title: 'Extra', c: '2026-11-01', u: '2026-11-01', o: [['Service', 'date', '2026-11-20', '']] }];
+  const a = alerts(s, '2026-11-14');
+  T.eq(a.map((x) => [x.c.id, x.days, x.late]), [['b', -4, true], ['d', 0, false], ['a', 4, false], ['f', 6, false]]);
+  s.alertDays = 1; T.eq(alerts(s, '2026-11-14').map((x) => x.c.id), ['b', 'd']);
+});
+T.test('version 1-data får deadline på standardfälten; alertDays valideras', () => {
+  const v1 = validate({ version: 1, types: [{ id: 'task', name: 'Uppgift', cat: 'o', on: 1, fields: [{ id: 'g', name: 'Mål', kind: 'note' }, { id: 'd', name: 'Klart senast', kind: 'date' }] }], alertDays: 5 });
+  T.eq(v1.types[0].fields[1].due, 1); T.ok(!v1.types[0].fields[0].due); T.eq(v1.alertDays, 7);
+  const v2 = validate({ version: 2, types: [{ id: 'task', name: 'Uppgift', cat: 'o', on: 1, fields: [{ id: 'd', name: 'Klart senast', kind: 'date' }] }], alertDays: 14 });
+  T.ok(!v2.types[0].fields[0].due, 'avbockad deadline respekteras'); T.eq(v2.alertDays, 14);
 });

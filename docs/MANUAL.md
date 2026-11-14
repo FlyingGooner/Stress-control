@@ -23,7 +23,9 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Överblick
 - Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.
-- Äldsta öppna ärendet visas – kan något göras idag, eller kan det stängas?
+- Aktuellt (överst, röd siffra även på fliken): datum i öppna ärenden inom påminnelsetiden (standard 7 dagar, ändras i Inställningar → Påminnelser) och deadlines som passerat. Tryck på en rad för att öppna ärendet.
+- Kommande: datum längre fram, uppdelat på Nästa vecka och Inom en månad.
+- Deadline: i Inställningar → Ärendetyper kan varje datumfält bockas som deadline (t.ex. Klart senast, Förfaller). Då syns det i Aktuellt även när datumet passerat, tills ärendet stängs.
 
 ## Ärendetyper och kategorier
 - Inställningar → Ärenden → Ärendetyper: bocka i fler typer, t.ex. Bostadsköp, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.
@@ -33,7 +35,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Bakåt
 - Bakåt stänger det som är öppet (ett ärende, typväljaren, en ärendetyp eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
-- Svep åt vänster eller höger för att byta flik (inte när ett ärende eller formulär är öppet).
+- Svep åt vänster eller höger i Ärenden för att byta filter (Alla, Hälsa, Hem …). Inte när ett ärende eller formulär är öppet.
 
 ## Backup och flytt
 - Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.

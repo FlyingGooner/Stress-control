@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA } from '../store.js';
+import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData } from './data.js';
 
@@ -30,7 +30,8 @@ export function typeEditor() {
       el('input', { type: 'text', maxlength: 40, value: f.name, 'aria-label': 'Fältets namn', 'data-act': 'fname', 'data-i': i, autocomplete: 'off' }),
       el('select', { 'data-act': 'fkind', 'data-i': i, 'aria-label': 'Sort' }, Object.entries(KINDS).map(([k, l]) => el('option', { value: k, selected: k === f.kind, text: l }))),
       el('button', { class: 'icon sm', 'data-act': 'fup', 'data-i': i, 'aria-label': 'Flytta upp', disabled: i === 0, text: '↑' }),
-      el('button', { class: 'icon sm danger', 'data-act': 'fdel', 'data-i': i, 'aria-label': 'Ta bort fältet', text: '✕' })))),
+      el('button', { class: 'icon sm danger', 'data-act': 'fdel', 'data-i': i, 'aria-label': 'Ta bort fältet', text: '✕' }),
+      f.kind === 'date' || f.kind === 'dt' ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: !!f.due, 'data-act': 'fdue', 'data-i': i }), el('span', { text: 'Deadline – påminn även när datumet passerat' })) : null))),
     d.fields.length < LIM.fields ? el('button', { class: 'link', 'data-act': 'fadd', text: '+ Lägg till fält' }) : null,
     el('p', { class: 'muted small', text: 'Sorter: text, lång text, datum, datum och tid, tal och bock (t.ex. Pratat med banken ✓). Data i ett borttaget fält sparas inte längre.' }),
     el('h2', { class: 'sub-h', text: 'Förslag på delmål' }),
@@ -73,6 +74,10 @@ export function viewSettings() {
           el('button', { class: 'icon sm danger', 'data-act': 'kdel', 'data-id': c.id, 'aria-label': `Ta bort ${c.name}`, disabled: S.state.types.some((t) => t.cat === c.id) || S.state.cats.length <= 1, text: '✕' })))),
         el('p', { class: 'muted small', text: 'En kategori som används av en ärendetyp kan inte tas bort.' }),
         S.state.cats.length < LIM.cats ? el('button', { class: 'link', 'data-act': 'knew', text: '+ Ny kategori' }) : null)),
+    sec('alerts', 'Påminnelser', `${S.state.alertDays ?? 7} dagar innan`,
+      el('label', { class: 'goal-row' }, el('span', { text: 'Visa i Aktuellt' }),
+        el('select', { 'data-act': 'alertdays', 'aria-label': 'Dagar innan' }, ALERT_DAYS.map((d) => el('option', { value: d, selected: d === (S.state.alertDays ?? 7), text: d === 1 ? '1 dag innan' : `${d} dagar innan` })))),
+      el('p', { class: 'muted small', text: 'Datum i öppna ärenden som närmar sig syns under Aktuellt i Överblick, med en röd siffra på fliken. Fält som är deadline (t.ex. Klart senast) syns även när datumet passerat. Välj deadline per fält under Ärendetyper.' })),
     group('app', 'Allmänt', 'Data, hjälp',
       sec('data', 'Data', 'Backup, import, radera',
         el('p', { class: 'small', text: 'All data sparas bara i den här webbläsaren (localStorage). Rensar du webbplatsdata eller avinstallerar appen försvinner den – spara en backup-fil då och då.' }),

@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, changeType, typeChangeLoss, addExtra, setExtra, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -81,6 +81,12 @@ function render() {
     t.classList.toggle('on', on);
     if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
   }
+  // Red count on Överblick: dates within the reminder time and passed deadlines.
+  const ov = tabbar.querySelector('[data-view="overview"]'), na = alerts(S.state, today()).length;
+  let bd = ov.querySelector('.tab-badge');
+  if (na && !bd) { bd = el('span', { class: 'tab-badge' }); ov.append(bd); }
+  if (bd) { bd.hidden = !na; bd.textContent = na > 99 ? '99+' : String(na); }
+  ov.setAttribute('aria-label', na ? `Överblick, ${na} aktuella` : 'Överblick');
   syncHistory();
 }
 /* ---------- Bakåt (som simple-nutrition): flikar och lager i historiken, popstate stänger det översta ---------- */
@@ -295,7 +301,7 @@ app.addEventListener('input', (ev) => {
   if (t.dataset.act === 'fname') { const f = d.fields[Number(t.dataset.i)]; if (f) f.name = t.value; }
   if (t.dataset.act === 'tsteps') d.steps = t.value.split('\n').map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
 });
-/* ---------- Swipe sideways between the tabs (only with no layer open; not from the screen edges = system Back) ---------- */
+/* ---------- Swipe sideways between the category filters in Ärenden (no layer open; not from the screen edges = system Back) ---------- */
 let swipe = null;
 document.addEventListener('touchstart', (ev) => {
   const t = ev.touches[0];
@@ -307,8 +313,10 @@ document.addEventListener('touchend', (ev) => {
   const t = ev.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
   swipe = null;
   if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
-  const tabs = [...document.querySelectorAll('.tabbar .tab')], i = tabs.findIndex((x) => x.getAttribute('aria-current') === 'page');
-  tabs[i + (dx < 0 ? 1 : -1)]?.click();
+  const chips = [...app.querySelectorAll('[data-act="filter"]')], i = chips.findIndex((x) => x.dataset.id === S.filter);
+  if (i < 0) return;
+  const next = chips[i + (dx < 0 ? 1 : -1)];
+  if (next) { next.click(); app.querySelector('.chip.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
 }, { passive: true });
 app.addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter') return;
@@ -372,7 +380,9 @@ app.addEventListener('change', (ev) => {
     }
     case 'ton': { const ty = S.state.types.find((x) => x.id === t.dataset.id); if (ty) { ty.on = t.checked ? 1 : 0; persist(); } return; }
     case 'tset': if (S.tedit && t.dataset.id === 'cat') S.tedit.cat = t.value; return;
-    case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) f.kind = t.value; return; }
+    case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) { f.kind = t.value; if (f.kind !== 'date' && f.kind !== 'dt') delete f.due; render(); } return; }
+    case 'fdue': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f) { if (t.checked) f.due = 1; else delete f.due; } return; }
+    case 'alertdays': { const v = Number(t.value); if (ALERT_DAYS.includes(v)) { S.state.alertDays = v; persist(); render(); } return; }
     case 'kname': {
       const k = S.state.cats.find((c) => c.id === t.dataset.id), v = cleanText(t.value, 30);
       if (k && v) { k.name = v; persist(); } else if (k) t.value = k.name;
