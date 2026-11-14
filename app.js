@@ -206,6 +206,8 @@ app.addEventListener('click', (ev) => {
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
       snackbar(`${c.title} är sparad`, null, null, 2500); return;
     }
+    case 'gocases': S.filter = id || 'all'; go('cases'); return;   // Överblick: open threads (a category with data-id)
+    case 'goarch': S.afilter = 'all'; go('archive'); return;
     case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
     case 'stepsclose': S.steps = false; break;
     case 'cexp': S.exp = S.exp === id ? null : id; break;

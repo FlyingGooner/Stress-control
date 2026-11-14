@@ -30,7 +30,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - En loggrad tas bort efter en fråga, med Ångra efteråt.
 
 ## Överblick
-- Antal öppna trådar per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.
+- Antal öppna trådar per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna. Allt går att trycka på: öppna trådar och en kategori visar listan (filtrerad), stängda visar Arkiv.
 - Aktuellt (överst, röd siffra även på fliken): datum i öppna trådar inom påminnelsetiden (standard 7 dagar, ändras i Inställningar → Påminnelser) och deadlines som passerat. Det som är försenat, idag eller imorgon står först under Akut, i rött; resten under Snart. Tryck på en rad för att öppna tråden.
 - Kommande: datum längre fram, uppdelat på Nästa vecka och Inom en månad.
 - Tryck på "delmål kvar" för att se alla delmål som är kvar, med tråden de hör till. Delmål med datum står först. Bocka av direkt i listan (med Ångra), eller tryck på ett delmål för att öppna tråden.
