@@ -99,16 +99,21 @@ export function daysBlock(c, fd, mode) {
   const list = c.f?.[fd.id] || [], who = personOf(S.state, c), dh = dayHours(S.state, c), full = mode !== 'view';
   return el('div', { class: 'days' },
     el('h2', { class: 'sub-h', text: fd.name + (list.length ? ` · ${list.filter((x) => x[2]).length} av ${list.length} ansökta` : '') }),
-    el('p', { class: 'muted small', text: `Normal arbetsdag ${hrs(dh)} tim (${who ? `${who.name}, ${hrs(weekHours(S.state, c))} tim/vecka` : 'ingen person vald, 40 tim/vecka'}). Ändra under Inställningar → Personer.` }),
+    // The working day everything is counted from: one cell per hour, and where the number comes from.
+    el('div', { class: 'day-norm' },
+      el('div', { class: 'day-norm-top' }, el('span', { text: '🕗 En arbetsdag' }), el('strong', { text: `${hrs(dh)} tim` })),
+      el('div', { class: 'day-cells', 'aria-hidden': 'true' }, Array.from({ length: Math.min(12, Math.ceil(dh)) }, () => el('span'))),
+      el('small', { text: `${who ? who.name : 'Ingen person vald'}: ${hrs(weekHours(S.state, c))} tim/vecka ÷ 5 dagar. Timmar borta = ${hrs(dh)} − det du jobbade.` })),
     list.length ? el('ul', { class: 'day-list' }, list.map(([d, w, a], i) => el('li', { class: a ? 'done' : '' },
       el('label', { class: 'day-main' }, el('input', { type: 'checkbox', checked: !!a, 'data-act': 'dayapp', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ansökt för ${dayName(d)}` }),
         el('span', { class: 'day-txt' }, el('span', { text: dayName(d) }),
-          el('small', { text: `${hrs(absentHours(S.state, c, w))} tim borta` + (w ? ` · jobbat ${hrs(w)}` : '') + (a ? ' · ansökt' : '') }))),
-      full ? el('input', { type: 'text', inputmode: 'decimal', class: 'day-w', value: w ? hrs(w) : '', placeholder: 'Jobbat', 'data-act': 'dayw', 'data-id': fd.id, 'data-i': i, 'aria-label': `Arbetade timmar ${dayName(d)}`, autocomplete: 'off' }) : null,
+          el('small', { text: `${hrs(absentHours(S.state, c, w))} av ${hrs(dh)} tim borta` + (w ? ` · jobbat ${hrs(w)}` : '') + (a ? ' · ansökt' : '') }),
+          el('progress', { class: 'day-bar', max: dh || 1, value: absentHours(S.state, c, w), 'aria-hidden': 'true' }))),
+      full ? el('input', { type: 'text', inputmode: 'decimal', class: 'day-w', value: w ? hrs(w) : '', placeholder: '0', 'data-act': 'dayw', 'data-id': fd.id, 'data-i': i, 'aria-label': `Arbetade timmar ${dayName(d)}`, autocomplete: 'off' }) : null,
       full ? el('button', { class: 'icon sm', 'data-act': 'daydel', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ta bort ${dayName(d)}`, text: '✕' }) : null))) : null,
     el('div', { class: 'pick-row day-add' },
-      el('input', { type: 'date', id: 'dy-d-' + fd.id, class: 'step-date', value: today(), 'aria-label': 'Datum' }),
-      el('input', { type: 'text', inputmode: 'decimal', id: 'dy-w-' + fd.id, class: 'day-w', placeholder: 'Jobbat, tim', 'aria-label': 'Arbetade timmar den dagen (valfritt)', autocomplete: 'off' }),
+      el('label', { class: 'day-lab' }, el('span', { text: 'Dag' }), el('input', { type: 'date', id: 'dy-d-' + fd.id, class: 'step-date', value: today() })),
+      el('label', { class: 'day-lab' }, el('span', { text: `Jobbade, av ${hrs(dh)} tim` }), el('input', { type: 'text', inputmode: 'decimal', id: 'dy-w-' + fd.id, class: 'day-w', placeholder: '0', autocomplete: 'off' })),
       el('button', { class: 'weigh-save add-btn', 'data-act': 'dayadd', 'data-id': fd.id, 'aria-label': 'Lägg till dag', text: '+' })),
     el('p', { class: 'import-error small', id: 'dy-e-' + fd.id, role: 'alert' }));
 }

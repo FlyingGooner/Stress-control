@@ -412,3 +412,17 @@ input.day-w { flex: none; width: 4.6em; min-height: 36px; padding: 2px 8px; bord
 .edit-list .p-hours input { flex: none; width: 3.2em; min-height: 40px; padding: 0 6px; text-align: right; }
 .own-row { margin-top: 0; } .own-row input { flex: 1; min-width: 0; }
 textarea.opts-edit { flex-basis: 100%; min-height: 72px; font-size: .9rem; }
+.day-norm { display: grid; gap: 6px; margin: 4px 0 8px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-container-high); }
+.day-norm-top { display: flex; justify-content: space-between; align-items: baseline; font-size: .9rem; }
+.day-norm-top strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.day-norm small { color: var(--muted); font-size: .8rem; }
+.day-cells { display: flex; gap: 3px; }
+.day-cells span { flex: 1; height: 10px; border-radius: 3px; background: var(--cc, var(--primary)); opacity: .75; }
+.day-txt { flex: 1; min-width: 0; }
+progress.day-bar { width: 100%; height: 6px; margin-top: 4px; appearance: none; border: 0; border-radius: 3px; background: var(--surface-container-high); overflow: hidden; }
+progress.day-bar::-webkit-progress-bar { background: var(--surface-container-high); border-radius: 3px; }
+progress.day-bar::-webkit-progress-value { background: var(--cc, var(--primary)); border-radius: 3px; }
+progress.day-bar::-moz-progress-bar { background: var(--cc, var(--primary)); }
+.day-add { align-items: flex-end; }
+.day-lab { display: grid; gap: 2px; font-size: .75rem; color: var(--muted); }
+.day-lab input.day-w { width: 6.5em; }
