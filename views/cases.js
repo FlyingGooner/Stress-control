@@ -7,14 +7,15 @@ const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' :
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
 export function caseRow(c) {
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id, who = personOf(S.state, c), dd = daysCount(c, t);
-  return el('li', { class: `case-li c-${cat.color}` + (open ? ' open' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'copen', 'data-id': c.id },
-    el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
+  const sel = S.sel && !c.x, on = sel && S.sel.includes(c.id);   // markeringsläge: a tap marks, the icon becomes a check box
+  return el('li', { class: `case-li c-${cat.color}` + (open && !sel ? ' open' : '') + (on ? ' marked' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': sel ? 'selt' : 'copen', 'data-id': c.id, ...(sel ? { 'aria-pressed': String(on) } : {}) },
+    sel ? el('span', { class: 'sel-box', 'aria-hidden': 'true', text: on ? '✓' : '' }) : el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
       el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` + (who ? ` · 👤 ${who.name}` : '') + (dd ? ` · ${dd[1]}/${dd[0]} ansökta` : '') })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
     ),
-    el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
-    open ? caseSummary(c, t, cat) : null);
+    sel ? null : el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
+    open && !sel ? caseSummary(c, t, cat) : null);
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna tråden.
 export const showVal = (fd, v) => fd.kind === 'days' ? `${v.length} ${v.length === 1 ? 'dag' : 'dagar'} · ${v.filter((x) => x[2]).length} ansökta` : fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
@@ -246,11 +247,19 @@ export function viewCases() {
   if (S.open) return caseView();
   const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter'), [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
   chips.prepend(...[pchips].filter(Boolean));
+  if (S.sel) S.sel = S.sel.filter((id) => all.some((c) => c.id === id));
+  const n = S.sel?.length ?? 0, allOn = S.sel && list.length && list.every((c) => S.sel.includes(c.id));
+  const bar = S.sel && el('div', { class: 'sel-bar', role: 'toolbar', 'aria-label': 'Markerade trådar' },
+    el('button', { class: 'icon-btn', 'data-act': 'selclose', 'aria-label': 'Avsluta markering', text: '✕' }),
+    el('span', { class: 'sel-n', 'aria-live': 'polite', text: `${n} ${n === 1 ? 'vald' : 'valda'}` }),
+    el('button', { class: 'text-btn', 'data-act': 'selall', text: allOn ? 'Ingen' : 'Alla' }),
+    el('button', { class: 'text-btn', 'data-act': 'selarch', disabled: !n, text: 'Arkivera' }),
+    el('button', { class: 'text-btn danger', 'data-act': 'seldel', disabled: !n, text: 'Radera' }));
   return [
-    chips,
+    bar || chips,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
       : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar med det här filtret.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
-    el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Ny tråd' }),
+    S.sel ? null : el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Ny tråd' }),
   ];
 }
 export { KINDS };

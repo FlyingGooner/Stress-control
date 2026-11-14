@@ -20,6 +20,7 @@ export const S = {
   tfilter: 'all',      // Papperskorg: category filter
   trash: false,        // Inställningar: Papperskorg open (a layer)
   q: '',               // Arkiv: search text
+  sel: null,           // Trådar: ids of marked cases (markeringsläge, a layer) or null
   installPrompt: null,
 };
 export const setOpen = new Set();   // Inställningar: open sections (data-sec), kept across re-renders

@@ -449,3 +449,15 @@ progress.day-bar::-moz-progress-bar { background: var(--cc, var(--primary)); }
 .props-ed .field-edit > input { flex: 1 1 10em; min-width: 0; } .props-ed .field-edit > select { flex: 0 1 8em; max-width: 8em; }
 select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface); color: var(--fg); font: inherit; font-size: .85rem; } .day-add { flex-wrap: wrap; }
 .day-list li { flex-wrap: wrap; } .day-ctl { display: flex; align-items: center; gap: 8px; flex-basis: 100%; padding: 0 0 8px 34px; } .day-ctl select.day-kid { flex: 1; max-width: none; } .day-add { flex-wrap: nowrap; gap: 6px; } .day-add .step-date { width: 8.4em; } .day-add select.day-kid { max-width: 5.5em; } .day-lab input.day-w { width: 4.5em; }
+
+/* Markeringsläge i Trådar (long press) */
+.case-row { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.sel-bar { position: sticky; top: 0; z-index: 4; display: flex; align-items: center; gap: 4px; margin: 8px 0 8px; padding: 4px; border-radius: var(--r-lg); background: var(--primary-container, #eaddff); color: var(--on-primary-container, #21005d); }
+.sel-bar .sel-n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.sel-bar button { min-height: 48px; min-width: 48px; padding: 0 8px; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 500; border-radius: var(--r-md); }
+.sel-bar button:disabled { opacity: .4; }
+.sel-bar .danger { color: #ba1a1a; }
+@media (prefers-color-scheme: dark) { .sel-bar .danger { color: #ffb4ab; } }
+.sel-box { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid var(--muted); border-radius: 6px; font-weight: 700; }
+.case-li.marked .case-line { background: var(--primary-container, #eaddff); }
+.case-li.marked .sel-box { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }

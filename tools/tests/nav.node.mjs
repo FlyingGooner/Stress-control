@@ -60,3 +60,10 @@ test('bakåt: redigering ligger över visningen av ett ärende', () => {
   closeTop(S); assert.equal(S.open, null); assert.equal(closeTop(S), false);
   assert.equal(layerDepth({ open: null, edit: true }), 0, 'kvarglömd edit utan ärende räknas inte');
 });
+test('bakåt: markeringsläget i Trådar är ett eget steg', () => {
+  const S = { sel: ['c1', 'c2'] };
+  assert.equal(topLayer(S), 'sel');
+  assert.equal(layerDepth(S), 1);
+  assert.equal(closeTop(S), true); assert.equal(S.sel, null);
+  assert.equal(closeTop(S), false);
+});

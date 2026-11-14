@@ -10,7 +10,7 @@ import { viewTrash } from './views/trash.js';
 import { viewSettings, personHint } from './views/settings.js';
 import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, setRemember } from './views/data.js';
 
-const CONFIG = { startView: 'cases' };
+const CONFIG = { startView: 'cases', longPressMs: 450 };
 document.getElementById('version').textContent = 'v' + self.APP_VERSION;
 const app = document.getElementById('app');
 const tabbar = document.querySelector('.tabbar');
@@ -151,7 +151,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false; S.own = null; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.sel = null; S.showPwd = false; S.own = null; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -160,7 +160,7 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false; S.own = null;
+  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.sel = null; S.showPwd = false; S.own = null;
   go(t.dataset.view);
 });
 
@@ -217,6 +217,28 @@ app.addEventListener('click', (ev) => {
     case 'cexp': S.exp = S.exp === id ? null : id; break;
     case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
+    case 'selt': {   // markeringsläge: tap toggles; the last one unmarked ends the mode
+      const i = S.sel.indexOf(id);
+      if (i < 0) S.sel.push(id); else S.sel.splice(i, 1);
+      if (!S.sel.length) S.sel = null;
+      break;
+    }
+    case 'selclose': S.sel = null; break;
+    case 'selall': {
+      const ids = [...app.querySelectorAll('[data-act="selt"]')].map((x) => x.dataset.id);
+      S.sel = ids.every((x) => S.sel.includes(x)) ? null : [...new Set([...S.sel, ...ids])];
+      break;
+    }
+    case 'selarch': case 'seldel': {   // several at once, with Ångra (a snapshot, like Rensa arkivet)
+      const list = S.state.cases.filter((c) => !c.x && S.sel.includes(c.id)); if (!list.length) return;
+      const n = list.length, what = n === 1 ? list[0].title : `${n} trådar`;
+      S.sel = null;
+      if (act === 'selarch') withUndo(`${what} är arkiverad${n === 1 ? '' : 'e'}`, () => {
+        for (const c of list) { c.x = today(); touch(c); nextCase(S.state, c, today()); }
+      });
+      else withUndo(`${what} ligger i papperskorgen`, () => { for (const c of list) trashCase(S.state, c, today()); });
+      return;
+    }
     case 'cedit': S.edit = true; render(); scrollTo(0, 0); return;
     case 'cedclose': S.edit = false; break;
     case 'cdone': {
@@ -414,6 +436,23 @@ app.addEventListener('input', (ev) => {
   if (t.dataset.act === 'tsteps') d.steps = t.value.split('\n').map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
   if (t.dataset.act === 'fopts') { const f = d.fields[Number(t.dataset.i)]; if (f) f.opts = [...new Set(t.value.split('\n').map((x) => cleanText(x, 60)).filter(Boolean))].slice(0, OPTS_MAX); }
 });
+/* ---------- Long press on a case in Trådar: markeringsläge (sel layer). The click after it is swallowed. ---------- */
+let press = null, pressFired = false;
+const endPress = () => { if (press) clearTimeout(press.timer); press = null; };
+app.addEventListener('pointerdown', (ev) => {
+  const row = ev.target.closest('[data-act="copen"]');
+  endPress(); pressFired = false;   // the row is redrawn during a long press, so its click may never come: a new touch clears the flag
+  if (!row || view !== 'cases' || topLayer(S) || ev.button > 0) return;
+  press = { x: ev.clientX, y: ev.clientY, timer: setTimeout(() => {
+    press = null; pressFired = true;
+    S.sel = [row.dataset.id]; S.exp = null; navigator.vibrate?.(20); render();
+  }, CONFIG.longPressMs) };
+});
+app.addEventListener('pointermove', (ev) => { if (press && Math.hypot(ev.clientX - press.x, ev.clientY - press.y) > 10) endPress(); });
+for (const t of ['pointerup', 'pointercancel', 'scroll']) addEventListener(t, endPress, { passive: true, capture: true });
+app.addEventListener('click', (ev) => { if (pressFired) { pressFired = false; ev.stopImmediatePropagation(); ev.preventDefault(); } }, true);
+app.addEventListener('contextmenu', (ev) => { if (ev.target.closest('.case-row')) ev.preventDefault(); });
+
 /* ---------- Swipe sideways between the category filters in Trådar (no layer open; not from the screen edges = system Back) ---------- */
 let swipe = null;
 document.addEventListener('touchstart', (ev) => {
