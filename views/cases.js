@@ -11,7 +11,7 @@ export function caseRow(c) {
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
       el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängt ' + shortDate(c.x) : 'ändrat ' + ago(c.u)}` })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
-    el('span', { class: 'case-chev', 'aria-hidden': 'true', text: open ? '▴' : '▾' })),
+    el('span', { class: 'case-chev', 'aria-hidden': 'true', text: '▾' })),
     open ? caseSummary(c, t, cat) : null);
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna ärendet.
@@ -23,7 +23,7 @@ function caseSummary(c, t, cat) {
     fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
     c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
-    el('button', { class: 'primary', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet' }));
+    el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
 }
 
 // Nytt ärende in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).

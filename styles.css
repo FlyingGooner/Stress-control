@@ -228,15 +228,20 @@ html, body { overflow-x: clip; }
 .cases { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
 .case-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 14px; border: 0; border-radius: var(--r-lg);
   background: var(--surface-container); box-shadow: inset 5px 0 0 var(--cc, var(--primary)); text-align: left; }
-.case-chev { flex: none; color: var(--muted); font-size: 1rem; }
-.case-sum { margin: 4px 0 0 5px; padding: 12px 14px; border-radius: var(--r-lg); background: var(--surface-container); box-shadow: inset 3px 0 0 var(--cc, var(--primary)); }
-.case-sum dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0 0 8px; }
-.case-sum dt { color: var(--muted); font-size: .85rem; }
-.case-sum dd { margin: 0; white-space: pre-wrap; }
-.sum-steps, .sum-log { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 2px; }
+.case-chev { flex: none; width: 24px; color: var(--muted); font-size: 1.1rem; text-align: center; transition: transform .2s; }
+.case-row[aria-expanded="true"] { border-radius: var(--r-lg) var(--r-lg) 0 0; }
+.case-row[aria-expanded="true"] .case-chev { transform: rotate(180deg); }
+.case-sum { padding: 4px 14px 14px 19px; border-radius: 0 0 var(--r-lg) var(--r-lg); background: var(--surface-container); box-shadow: inset 5px 0 0 var(--cc, var(--primary)); }
+.case-sum::before { content: ""; display: block; height: 1px; margin: 0 0 10px 34px; background: var(--outline-variant, rgba(0,0,0,.08)); }
+.case-sum dl { display: grid; gap: 0; margin: 0 0 10px 34px; }
+.case-sum dt { color: var(--muted); font-size: .75rem; letter-spacing: .02em; }
+.case-sum dd { margin: 0 0 8px; white-space: pre-wrap; line-height: 1.3; }
+.case-sum dt { line-height: 1.2; }
+.case-sum > p, .sum-steps, .sum-log { margin-left: 34px; }
+.sum-steps, .sum-log { list-style: none; padding: 0; margin-top: 0; margin-bottom: 10px; display: grid; gap: 2px; font-size: .95rem; }
 .sum-steps .done { color: var(--muted); text-decoration: line-through; }
 .sum-log small { color: var(--muted); }
-.case-sum .primary { margin-top: 4px; }
+.case-sum .sum-open { display: block; margin: 4px 0 0 auto; min-height: 40px; padding: 0 18px; border: 0; border-radius: 20px; background: var(--primary-container, #e9ddff); color: var(--on-primary-container, #22005d); font-weight: 500; }
 .case-icon { font-size: 1.4rem; line-height: 1; flex: none; }
 .case-main { display: grid; min-width: 0; flex: 1; }
 .case-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
