@@ -25,6 +25,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.
 - Aktuellt (överst, röd siffra även på fliken): datum i öppna ärenden inom påminnelsetiden (standard 7 dagar, ändras i Inställningar → Påminnelser) och deadlines som passerat. Tryck på en rad för att öppna ärendet.
 - Kommande: datum längre fram, uppdelat på Nästa vecka och Inom en månad.
+- Tryck på "delmål kvar" för att se alla delmål som är kvar, med ärendet de hör till. Delmål med datum står först. Bocka av direkt i listan (med Ångra), eller tryck på ett delmål för att öppna ärendet.
 - Deadline: i Inställningar → Ärendetyper kan varje datumfält bockas som deadline (t.ex. Klart senast, Förfaller). Då syns det i Aktuellt även när datumet passerat, tills ärendet stängs.
 
 ## Ärendetyper och kategorier
@@ -34,7 +35,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Kategorier: byt namn och färg, eller lägg till nya.
 
 ## Bakåt
-- Bakåt stänger det som är öppet (ett ärende, typväljaren, en ärendetyp eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
+- Bakåt stänger det som är öppet (ett ärende, typväljaren, en ärendetyp, delmålslistan eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
 - Svep åt vänster eller höger i Ärenden för att byta filter (Alla, Hälsa, Hem …). Inte när ett ärende eller formulär är öppet.
 
 ## Backup och flytt

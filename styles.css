@@ -339,3 +339,10 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .pick-row:has(#s-date) { flex-wrap: wrap; }
 .pick-row #s-new { flex: 1 1 100%; }
 .pick-row #s-date { flex: 1; width: auto; min-height: 44px; background: var(--surface-container-high, #ece6f0); color: var(--on-surface); }
+.stat-btn { border: 0; background: transparent; font: inherit; color: var(--muted); border-radius: var(--r-md); cursor: pointer; }
+.stat-btn:active { background: var(--surface-container-high, #ece6f0); }
+.all-steps li { justify-content: flex-start; gap: 12px; min-height: 56px; }
+.step-open { display: grid; flex: 1; min-width: 0; padding: 6px 0; border: 0; background: transparent; text-align: left; color: inherit; font: inherit; }
+.step-open small { color: var(--muted); font-size: .8rem; }
+.step-when { flex: none; font-size: .85rem; font-weight: 600; color: var(--primary); }
+.all-steps li.late .step-when { color: var(--error, #b3261e); }

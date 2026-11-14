@@ -140,7 +140,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -149,7 +149,7 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.draft = null; S.tedit = null;
+  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false;
   go(t.dataset.view);
 });
 
@@ -182,6 +182,8 @@ app.addEventListener('click', (ev) => {
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
       snackbar(`${c.title} är sparat`, null, null, 2500); return;
     }
+    case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
+    case 'stepsclose': S.steps = false; break;
     case 'cexp': S.exp = S.exp === id ? null : id; break;
     case 'copen': S.exp = null; S.open = id; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
@@ -380,7 +382,8 @@ app.addEventListener('change', (ev) => {
       c.u = today(); persist(); render(); return;
     }
     case 'stog': {
-      const c = S.state.cases.find((x) => x.id === S.open), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
+      const c = S.state.cases.find((x) => x.id === (t.dataset.case || S.open)), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
+      if (t.dataset.case && t.checked) { const before = JSON.stringify(S.state); row[1] = 1; c.u = today(); persist(); render(); snackbar(`${row[0]} klart`, 'Ångra', () => { S.state = JSON.parse(before); persist(); render(); }); return; }
       row[1] = t.checked ? 1 : 0; c.u = today(); persist(); render(); return;
     }
     case 'ton': { const ty = S.state.types.find((x) => x.id === t.dataset.id); if (ty) { ty.on = t.checked ? 1 : 0; persist(); } return; }

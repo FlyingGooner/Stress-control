@@ -41,3 +41,9 @@ test('typeditor från ett ärende ligger överst och Bakåt stänger bara den', 
   assert.equal(topLayer(S), 'tedit'); assert.equal(layerDepth(S), 2);
   closeTop(S); assert.equal(S.open, 'c1'); assert.equal(S.tedit, null); assert.equal(S.teditFor, null);
 });
+
+test('delmålslistan är ett lager; ett ärende öppnat från den ligger överst', () => {
+  const S = { steps: true, open: 'c1' };
+  assert.equal(topLayer(S), 'open'); assert.equal(layerDepth(S), 2);
+  closeTop(S); assert.equal(topLayer(S), 'steps'); closeTop(S); assert.equal(topLayer(S), null);
+});

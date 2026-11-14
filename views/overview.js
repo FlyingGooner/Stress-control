@@ -1,5 +1,5 @@
 // Vy: Överblick – Aktuellt (inom påminnelsetiden + passerade deadlines), siffror, per kategori, Kommande (vecka/månad).
-import { overview, alerts, typeOf } from '../store.js';
+import { overview, alerts, daysBetween, typeOf } from '../store.js';
 import { today, S, el, longDate } from '../ui.js';
 import { caseEditor } from './cases.js';
 import { typeEditor } from './settings.js';
@@ -7,6 +7,7 @@ import { typeEditor } from './settings.js';
 export function viewOverview() {
   if (S.tedit) return typeEditor();
   if (S.open) return caseEditor();
+  if (S.steps) return stepsView();
   const o = overview(S.state, today()), max = Math.max(1, ...o.per.map((x) => x.n));
   const stat = (n, label) => el('div', { class: 'stat' }, el('span', { class: 'stat-n', text: String(n) }), el('span', { text: label }));
   const al = alerts(S.state, today()), n = S.state.alertDays ?? 7;
@@ -26,7 +27,7 @@ export function viewOverview() {
       el('h2', {}, el('span', { text: 'Aktuellt' }), al.length ? el('span', { class: 'badge', text: String(al.length) }) : null),
       al.length ? el('ul', { class: 'alert-list' }, al.map(row))
         : el('p', { class: 'muted small', text: `Inget som närmar sig de närmaste ${n} dagarna.` })),
-    el('section', { class: 'card stats3' }, stat(o.open, 'öppna ärenden'), stat(o.steps, 'delmål kvar'), stat(o.closed30, 'stängda, 30 dagar')),
+    el('section', { class: 'card stats3' }, stat(o.open, 'öppna ärenden'), el('button', { class: 'stat stat-btn', 'data-act': 'stepsopen', 'aria-label': `${o.steps} delmål kvar – visa alla` }, el('span', { class: 'stat-n', text: String(o.steps) }), el('span', { text: 'delmål kvar ›' })), stat(o.closed30, 'stängda, 30 dagar')),
     el('section', { class: 'card' }, el('h2', { text: 'Per kategori' }),
       el('ul', { class: 'bars' }, o.per.map(({ cat, n }) => el('li', { class: `c-${cat.color}` },
         el('span', { class: 'bar-name', text: cat.name }),
@@ -36,4 +37,26 @@ export function viewOverview() {
       week.length ? [el('h3', { class: 'up-h', text: n < 7 ? 'Inom två veckor' : 'Nästa vecka' }), el('ul', { class: 'alert-list' }, week.map(row))] : null,
       month.length ? [el('h3', { class: 'up-h', text: 'Inom en månad' }), el('ul', { class: 'alert-list' }, month.map(row))] : null) : null,
   ];
+}
+
+// Delmål kvar: every open sub-goal with its case, dated first (by date), then the rest by case. Tick off right here.
+function stepsView() {
+  const t0 = today(), rows = [];
+  for (const c of S.state.cases) if (!c.x) (c.s || []).forEach(([x, done, d], i) => { if (!done) rows.push({ c, x, d, i }); });
+  rows.sort((a, b) => (a.d && b.d ? (a.d < b.d ? -1 : a.d > b.d ? 1 : 0) : a.d ? -1 : b.d ? 1 : a.c.title.localeCompare(b.c.title, 'sv')));
+  const when = (d) => { const n = daysBetween(t0, d); return n < 0 ? (n === -1 ? 'igår' : `${-n} dagar sen`) : n === 0 ? 'idag' : n === 1 ? 'imorgon' : `om ${n} dagar`; };
+  return el('section', { class: 'card' },
+    el('div', { class: 'add-top' },
+      el('button', { class: 'icon', 'data-act': 'stepsclose', 'aria-label': 'Stäng', text: '✕' }),
+      el('h1', { class: 'add-title', text: `Delmål kvar (${rows.length})` })),
+    rows.length ? el('ul', { class: 'steps all-steps' }, rows.map(({ c, x, d, i }) => {
+      const ty = typeOf(S.state, c), late = d && d < t0;
+      return el('li', { class: late ? 'late' : '' },
+        el('input', { type: 'checkbox', 'data-act': 'stog', 'data-case': c.id, 'data-i': i, 'aria-label': `${x} klart` }),
+        el('button', { class: 'step-open', 'data-act': 'copen', 'data-id': c.id },
+          el('span', { class: 'step-x', text: x }),
+          el('small', { text: `${ty?.icon || '📌'} ${c.title}` })),
+        d ? el('span', { class: 'step-when', text: when(d) }) : null);
+    })) : el('p', { class: 'muted', text: 'Inga delmål kvar. Bra jobbat!' }),
+    el('p', { class: 'muted small', text: 'Bocka av direkt här, eller tryck på ett delmål för att öppna ärendet.' }));
 }
