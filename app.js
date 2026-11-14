@@ -231,6 +231,7 @@ app.addEventListener('click', (ev) => {
     }
     case 'selarch': case 'seldel': case 'selreopen': {   // several at once, with Ångra (a snapshot, like Rensa arkivet)
       const list = S.state.cases.filter((c) => (act === 'selarch' ? !c.x : act === 'selreopen' ? c.x : true) && S.sel.includes(c.id)); if (!list.length) return;
+      if (act === 'selreopen' && S.state.cases.filter((c) => !c.x).length + list.length > LIM.open) { snackbar(`Max ${LIM.open} öppna trådar – arkivera något först`, null, null, 3000); return; }
       const n = list.length, what = n === 1 ? list[0].title : `${n} trådar`;
       S.sel = null;
       if (act === 'selarch') withUndo(`${what} är arkiverad${n === 1 ? '' : 'e'}`, () => {
