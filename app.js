@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -206,7 +206,7 @@ app.addEventListener('click', (ev) => {
       const c = cs(), x = cleanText(document.getElementById('s-new')?.value, 80);
       if (!c || !x) { document.getElementById('s-new')?.focus(); return; }
       if ((c.s || []).length >= LIM.steps) { errText('c-error', `Max ${LIM.steps} delmål.`); return; }
-      (c.s ||= []).push([x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
+      const sd = document.getElementById('s-date')?.value; (c.s ||= []).push(validDate(sd) ? [x, 0, sd] : [x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
     }
     case 'oadd': {
       const c = cs(), n = document.getElementById('o-name'); if (!c) return;
@@ -373,6 +373,11 @@ app.addEventListener('change', (ev) => {
       const c = S.state.cases.find((x) => x.id === S.open), v = cleanText(t.value, 80);
       if (c && v) { c.title = v; c.u = today(); persist(); } else if (c) t.value = c.title;
       return;
+    }
+    case 'sdate': {
+      const c = S.state.cases.find((x) => x.id === S.open), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
+      if (validDate(t.value)) row[2] = t.value; else row.length = 2;
+      c.u = today(); persist(); render(); return;
     }
     case 'stog': {
       const c = S.state.cases.find((x) => x.id === S.open), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;

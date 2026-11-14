@@ -121,3 +121,9 @@ T.test('version 1-data får deadline på standardfälten; alertDays valideras', 
   const v2 = validate({ version: 2, types: [{ id: 'task', name: 'Uppgift', cat: 'o', on: 1, fields: [{ id: 'd', name: 'Klart senast', kind: 'date' }] }], alertDays: 14 });
   T.ok(!v2.types[0].fields[0].due, 'avbockad deadline respekteras'); T.eq(v2.alertDays, 14);
 });
+T.test('delmål med datum: valideras och syns i Aktuellt tills det bockas av', () => {
+  const s = defaults();
+  s.cases = [{ id: 'a', t: 'task', title: 'Bil', c: '2026-11-01', u: '2026-11-01', s: [['Boka service', 0, '2026-11-16'], ['Klart', 1, '2026-11-15'], ['Utan datum', 0]] }];
+  T.eq(alerts(s, '2026-11-14').map((x) => [x.name, x.days]), [['Delmål Boka service', 2]]);
+  T.eq(validate({ cases: [{ id: 'a', t: 'task', title: 'Bil', c: '2026-11-01', s: [['A', 0, '2026-13-01'], ['B', 0, '2026-11-20']] }] }).cases[0].s, [['A', 0], ['B', 0, '2026-11-20']]);
+});

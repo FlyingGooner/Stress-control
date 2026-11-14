@@ -23,7 +23,7 @@ function caseSummary(c, t, cat) {
   return el('div', { class: `case-sum c-${cat.color}` },
     fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : c.o?.some((x) => x[2] != null) ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
     c.o?.some((x) => x[2] != null) ? el('dl', { class: 'sum-old' }, c.o.filter((x) => x[2] != null).map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
-    c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x }))) : null,
+    c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (dd ? ` · ${shortDate(dd)}` : '') }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
     el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
 }
@@ -89,11 +89,13 @@ export function caseEditor() {
         el('button', { class: 'link', 'data-act': 'oclear', text: 'Ta bort alla' })) : null),
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     el('h2', { class: 'sub-h', text: all ? `Delmål ${done}/${all}` : 'Delmål' }),
-    el('ul', { class: 'steps' }, (c.s || []).map(([x, d], i) => el('li', { class: d ? 'done' : '' },
+    el('ul', { class: 'steps' }, (c.s || []).map(([x, d, dd], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
       el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }), el('span', { text: x })),
+      el('input', { type: 'date', class: 'step-date' + (dd ? '' : ' empty'), value: dd || '', 'data-act': 'sdate', 'data-i': i, 'aria-label': `Datum för ${x}` }),
       el('button', { class: 'icon sm', 'data-act': 'sdel', 'data-i': i, 'aria-label': `Ta bort ${x}`, text: '✕' })))),
     el('div', { class: 'pick-row' },
       el('input', { type: 'text', id: 's-new', maxlength: 80, placeholder: 'Nytt delmål', 'aria-label': 'Nytt delmål', autocomplete: 'off' }),
+      el('input', { type: 'date', id: 's-date', class: 'step-date', 'aria-label': 'Datum för nytt delmål (valfritt)' }),
       el('button', { class: 'weigh-save', 'data-act': 'sadd', text: 'Lägg till' })),
     el('h2', { class: 'sub-h', text: 'Logg' }),
     el('ul', { class: 'log' }, [...(c.l || [])].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => el('li', {},
