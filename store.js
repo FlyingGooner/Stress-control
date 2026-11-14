@@ -110,7 +110,7 @@ function cleanCase(c, types) {
     if (Object.keys(f).length) out.f = f;
   }
   const o = (Array.isArray(c.o) ? c.o : []).filter((x) => Array.isArray(x) && Object.hasOwn(KINDS, x[1]) && cleanText(x[0], 40)).slice(0, LIM.fields)
-    .map((x) => [cleanText(x[0], 40), x[1], cleanValue(x[1], x[2]), cleanText(x[3], 30)]).filter((x) => x[2] !== undefined);
+    .map((x) => [cleanText(x[0], 40), x[1], cleanValue(x[1], x[2]) ?? null, cleanText(x[3], 30)]);
   if (o.length) out.o = o;
   const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => [cleanText(x[0], 80), x[1] ? 1 : 0]);
   if (s.length) out.s = s;
@@ -183,14 +183,29 @@ export function newCase(state, typeId, title, today) {
   state.cases.unshift(c);
   return c;
 }
+// Input text → value by kind; undefined = empty, false = invalid.
+function parseInput(kind, input) {
+  if (kind === 'num') { const t = String(input ?? '').replace(/\s/g, '').replace(',', '.'); if (t === '') return undefined; const v = cleanValue('num', Number(t)); return v === undefined ? false : v; }
+  if (kind === 'check') return input ? 1 : undefined;
+  const v = cleanValue(kind, input); return v === undefined && String(input ?? '').trim() ? false : v;
+}
+// Extra fields only in this case (c.o: [name, kind, value|null, from-type?]) – added by hand or left from an earlier type.
+export function addExtra(c, name, kind, today) {
+  const n = cleanText(name, 40);
+  if (!n || !Object.hasOwn(KINDS, kind) || (c.o || []).length >= LIM.fields || (c.o || []).some((x) => x[0] === n)) return false;
+  (c.o ||= []).push([n, kind, null, '']); c.u = today; return true;
+}
+export function setExtra(c, i, input, today) {
+  const x = c.o?.[i]; if (!x) return false;
+  const v = parseInput(x[1], input); if (v === false) return false;
+  x[2] = v === undefined ? null : v; c.u = today; return true;
+}
 // Sets one field from input text (by the field's kind). Returns false if the input is invalid (nothing changed).
 export function setField(state, c, fieldId, input, today) {
   const fd = typeOf(state, c)?.fields.find((f) => f.id === fieldId);
   if (!fd) return false;
-  let v;
-  if (fd.kind === 'num') { const t = String(input ?? '').replace(/\s/g, '').replace(',', '.'); v = t === '' ? undefined : cleanValue('num', Number(t)); if (t !== '' && v === undefined) return false; }
-  else if (fd.kind === 'check') v = input ? 1 : undefined;
-  else { v = cleanValue(fd.kind, input); if (v === undefined && String(input ?? '').trim()) return false; }
+  const v = parseInput(fd.kind, input);
+  if (v === false) return false;
   const f = { ...(c.f || {}) };
   if (v === undefined) delete f[fd.id]; else f[fd.id] = v;
   if (Object.keys(f).length) c.f = f; else delete c.f;
@@ -206,7 +221,7 @@ function typePlan(state, c, to) {
     ...(c.o || []).map(([n, k, v, fr]) => ({ n, k, v, from: fr }))];
   for (const x of pool) {
     const dst = to.fields.find((d) => d.name === x.n && d.kind === x.k && !(d.id in f)) || (x.id && to.fields.find((d) => d.id === x.id && d.kind === x.k && !(d.id in f)));
-    if (dst) f[dst.id] = x.v; else rest.push(x);
+    if (dst) { if (x.v != null) f[dst.id] = x.v; } else rest.push(x);
   }
   return { f, rest };
 }
@@ -261,7 +276,7 @@ export const EXPORT_SCHEMA = {
   version: 'tal, 1',
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')} }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: värden från tidigare typ [[fältnamn ≤ 40, kind, värde, från typnamn ≤ 30]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {

@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -89,5 +89,16 @@ T.test('byta typ med rensa: nya restvärden tas bort, äldre ligger kvar', () =>
   changeType(s, c, 'x', '2026-11-14', true);
   T.ok(!c.f && !c.o);
   const v = validate({ ...s, cases: [{ ...c, o: [['A', 'text', 'v', 'T'], ['B', '__proto__', 'v', 'T'], ['C', 'num', 'x', 'T']] }] });
-  T.eq(v.cases[0].o, [['A', 'text', 'v', 'T']]);
+  T.eq(v.cases[0].o, [['A', 'text', 'v', 'T'], ['C', 'num', null, 'T']]);
+});
+T.test('extra fält i ett ärende: lägg till, fyll i, tomt värde behålls, följer med till typ med samma fält', () => {
+  const s = base(), c = s.cases[0];
+  T.ok(addExtra(c, 'Pris', 'num', '2026-11-14')); T.ok(!addExtra(c, 'Pris', 'text', '2026-11-14'), 'dubblett'); T.ok(!addExtra(c, ' ', 'text', '2026-11-14'));
+  T.ok(addExtra(c, 'Not', 'text', '2026-11-14'));
+  T.ok(!setExtra(c, 0, 'abc', '2026-11-14')); T.ok(setExtra(c, 0, '1 250,5', '2026-11-14'));
+  T.eq(c.o, [['Pris', 'num', 1250.5, ''], ['Not', 'text', null, '']]);
+  T.eq(validate(JSON.parse(JSON.stringify(s))).cases[0].o, c.o);
+  s.types.push({ id: 'y', name: 'Y', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'p', name: 'Pris', kind: 'num' }, { id: 'n', name: 'Not', kind: 'text' }, { id: 'a', name: 'Symptom', kind: 'text' }] });
+  changeType(s, c, 'y', '2026-11-14');
+  T.eq(c.f, { p: 1250.5, a: 'Knä' }); T.eq(c.o, [['Kontaktat vården', 'check', 1, 'Symptom']]);
 });

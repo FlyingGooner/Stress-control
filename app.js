@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, changeType, typeChangeLoss, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, changeType, typeChangeLoss, addExtra, setExtra, cleanType, LIM, COLORS, KINDS } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -202,8 +202,13 @@ app.addEventListener('click', (ev) => {
       if ((c.s || []).length >= LIM.steps) { errText('c-error', `Max ${LIM.steps} delmål.`); return; }
       (c.s ||= []).push([x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
     }
+    case 'oadd': {
+      const c = cs(), n = document.getElementById('o-name'); if (!c) return;
+      if (!addExtra(c, n?.value, document.getElementById('o-kind')?.value, today())) { errText('c-error', cleanText(n?.value, 40) ? 'Fältet finns redan, eller max antal fält.' : 'Skriv ett namn på fältet.'); n?.focus(); return; }
+      persist(); render(); document.getElementById('f-o' + (c.o.length - 1))?.focus(); return;
+    }
     case 'odel': { const c = cs(); if (!c?.o) return; const n = c.o[Number(t.dataset.i)]?.[0]; withUndo(`${n} togs bort`, () => { c.o.splice(Number(t.dataset.i), 1); if (!c.o.length) delete c.o; touch(c); }); return; }
-    case 'oclear': { const c = cs(); if (!c?.o) return; withUndo('Gamla fält borttagna', () => { delete c.o; touch(c); }); return; }
+    case 'oclear': { const c = cs(); if (!c?.o) return; withUndo('Extra fält borttagna', () => { delete c.o; touch(c); }); return; }
     case 'sdel': { const c = cs(); if (!c?.s) return; c.s.splice(Number(t.dataset.i), 1); if (!c.s.length) delete c.s; touch(c); persist(); break; }
     case 'ladd': {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
@@ -293,6 +298,7 @@ app.addEventListener('input', (ev) => {
 app.addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter') return;
   if (ev.target.id === 's-new') { ev.preventDefault(); app.querySelector('[data-act="sadd"]')?.click(); }
+  if (ev.target.id === 'o-name') { ev.preventDefault(); app.querySelector('[data-act="oadd"]')?.click(); }
   if (ev.target.id === 'new-title') { ev.preventDefault(); app.querySelector('.type-btn')?.focus(); }
 });
 app.addEventListener('toggle', (ev) => {
@@ -320,11 +326,17 @@ app.addEventListener('change', (ev) => {
       const dlg = document.getElementById('type-dialog');
       dlg.onclose = () => {
         dlg.onclose = null;
-        if (dlg.returnValue === 'keep') { changeType(S.state, c, to.id, today()); persist(); render(); snackbar('Bytt typ – gamla fält finns under fälten', null, null, 3000); }
+        if (dlg.returnValue === 'keep') { changeType(S.state, c, to.id, today()); persist(); render(); snackbar('Bytt typ – fälten finns under Extra fält', null, null, 3000); }
         else if (dlg.returnValue === 'drop') withUndo(`Bytt till ${to.name}, ${loss.length} ${loss.length === 1 ? 'värde' : 'värden'} borttagna`, () => changeType(S.state, c, to.id, today(), true));
         else render();   // Avbryt: the list shows the old type again
       };
       dlg.returnValue = ''; dlg.showModal();
+      return;
+    }
+    case 'ov': {   // an extra field in the case
+      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
+      const ok = setExtra(c, Number(t.dataset.id.slice(1)), t.type === 'checkbox' ? t.checked : t.value, today());
+      errText('c-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.'); if (ok) persist();
       return;
     }
     case 'fv': {   // a case field: saved directly; invalid input gives a message and is not saved
