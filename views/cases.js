@@ -74,8 +74,10 @@ export function caseEditor() {
     el('div', { class: 'save-row' }, el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
     el('div', { class: 'row-actions case-actions' },
       el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
-      c.x ? el('button', { class: 'weigh-save', 'data-act': 'creopen', text: 'Öppna igen' })
-        : el('button', { class: 'weigh-save', 'data-act': 'cdone', text: 'Klart – stäng ärendet' })));
+      c.x ? el('button', { class: 'link', 'data-act': 'creopen', text: 'Öppna igen' })
+        : el('button', { class: 'link', 'data-act': 'cdone', text: 'Löst – arkivera' })),
+    el('button', { class: 'primary save-case', 'data-act': 'cclose', text: 'Spara' }),
+    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara stänger ärendet och tar dig tillbaka till listan – det ligger kvar som öppet.' }));
 }
 
 export function viewCases() {

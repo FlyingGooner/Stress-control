@@ -4,7 +4,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Kom igång
 - Det som snurrar i huvudet tar energi. Skriv ner det som ett ärende med nästa steg – då kan du släppa tanken, appen håller reda på den.
-- Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa ärende. Resten kan du fylla i senare.
+- Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa ärende. Ärendet sparas som öppet i listan. Resten kan du fylla i senare.
 
 ## Ärenden
 - Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.
@@ -14,7 +14,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Färgen visar kategorin: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb, lila Relationer, grå Övrigt. Filtrera med knapparna överst.
 
 ## Stänga och arkivera
-- När ärendet är klart: tryck Klart – stäng ärendet. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.
+- Spara tar dig tillbaka till listan, ärendet ligger kvar som öppet. När ärendet är löst: tryck Löst – arkivera. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.
 - I Arkiv kan du söka och öppna ett ärende igen.
 - Ta bort frågar först och visar hur många loggrader och delmål som försvinner. Sedan raderas ärendet helt (Ångra finns några sekunder). Samma sak gäller en loggrad.
 

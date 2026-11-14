@@ -167,13 +167,14 @@ app.addEventListener('click', (ev) => {
       if (S.draft.f) { for (const k of Object.keys(S.draft.f)) if (!ty?.fields.some((f) => f.id === k)) delete S.draft.f[k]; }
       render(); app.querySelector('.draft')?.scrollIntoView({ block: 'nearest' }); return;
     }
-    case 'cnew': {   // the picker layer becomes the case layer (same history step)
+    case 'cnew': {   // creates the case (open, not archived) and closes the picker
       const title = document.getElementById('new-title')?.value;
       if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
       const c = newCase(S.state, id, title, today());
       if (!c) { errText('new-error', `Max ${LIM.cases} ärenden.`); return; }
       if (S.draft?.t === id && S.draft.f) { const f = {}; for (const [k, v] of Object.entries(S.draft.f)) f[k] = v; c.f = f; }
-      S.pick = false; S.draft = null; S.open = c.id; persist(); render(); scrollTo(0, 0); return;
+      S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
+      snackbar(`${c.title} är sparat`, null, null, 2500); return;
     }
     case 'copen': S.open = id; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;

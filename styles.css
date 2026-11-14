@@ -262,6 +262,7 @@ html, body { overflow-x: clip; }
 #l-new { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 8px 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-md); background: var(--surface); color: var(--fg); font: inherit; }
 #s-new { flex: 1; min-width: 0; }
 .case-actions { margin-top: 20px; }
+.save-case { margin-top: 12px; }
 .stats3 { display: grid; grid-template-columns: repeat(3, 1fr); }
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .bars li { display: grid; grid-template-columns: 7.5em 1fr 2em; align-items: center; gap: 10px; font-size: .875rem; }
