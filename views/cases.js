@@ -7,7 +7,7 @@ const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' :
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
 export function caseRow(c) {
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id, who = personOf(S.state, c), dd = daysCount(c, t);
-  const sel = S.sel && !c.x, on = sel && S.sel.includes(c.id);   // markeringsläge: a tap marks, the icon becomes a check box
+  const sel = !!S.sel, on = sel && S.sel.includes(c.id);   // markeringsläge: a tap marks, the icon becomes a check box
   return el('li', { class: `case-li c-${cat.color}` + (open && !sel ? ' open' : '') + (on ? ' marked' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': sel ? 'selt' : 'copen', 'data-id': c.id, ...(sel ? { 'aria-pressed': String(on) } : {}) },
     sel ? el('span', { class: 'sel-box', 'aria-hidden': 'true', text: on ? '✓' : '' }) : el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
@@ -241,6 +241,17 @@ export function caseEditor() {
     el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara går tillbaka till visningen.' }));
 }
 
+// Markeringsläge (long press on a row), in Trådar and Arkiv. extra = the view's own button before Radera.
+export function selBar(list, extra) {
+  if (!S.sel) return null;
+  const n = S.sel.length, allOn = list.length && list.every((c) => S.sel.includes(c.id));
+  return el('div', { class: 'sel-bar', role: 'toolbar', 'aria-label': 'Markerade trådar' },
+    el('button', { class: 'icon-btn', 'data-act': 'selclose', 'aria-label': 'Avsluta markering', text: '✕' }),
+    el('span', { class: 'sel-n', 'aria-live': 'polite', text: `${n} ${n === 1 ? 'vald' : 'valda'}` }),
+    el('button', { class: 'text-btn', 'data-act': 'selall', text: allOn ? 'Ingen' : 'Alla' }),
+    extra,
+    el('button', { class: 'text-btn danger', 'data-act': 'seldel', disabled: !n, text: 'Radera' }));
+}
 export function viewCases() {
   if (S.pick) return picker();
   if (S.tedit) return typeEditor();
@@ -248,13 +259,7 @@ export function viewCases() {
   const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter'), [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
   chips.prepend(...[pchips].filter(Boolean));
   if (S.sel) S.sel = S.sel.filter((id) => all.some((c) => c.id === id));
-  const n = S.sel?.length ?? 0, allOn = S.sel && list.length && list.every((c) => S.sel.includes(c.id));
-  const bar = S.sel && el('div', { class: 'sel-bar', role: 'toolbar', 'aria-label': 'Markerade trådar' },
-    el('button', { class: 'icon-btn', 'data-act': 'selclose', 'aria-label': 'Avsluta markering', text: '✕' }),
-    el('span', { class: 'sel-n', 'aria-live': 'polite', text: `${n} ${n === 1 ? 'vald' : 'valda'}` }),
-    el('button', { class: 'text-btn', 'data-act': 'selall', text: allOn ? 'Ingen' : 'Alla' }),
-    el('button', { class: 'text-btn', 'data-act': 'selarch', disabled: !n, text: 'Arkivera' }),
-    el('button', { class: 'text-btn danger', 'data-act': 'seldel', disabled: !n, text: 'Radera' }));
+  const bar = selBar(list, el('button', { class: 'text-btn', 'data-act': 'selarch', disabled: !S.sel?.length, text: 'Arkivera' }));
   return [
     bar || chips,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))

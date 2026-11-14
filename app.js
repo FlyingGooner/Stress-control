@@ -229,13 +229,14 @@ app.addEventListener('click', (ev) => {
       S.sel = ids.every((x) => S.sel.includes(x)) ? null : [...new Set([...S.sel, ...ids])];
       break;
     }
-    case 'selarch': case 'seldel': {   // several at once, with Ångra (a snapshot, like Rensa arkivet)
-      const list = S.state.cases.filter((c) => !c.x && S.sel.includes(c.id)); if (!list.length) return;
+    case 'selarch': case 'seldel': case 'selreopen': {   // several at once, with Ångra (a snapshot, like Rensa arkivet)
+      const list = S.state.cases.filter((c) => (act === 'selarch' ? !c.x : act === 'selreopen' ? c.x : true) && S.sel.includes(c.id)); if (!list.length) return;
       const n = list.length, what = n === 1 ? list[0].title : `${n} trådar`;
       S.sel = null;
       if (act === 'selarch') withUndo(`${what} är arkiverad${n === 1 ? '' : 'e'}`, () => {
         for (const c of list) { c.x = today(); touch(c); nextCase(S.state, c, today()); }
       });
+      else if (act === 'selreopen') withUndo(`${what} är öppen${n === 1 ? '' : 'na'} igen`, () => { for (const c of list) { delete c.x; touch(c); } });
       else withUndo(`${what} ligger i papperskorgen`, () => { for (const c of list) trashCase(S.state, c, today()); });
       return;
     }
@@ -442,7 +443,7 @@ const endPress = () => { if (press) clearTimeout(press.timer); press = null; };
 app.addEventListener('pointerdown', (ev) => {
   const row = ev.target.closest('[data-act="copen"]');
   endPress(); pressFired = false;   // the row is redrawn during a long press, so its click may never come: a new touch clears the flag
-  if (!row || view !== 'cases' || topLayer(S) || ev.button > 0) return;
+  if (!row || (view !== 'cases' && view !== 'archive') || topLayer(S) || ev.button > 0) return;
   press = { x: ev.clientX, y: ev.clientY, timer: setTimeout(() => {
     press = null; pressFired = true;
     getSelection()?.removeAllRanges(); S.sel = [row.dataset.id]; S.exp = null; navigator.vibrate?.(20); render();
