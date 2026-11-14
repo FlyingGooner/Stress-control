@@ -1,12 +1,12 @@
 // Vy: Arkiv – stängda trådar, senast stängda först, filter per kategori och sök i rubrik. En tråd öppnas i samma lager som från Trådar.
 import { closedCases, archReady } from '../store.js';
 import { S, el } from '../ui.js';
-import { caseRow, caseView, catFilter } from './cases.js';
+import { caseRow, caseView, catFilter, personFilter } from './cases.js';
 import { typeEditor } from './settings.js';
 
 export function archiveList() {
   if (!archReady()) return el('p', { class: 'muted small', text: 'Läser in arkivet…' });
-  const [, byCat] = catFilter(closedCases(S.state), 'afilter', 'afilter');
+  const [, mine] = personFilter(closedCases(S.state), 'apfilter', 'apfilter'), [, byCat] = catFilter(mine, 'afilter', 'afilter');
   const q = S.q.trim().toLowerCase(), list = byCat.filter((c) => !q || c.title.toLowerCase().includes(q));
   const shown = list.slice(0, S.alimit), more = list.length - shown.length;
   return list.length ? [el('ul', { class: 'cases' }, shown.map(caseRow)),
@@ -16,10 +16,10 @@ export function archiveList() {
 export function viewArchive() {
   if (S.tedit) return typeEditor();
   if (S.open) return caseView();
-  const all = closedCases(S.state), [chips] = catFilter(all, 'afilter', 'afilter');
+  const all = closedCases(S.state), [pchips, mine] = personFilter(all, 'apfilter', 'apfilter'), [chips] = catFilter(mine, 'afilter', 'afilter');
   return [
     el('h1', { class: 'view-title', text: 'Arkiv' }),
-    all.length ? chips : null,
+    all.length ? [pchips, chips] : null,
     el('input', { type: 'search', id: 'arch-q', class: 'search', value: S.q, placeholder: 'Sök i stängda trådar', 'aria-label': 'Sök', autocomplete: 'off' }),
     el('div', { id: 'arch-list' }, archiveList()),
   ];

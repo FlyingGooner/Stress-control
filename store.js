@@ -3,7 +3,7 @@
 const KEY = 'sk.data';
 export const EXPORT_APP = 'stress-kontroll', EXPORT_FORMAT = 1;
 export const MAX_IMPORT_CHARS = 2000000;
-export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 50, logKeep: 200, typeSteps: 10 };   // log: new notes per case; logKeep: older data with more is kept, never cut
+export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 50, logKeep: 200, typeSteps: 10, people: 20 };   // log: new notes per case; logKeep: older data with more is kept, never cut
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
 export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock' };
@@ -67,7 +67,7 @@ export const DEFAULT_TYPES = [
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 2, cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 2, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -100,13 +100,14 @@ export function cleanValue(kind, v) {
     default: return undefined;
   }
 }
-function cleanCase(c, types) {
+function cleanCase(c, types, people) {
   if (!isObj(c) || !okId(c.id) || !validDate(c.c)) return null;
   const type = types.get(c.t), title = cleanText(c.title, 80);
   if (!type || !title) return null;
   const out = { id: c.id, t: c.t, title, c: c.c, u: validDate(c.u) && c.u >= c.c ? c.u : c.c };
   if (validDate(c.x)) out.x = c.x;
   if (REPEAT[c.r]) out.r = c.r;
+  if (people?.has(c.p)) out.p = c.p;
   if (isObj(c.f)) {
     const f = {};
     for (const fd of type.fields) { const v = cleanValue(fd.kind, c.f[fd.id]); if (v !== undefined) f[fd.id] = v; }
@@ -141,9 +142,14 @@ export function validate(raw) {
     }
   } else s.types.forEach((t) => { if (!catIds.has(t.cat)) t.cat = s.cats[0].id; });
   const types = new Map(s.types.map((t) => [t.id, t]));
+  if (Array.isArray(raw.people)) {   // Personer: who does a case (case.p)
+    const seen = new Set();
+    s.people = raw.people.filter((x) => isObj(x) && okId(x.id) && cleanText(x.name, 30) && !seen.has(x.id) && seen.add(x.id)).slice(0, LIM.people).map((x) => ({ id: x.id, name: cleanText(x.name, 30) }));
+  }
+  const people = new Set(s.people.map((x) => x.id));
   if (Array.isArray(raw.cases)) {
     const seen = new Set();
-    s.cases = raw.cases.map((c) => cleanCase(c, types)).filter((c) => c && !seen.has(c.id) && seen.add(c.id));
+    s.cases = raw.cases.map((c) => cleanCase(c, types, people)).filter((c) => c && !seen.has(c.id) && seen.add(c.id));
     if (s.cases.length > LIM.cases) {   // over the limit: all open cases stay, the most recently closed fill the rest
       const keep = new Set(s.cases.filter((c) => !c.x).slice(0, LIM.open).map((c) => c.id));
       s.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : -1)).slice(0, LIM.cases - keep.size).forEach((c) => keep.add(c.id));
@@ -152,7 +158,7 @@ export function validate(raw) {
   }
   if (Array.isArray(raw.trash)) {   // Papperskorg: removed cases with d = removed date; ids never clash with cases
     const seen = new Set(s.cases.map((c) => c.id));
-    s.trash = raw.trash.filter((c) => isObj(c) && validDate(c.d)).map((c) => { const x = cleanCase(c, types); if (x) x.d = c.d; return x; })
+    s.trash = raw.trash.filter((c) => isObj(c) && validDate(c.d)).map((c) => { const x = cleanCase(c, types, people); if (x) x.d = c.d; return x; })
       .filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(-LIM.trash);
   }
   if (TRASH_DAYS.includes(raw.trashDays)) s.trashDays = raw.trashDays;
@@ -257,6 +263,7 @@ export function trashArchivedBefore(state, date, today) {
 }
 
 /* ---------- Cases ---------- */
+export const personOf = (state, c) => (c.p ? state.people.find((x) => x.id === c.p) : undefined);
 export const typeOf = (state, c) => state.types.find((t) => t.id === c.t);
 export const catOf = (state, t) => state.cats.find((c) => c.id === t?.cat) || { id: '', name: 'Övrigt', color: 'gray' };
 // New case from a type: the type's suggested steps become sub-goals.
@@ -339,6 +346,7 @@ export function nextCase(state, c, today) {
   const n = c.r === 'y' ? 12 : 1, mv = (v) => { const d = addMonths(v.slice(0, 10), n); return validDate(d) ? d + v.slice(10) : v; };
   const t = typeOf(state, c), dated = new Set((t?.fields || []).filter((f) => f.kind === 'date' || f.kind === 'dt').map((f) => f.id));
   const nc = { id: uid(), t: c.t, title: c.title, c: today, u: today, r: c.r };
+  if (c.p) nc.p = c.p;   // the repeat keeps who does it
   if (c.f) nc.f = Object.fromEntries(Object.entries(c.f).filter(([k]) => t?.fields.some((f) => f.id === k && f.kind !== 'check')).map(([k, v]) => [k, dated.has(k) ? mv(v) : v]));
   if (nc.f && !Object.keys(nc.f).length) delete nc.f;
   if (c.o) nc.o = c.o.map(([nm, k, v, fr]) => [nm, k, v == null || k === 'check' ? null : (k === 'date' || k === 'dt') ? mv(v) : v, fr]);
@@ -449,19 +457,21 @@ export function importText(text) {
 export const EXPORT_README = 'Backup från Stress kontroll. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
   version: 'tal, 2',
+  people: `lista { id, name ≤ 30 }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna trådar, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan tråden raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
   version: 2,
+  people: [{ id: 'p1', name: 'Anna' }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],
   types: [{ id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1, fields: [{ id: 's1', name: 'Symptom', kind: 'text' }, { id: 's3', name: 'Kontaktat vården', kind: 'check' }] }],
-  cases: [{ id: 'c1', t: 'sym', title: 'Ont i knät', c: '2026-11-10', u: '2026-11-12', f: { s1: 'Värk vid trappor', s3: 1 }, s: [['Ring vårdcentralen', 1], ['Gå på besöket', 0]], l: [['2026-11-12', 'Fick tid 18/11']] }],
+  cases: [{ id: 'c1', t: 'sym', title: 'Ont i knät', p: 'p1', c: '2026-11-10', u: '2026-11-12', f: { s1: 'Värk vid trappor', s3: 1 }, s: [['Ring vårdcentralen', 1], ['Gå på besöket', 0]], l: [['2026-11-12', 'Fick tid 18/11']] }],
   backup: { remind: 'month' },
 };
 export function exportText(state, today) {

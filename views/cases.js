@@ -1,16 +1,16 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, typeOf, catOf, progress, daysBetween, KINDS, REPEAT } from '../store.js';
+import { openCases, typeOf, catOf, personOf, progress, daysBetween, KINDS, REPEAT } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
 const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' : d === 1 ? 'igår' : `${d} dagar`; };
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
 export function caseRow(c) {
-  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id;
+  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id, who = personOf(S.state, c);
   return el('li', { class: `case-li c-${cat.color}` + (open ? ' open' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'copen', 'data-id': c.id },
     el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
-      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` })),
+      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` + (who ? ` · 👤 ${who.name}` : '') })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
     ),
     el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
@@ -39,6 +39,27 @@ export function catFilter(all, key, act) {
     S.state.cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color)));
   return [chips, S[key] === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S[key])];
 }
+// Person chips (only when there are people): Alla, each person with cases, Ingen. key/act as catFilter. Returns [chips, filtered list].
+export function personFilter(all, key, act) {
+  const people = S.state.people || [];
+  if (!people.length) { S[key] = 'all'; return [null, all]; }
+  const counts = new Map();
+  for (const c of all) { const k = personOf(S.state, c)?.id || '-'; counts.set(k, (counts.get(k) || 0) + 1); }
+  if (S[key] !== 'all' && !counts.get(S[key])) S[key] = 'all';
+  const chip = (id, label) => el('button', { class: 'chip' + (S[key] === id ? ' on' : ''), 'data-act': act, 'data-id': id, 'aria-pressed': String(S[key] === id), text: label });
+  const chips = el('div', { class: 'chips person-chips', role: 'group', 'aria-label': 'Vem' }, chip('all', `👤 Alla`),
+    people.filter((x) => counts.get(x.id)).map((x) => chip(x.id, `${x.name} ${counts.get(x.id)}`)),
+    counts.get('-') ? chip('-', `Ingen ${counts.get('-')}`) : null);
+  return [chips, S[key] === 'all' ? all : all.filter((c) => (personOf(S.state, c)?.id || '-') === S[key])];
+}
+// "Vem" select (Ny tråd, Redigera); nothing when no people are added.
+export function personSelect(cur, act) {
+  const people = S.state.people || [];
+  if (!people.length) return null;
+  return el('label', { class: 'goal-row' }, el('span', { text: 'Vem utför' }),
+    el('select', { 'data-act': act, 'aria-label': 'Vem utför' }, el('option', { value: '', selected: !cur, text: 'Ingen vald' }),
+      people.map((x) => el('option', { value: x.id, selected: x.id === cur, text: x.name }))));
+}
 
 // Ny tråd in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).
 function picker() {
@@ -54,6 +75,7 @@ function picker() {
       el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t.icon }), el('span', { text: t.name }))))),
     dt ? el('div', { class: `draft c-${catOf(S.state, dt).color}` },
       el('h2', { class: 'sub-h', text: `${dt.icon} ${dt.name}` }),
+      personSelect(d.p, 'dperson'),
       dt.fields.map((fd) => fieldInput(d, fd, 'dv')),
       el('p', { class: 'import-error small', id: 'd-error', role: 'alert' }),
       dt.steps?.length ? [el('h2', { class: 'sub-h', text: 'Delmål' }),
@@ -83,13 +105,14 @@ export function caseView() {
   if (!c) return null;
   if (S.edit) return caseEditor();
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
-  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined), extra = (c.o || []).filter((x) => x[2] != null);
+  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined), extra = (c.o || []).filter((x) => x[2] != null), who = personOf(S.state, c);
   return el('section', { class: `card case c-${cat.color}` },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
       el('span', { class: 'cat-chip', text: `${t?.icon || '📌'} ${t?.name ?? 'Okänd typ'} · ${cat.name}` })),
     el('h1', { class: 'case-h case-h-view', text: c.title }),
     el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)} · ändrad ${longDate(c.u)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') + (c.r ? ` · upprepas ${REPEAT[c.r].toLowerCase()}` : '') }),
+    who ? el('p', { class: 'case-who', text: `👤 ${who.name} utför` }) : null,
     fields.length || extra.length ? el('dl', { class: 'view-fields' },
       fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })]),
       extra.map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
@@ -119,6 +142,7 @@ export function caseEditor() {
         S.state.types.filter((x) => x.on || x.id === c.t).map((x) => el('option', { value: x.id, selected: x.id === c.t, text: `${x.icon} ${x.name} · ${catOf(S.state, x).name}` })))),
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
     el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') }),
+    personSelect(c.p, 'cperson'),
     (t?.fields || []).map((fd) => fieldInput(c, fd)),
     el('details', { class: 'old-fields' + (c.o?.length ? '' : ' empty'), 'data-sec': 'extra', open: !!c.o?.length || setOpen.has('extra') },   // folded until used
       el('summary', { class: 'sub-h', text: c.o?.length ? `Extra fält (${c.o.length})` : '+ Extra fält' }),
@@ -170,11 +194,12 @@ export function viewCases() {
   if (S.pick) return picker();
   if (S.tedit) return typeEditor();
   if (S.open) return caseView();
-  const all = openCases(S.state), [chips, list] = catFilter(all, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
+  const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter'), [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
   return [
+    pchips,
     chips,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
-      : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar i den här kategorin.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
+      : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar med det här filtret.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
     el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Ny tråd' }),
   ];
 }

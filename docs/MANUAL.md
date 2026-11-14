@@ -43,6 +43,11 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Tar du bort ett fält (eller byter dess sort) flyttas ifyllda värden till Extra fält i trådarna av typen – inget försvinner.
 - Kategorier: byt namn och färg, eller lägg till nya.
 
+## Personer
+- Inställningar → Trådar → Personer: lägg till de som kan utföra en tråd, t.ex. du själv, en partner eller en hantverkare. Byt namn direkt i listan; ✕ tar bort personen (med Ångra) och den tas då bort från alla trådar.
+- Välj Vem utför när du skapar en tråd (under typens rubrik) eller i redigeringen. Personen syns i listan (👤) och överst i tråden. En återkommande tråd behåller personen.
+- När det finns personer visas en rad med person-knappar överst i Trådar och Arkiv: Alla, varje person och Ingen (trådar utan person). Den går att kombinera med kategorifiltret.
+
 ## Bakåt
 - Bakåt stänger det som är öppet (redigeringen, en tråd, typväljaren, en typ, delmålslistan eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
 - Svep åt vänster eller höger i Trådar för att byta filter (Alla, Hälsa, Hem …). Inte när en tråd eller ett formulär är öppet.

@@ -9,6 +9,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 |---|---|---|
 | `version` | tal | `2`. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. |
 | `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
+| `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30 }`. |
 | `cats` | lista, 1–12 | Kategorier. |
 | `types` | lista, 1–30 | Ärendetyper. |
 | `cases` | lista, ≤ 10 000 (varav ≤ 500 öppna) | Ärenden. Över taket behålls alla öppna och de senast stängda. |
@@ -35,6 +36,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `title ≤ 80` | Rubrik, krävs. |
 | `c`, `u` | Skapad och senast ändrad (datum, `u ≥ c`). |
 | `x?` | Stängd (arkiverad) datum. |
+| `p?` | Person-id: vem som utför ärendet. Okänd person → tas bort. Tas en person bort rensas `p` i alla ärenden. Följer med till nästa upprepning. |
 | `r?` | Upprepa: `m` = varje månad, `y` = varje år. När ärendet arkiveras skapas ett nytt öppet ärende med samma typ, rubrik och fält; alla datum (fält, extra fält, delmål) flyttas en månad eller ett år (31 jan → 28/29 feb). Bockar och delmål nollställs, loggen följer inte med. |
 | `f?` | `{ fält-id: värde }` efter typens fält. Värden för fält som inte finns i typen tas bort vid validering. |
 | `o?` | Extra fält bara i ärendet, ≤ 20 × `[namn ≤ 40, kind, värde \| null, från-typ ≤ 30 eller ""]`. Tillagda för hand, kvar från en tidigare typ, eller flyttade hit när ett fält togs bort ur typen. |
@@ -52,10 +54,11 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 ## Exempel
 ```json
 { "version": 2, "alertDays": 7,
+  "people": [{ "id": "p1", "name": "Anna" }],
   "cats": [{ "id": "e", "name": "Ekonomi", "color": "green" }],
   "types": [{ "id": "eco", "name": "Ekonomi", "icon": "💸", "cat": "e", "on": 1,
               "fields": [{ "id": "wh", "name": "Vad", "kind": "text" }, { "id": "du", "name": "Förfaller", "kind": "date", "due": 1 }] }],
-  "cases": [{ "id": "c1", "t": "eco", "title": "Bilskatt", "c": "2026-11-01", "u": "2026-11-01", "r": "y",
+  "cases": [{ "id": "c1", "t": "eco", "title": "Bilskatt", "p": "p1", "c": "2026-11-01", "u": "2026-11-01", "r": "y",
               "f": { "wh": "Skatt", "du": "2026-11-30" }, "s": [["Betala", 0, "2026-11-28"]], "l": [["2026-11-01", "Fick avin"]] }],
   "backup": { "remind": "month" } }
 ```

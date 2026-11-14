@@ -14,6 +14,8 @@ export const S = {
   teditOrig: '',       // JSON copy of the draft when the editor opened (unsaved changes → "Släng ändringarna?")
   filter: 'all',       // Ärenden: category filter
   afilter: 'all',      // Arkiv: category filter
+  pfilter: 'all',      // Trådar: person filter ('-' = no one)
+  apfilter: 'all',     // Arkiv: person filter
   alimit: 100,         // Arkiv: rows shown (Visa fler adds 100)
   tfilter: 'all',      // Papperskorg: category filter
   trash: false,        // Inställningar: Papperskorg open (a layer)
