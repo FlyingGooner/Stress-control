@@ -24,7 +24,7 @@ export function caseSummary(c, t, cat, actions) {
   return el('div', { class: `case-sum c-${cat.color}` },
     fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : c.o?.some((x) => x[2] != null) ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
     c.o?.some((x) => x[2] != null) ? el('dl', { class: 'sum-old' }, c.o.filter((x) => x[2] != null).map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
-    c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (dd ? ` · ${shortDate(dd)}` : '') }))) : null,
+    c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd, dn]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
     actions || el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
 }
@@ -106,7 +106,8 @@ export function caseEditor() {
     el('h2', { class: 'sub-h', text: all ? `Delmål ${done}/${all}` : 'Delmål' }),
     el('ul', { class: 'steps' }, (c.s || []).map(([x, d, dd], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
       el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }), el('span', { text: x })),
-      el('input', { type: 'date', class: 'step-date' + (dd ? '' : ' empty'), value: dd || '', 'data-act': 'sdate', 'data-i': i, 'aria-label': `Datum för ${x}` }),
+      d ? el('input', { type: 'date', class: 'step-date done-date', value: c.s[i][3] || '', max: today(), 'data-act': 'sdate', 'data-i': i, 'aria-label': `Klart datum för ${x}` })
+        : el('input', { type: 'date', class: 'step-date' + (dd ? '' : ' empty'), value: dd || '', 'data-act': 'sdate', 'data-i': i, 'aria-label': `Datum för ${x}` }),
       el('button', { class: 'icon sm', 'data-act': 'sdel', 'data-i': i, 'aria-label': `Ta bort ${x}`, text: '✕' })))),
     el('div', { class: 'pick-row' },
       el('input', { type: 'text', id: 's-new', maxlength: 80, placeholder: 'Nytt delmål', 'aria-label': 'Nytt delmål', autocomplete: 'off' }),

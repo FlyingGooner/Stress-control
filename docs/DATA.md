@@ -38,7 +38,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `r?` | Upprepa: `m` = varje månad, `y` = varje år. När ärendet arkiveras skapas ett nytt öppet ärende med samma typ, rubrik och fält; alla datum (fält, extra fält, delmål) flyttas en månad eller ett år (31 jan → 28/29 feb). Bockar och delmål nollställs, loggen följer inte med. |
 | `f?` | `{ fält-id: värde }` efter typens fält. Värden för fält som inte finns i typen tas bort vid validering. |
 | `o?` | Extra fält bara i ärendet, ≤ 20 × `[namn ≤ 40, kind, värde \| null, från-typ ≤ 30 eller ""]`. Tillagda för hand, kvar från en tidigare typ, eller flyttade hit när ett fält togs bort ur typen. |
-| `s?` | Delmål, ≤ 50 × `[text ≤ 80, 0 \| 1, datum?]`. Ett ej avbockat delmål med datum är en deadline i Aktuellt. |
+| `s?` | Delmål, ≤ 50 × `[text ≤ 80, 0 \| 1, deadline?, klart?]`. `deadline` är ett datum eller `0` (ingen) och syns i Aktuellt tills delmålet bockats av. `klart` = datum när det bockades av (bara när `1`). |
 | `l?` | Logg, `[datum, text ≤ 500]`. Nya anteckningar bara upp till 50 per ärende; äldre data med fler (upp till 200) behålls. |
 
 ## Lagring

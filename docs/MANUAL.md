@@ -12,7 +12,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Extra fält: tryck på "+ Extra fält" under fälten för att lägga till fält som bara gäller det ärendet (t.ex. Pris), utan att ändra typen. Vill du ha dem permanent: tryck "+ Spara som ny ärendetyp" – en ny typ öppnas med typens fält plus de extra, och när du sparar flyttar ärendet över till den.
 - Fel typ? Byt den i listan överst i ärendet. Alla typer som är påslagna i Inställningar finns med. Värden följer med till fält med samma namn. Fält som inte passar kan du behålla som extra fält eller ta bort. Extra fält flyttas in i fälten om du byter till en typ som har dem.
 - Allt sparas direkt när du lämnar ett fält.
-- Delmål bockar du av. Ett delmål kan få ett datum (när du lägger till det eller i efterhand); ej avbockade delmål med datum syns i Aktuellt och Kommande i Överblick, i rött om datumet passerat. Många typer lägger in förslag på delmål, t.ex. Ring vårdcentralen.
+- Delmål bockar du av – dagens datum sparas då som klart-datum och syns bredvid delmålet; tryck på datumet för att ändra det. Ett delmål kan få ett datum (när du lägger till det eller i efterhand); ej avbockade delmål med datum syns i Aktuellt och Kommande i Överblick, i rött om datumet passerat. Många typer lägger in förslag på delmål, t.ex. Ring vårdcentralen.
 - Logg: skriv en kort anteckning, t.ex. Ringde, fick tid 18/11. Datumet är idag, men du kan välja ett tidigare datum om du skriver in något i efterhand – anteckningen hamnar då på rätt plats i loggen. Upp till 50 anteckningar per ärende.
 - Färgen visar kategorin: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb, lila Relationer, grå Övrigt. Filtrera med knapparna överst.
 

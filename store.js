@@ -115,7 +115,7 @@ function cleanCase(c, types) {
   const o = (Array.isArray(c.o) ? c.o : []).filter((x) => Array.isArray(x) && Object.hasOwn(KINDS, x[1]) && cleanText(x[0], 40)).slice(0, LIM.fields)
     .map((x) => [cleanText(x[0], 40), x[1], cleanValue(x[1], x[2]) ?? null, cleanText(x[3], 30)]);
   if (o.length) out.o = o;
-  const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => (validDate(x[2]) ? [cleanText(x[0], 80), x[1] ? 1 : 0, x[2]] : [cleanText(x[0], 80), x[1] ? 1 : 0]));
+  const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => cleanStep(x[0], x[1], x[2], x[3]));
   if (s.length) out.s = s;
   const l = (Array.isArray(c.l) ? c.l : []).filter((x) => Array.isArray(x) && validDate(x[0]) && cleanText(x[1], 500, true)).slice(-LIM.logKeep).map((x) => [x[0], cleanText(x[1], 500, true)]);
   if (l.length) out.l = l;
@@ -373,6 +373,17 @@ export function purgeTrash(state, today) {
   if (state.trashDays) state.trash = state.trash.filter((c) => purgeDate(state, c) > today);
   return n - state.trash.length;
 }
+// A sub-goal: [text, done 0|1, deadline date or 0, done date] – trailing empty parts left out.
+export function cleanStep(text, done, due, doneOn) {
+  const r = [cleanText(text, 80), done ? 1 : 0];
+  if (done && validDate(doneOn)) r.push(validDate(due) ? due : 0, doneOn); else if (validDate(due)) r.push(due);
+  return r;
+}
+// Ticks a sub-goal on or off; ticked gets today as its done date (can be changed afterwards).
+export function setStepDone(c, i, done, today) {
+  const x = c.s?.[i]; if (!x) return false;
+  c.s[i] = cleanStep(x[0], done, x[2], done ? today : null); c.u = today; return true;
+}
 export const progress = (c) => [(c.s || []).filter((x) => x[1]).length, (c.s || []).length];
 export const openCases = (state) => state.cases.filter((c) => !c.x).sort((a, b) => (a.u < b.u ? 1 : a.u > b.u ? -1 : 0));
 export const closedCases = (state) => state.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : a.x > b.x ? -1 : 0));
@@ -428,7 +439,7 @@ export const EXPORT_SCHEMA = {
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, datum?]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum? (bara när avbockat)]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna ärenden, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan ärendet raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',

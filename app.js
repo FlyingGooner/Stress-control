@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -441,13 +441,14 @@ app.addEventListener('change', (ev) => {
     }
     case 'sdate': {
       const c = S.state.cases.find((x) => x.id === S.open), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
-      if (validDate(t.value)) row[2] = t.value; else row.length = 2;
+      const i = Number(t.dataset.i);
+      c.s[i] = row[1] ? cleanStep(row[0], 1, row[2], validDate(t.value) ? t.value : today()) : cleanStep(row[0], 0, t.value);   // done: the done date; else the deadline
       c.u = today(); persist(); render(); return;
     }
     case 'stog': {
       const c = S.state.cases.find((x) => x.id === (t.dataset.case || S.open)), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
-      if (t.dataset.case && t.checked) { const before = JSON.stringify(S.state); row[1] = 1; c.u = today(); persist(); render(); snackbar(`${row[0]} klart`, 'Ångra', () => { S.state = JSON.parse(before); persist(); render(); }); return; }
-      row[1] = t.checked ? 1 : 0; c.u = today(); persist(); render(); return;
+      if (t.dataset.case && t.checked) { const before = JSON.stringify(S.state); setStepDone(c, Number(t.dataset.i), 1, today()); persist(); render(); snackbar(`${row[0]} klart`, 'Ångra', () => { S.state = JSON.parse(before); persist(); render(); }); return; }
+      setStepDone(c, Number(t.dataset.i), t.checked, today()); persist(); render(); return;
     }
     case 'ton': { const ty = S.state.types.find((x) => x.id === t.dataset.id); if (ty) { ty.on = t.checked ? 1 : 0; persist(); } return; }
     case 'tset': if (S.tedit && t.dataset.id === 'cat') S.tedit.cat = t.value; return;
