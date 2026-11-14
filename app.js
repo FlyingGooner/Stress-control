@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, changeType, cleanType, LIM, COLORS, KINDS } from './store.js';
 import { today, S, setOpen, longDate, shortDate } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases } from './views/cases.js';
@@ -294,6 +294,11 @@ app.addEventListener('change', (ev) => {
       const d = S.draft; if (!d) return;
       const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
       errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
+      return;
+    }
+    case 'ctype': {   // change type afterwards: values follow by field name, the rest goes to the log
+      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
+      if (changeType(S.state, c, t.value, today())) { persist(); render(); }
       return;
     }
     case 'fv': {   // a case field: saved directly; invalid input gives a message and is not saved

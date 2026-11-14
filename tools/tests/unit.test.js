@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -71,4 +71,13 @@ T.test('trasig sparad data: kopia bevaras och load() säger till', async () => {
   T.ok(st.loadFailed(), 'loadFailed');
   T.eq(mem['sk.data.broken'], '{trasig');
   T.ok(st.storageUsed() > 0, 'storleken räknas');
+});
+T.test('byta typ: värden följer med fältnamn, resten hamnar i loggen', () => {
+  const s = base(), c = s.cases[0];
+  s.types.push({ id: 'x', name: 'X', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'q', name: 'Symptom', kind: 'text' }] });
+  T.ok(changeType(s, c, 'x', '2026-11-14'));
+  T.eq(c.t, 'x'); T.eq(c.f, { q: 'Knä' });
+  T.eq(c.l.at(-1), ['2026-11-14', 'Från Symptom: Kontaktat vården: ja']);
+  T.ok(!changeType(s, c, 'finns-inte', '2026-11-14'));
+  T.eq(validate(JSON.parse(JSON.stringify(s))).cases[0].f, { q: 'Knä' });
 });

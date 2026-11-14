@@ -194,6 +194,23 @@ export function setField(state, c, fieldId, input, today) {
   c.u = today;
   return true;
 }
+// Changes a case's type. Values move to a field with the same name and kind (else same id and kind);
+// values that fit nowhere are kept as a log line, so nothing is lost. Returns false for an unknown type.
+export function changeType(state, c, typeId, today) {
+  const from = typeOf(state, c), to = state.types.find((x) => x.id === typeId);
+  if (!to || to.id === c.t) return false;
+  const f = {}, lost = [];
+  for (const [k, v] of Object.entries(c.f || {})) {
+    const fd = from?.fields.find((x) => x.id === k);
+    const dst = (fd && to.fields.find((x) => x.name === fd.name && x.kind === fd.kind)) || to.fields.find((x) => x.id === k && x.kind === fd?.kind);
+    if (dst && !(dst.id in f)) f[dst.id] = v; else lost.push(`${fd?.name ?? k}: ${v === 1 && fd?.kind === 'check' ? 'ja' : v}`);
+  }
+  c.t = to.id;
+  if (Object.keys(f).length) c.f = f; else delete c.f;
+  if (lost.length) { (c.l ||= []).push([today, cleanText(`Från ${from?.name ?? 'okänd typ'}: ` + lost.join('; '), 500, true)]); if (c.l.length > LIM.log) c.l.shift(); }
+  c.u = today;
+  return true;
+}
 export const progress = (c) => [(c.s || []).filter((x) => x[1]).length, (c.s || []).length];
 export const openCases = (state) => state.cases.filter((c) => !c.x).sort((a, b) => (a.u < b.u ? 1 : a.u > b.u ? -1 : 0));
 export const closedCases = (state) => state.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : a.x > b.x ? -1 : 0));
