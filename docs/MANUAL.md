@@ -1,0 +1,43 @@
+# Stress kontroll – så använder du appen
+
+Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen med `tools/build-help.ps1`. Ändra bara här.
+
+## Kom igång
+- Det som snurrar i huvudet tar energi. Skriv ner det som ett ärende med nästa steg – då kan du släppa tanken, appen håller reda på den.
+- Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Resten kan du fylla i senare.
+
+## Ärenden
+- Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.
+- Allt sparas direkt när du lämnar ett fält.
+- Delmål bockar du av. Många typer lägger in förslag på delmål, t.ex. Ring vårdcentralen.
+- Logg: skriv en kort anteckning med dagens datum, t.ex. Ringde, fick tid 18/11.
+- Färgen visar kategorin: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb, lila Relationer, grå Övrigt. Filtrera med knapparna överst.
+
+## Stänga och arkivera
+- När ärendet är klart: tryck Klart – stäng ärendet. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.
+- I Arkiv kan du söka och öppna ett ärende igen.
+- Ta bort raderar ärendet helt (Ångra finns några sekunder).
+
+## Överblick
+- Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.
+- Äldsta öppna ärendet visas – kan något göras idag, eller kan det stängas?
+
+## Ärendetyper och kategorier
+- Inställningar → Ärenden → Ärendetyper: bocka i fler typer, t.ex. Bostadsköp, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.
+- + Egen ärendetyp: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal och bock – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
+- Förslag på delmål (ett per rad) läggs in i varje nytt ärende av typen.
+- Kategorier: byt namn och färg, eller lägg till nya.
+
+## Bakåt
+- Bakåt stänger det som är öppet (ett ärende, typväljaren, en ärendetyp eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
+
+## Backup och flytt
+- Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.
+- För att läsa tillbaka: tryck Läs in backup-fil, kontrollera sammanfattningen och tryck Ersätt. All nuvarande data ersätts – Ångra finns direkt efteråt.
+- Appen påminner om backup varje månad (ändra under Data).
+
+## Installera och offline
+- Android (Chrome): menyn ⋮ → Installera app. iPhone (Safari): Dela → Lägg till på hemskärmen. Appen fungerar sedan utan nät.
+
+## Integritet
+- Appen gör inga anrop – ingen server, ingen analys, inget konto. Allt du skriver finns bara i den här telefonen.

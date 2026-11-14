@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; require-trusted-types-for 'script'; img-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#fef7ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141218" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../icons/icon-192.png">
+<title>Stress kontroll</title>
+<link rel="stylesheet" href="presentation.css">
+</head>
+<body>
+
+<main class="deck" id="deck">
+
+  <section class="title">
+    <div class="glow"></div><div class="glow g2"></div>
+    <div class="hero">
+      <span class="eyebrow">Ärenden för livet</span>
+      <h1>Stress kontroll</h1>
+      <p class="lead">Skriv ner det – och släpp det.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Filosofi</span>
+    <h2>Tre principer bakom appen</h2>
+    <div class="cols">
+      <div class="card"><div class="ic" aria-hidden="true">🎯</div><h3>Ett tydligt fokus</h3><p>Appen svarar på en enda fråga. Allt annat väljs aktivt bort.</p></div>
+      <div class="card"><div class="ic" aria-hidden="true">🔒</div><h3>Integritet först</h3><p>Ingen inloggning, ingen spårning. Data stannar på telefonen, och webbläsaren stänger ute allt som inte är appens eget.</p></div>
+      <div class="card"><div class="ic" aria-hidden="true">⚡</div><h3>Ren webb</h3><p>HTML, CSS och vanlig JavaScript. Inga byggsteg – hela appen kan levereras som en enda fil.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Problemet</span>
+    <h2>Varför den här appen?</h2>
+    <p class="lead">Saker som snurrar i huvudet tar energi. När ett symptom, en jobbansökan eller ett husköp finns nedskrivet med nästa steg kan du släppa tanken – appen håller reda på den åt dig.</p>
+  </section>
+  <section>
+    <span class="eyebrow">Kvalitetsstämpel</span>
+    <h2>Säkerhetstestad</h2>
+    <p>Automatiska tester körs före varje commit och push. Underkänt test = ingen release.</p>
+    <h3 class="checks-h">Säkerhetskontroll</h3>
+    <ul class="checks">
+      <li><b>Bara appens egen kod körs</b><span>webbläsaren blockerar allt annat, även om någon försöker smyga in något.</span></li>
+      <li><b>Inget lämnar telefonen</b><span>appen pratar aldrig med någon server.</span></li>
+      <li><b>Din data stannar hos dig</b><span>sparas bara i telefonen; appen rör bara sina egna uppgifter.</span></li>
+      <li><b>Fungerar utan nät</b><span>med bara appens egna filer – inget hämtas utifrån i smyg.</span></li>
+      <li><b>Låst backup</b><span>bara ditt lösenord öppnar filen – samma typ av kryptering som banker använder. Lösenordet sparas aldrig.</span></li>
+    </ul>
+    <h3 class="checks-h">Funktionstester</h3>
+    <ul class="checks">
+      <li><b>Trasiga filer stoppas</b><span>en backup från fel app, eller som någon ändrat i, läses inte in.</span></li>
+      <li><b>Inget innehåll kan bli kod</b><span>allt visas som vanlig text, även konstiga namn.</span></li>
+      <li><b>Export och radering</b><span>backup tur och retur ger samma data; radera tar bara appens egna data.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="eyebrow">Design</span>
+    <h2>Material Design 3, byggd för mobilen</h2>
+    <div class="card">
+      <h3>Färg via roller</h3>
+      <p>Nyckelfärgen styr allt. Ljust och mörkt tema följer telefonen. Nästan kantigt och tätt.</p>
+      <div class="palette"><div class="sw p">primary</div><div class="sw c">container</div><div class="sw s">surface</div><div class="sw d">dark</div></div>
+      <div class="shapes"><div class="shape r8">Kort · 8 px</div><div class="shape r4">Chip · 4 px</div><div class="shape r6">Knapp · 6 px</div><div class="shape r12">Dialog · 12 px</div></div>
+      <p class="note">Bottenmeny för tummen · tryckytor ≥ 48 px · systemtypsnitt</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Arbetssätt</span>
+    <h2>Samma struktur, varje gång</h2>
+<pre><em>index.html</em>  styles.css  app.js
+store.js  version.js  <em>sw.js</em>
+<em>docs/</em>   SPEC · MANUAL · presentation
+<em>tools/</em>  tester · bygge
+<em>dist/</em>   testfil med allt inbakat</pre>
+    <ol class="steps">
+      <li>SPEC först – idé, mål, icke-mål</li>
+      <li>Säkerhet: förhandsprövning före bygget, efterkontroll före push</li>
+      <li>Release kör kontroll och alla tester – underkänt stoppar</li>
+      <li>Det som blir bättre här förs in i alla appar</li>
+    </ol>
+  </section>
+
+  <section>
+    <span class="eyebrow">Kom igång</span>
+    <h2>Installera på 30 sekunder</h2>
+    <ol class="steps">
+      <li><span>Öppna adressen i Chrome på mobilen:<br><span class="url">flyinggooner.github.io/stress-control</span></span></li>
+      <li><span>Tryck på ⋮ och välj <b>Installera app</b>. På iPhone: Dela → <b>Lägg till på hemskärmen</b>.</span></li>
+      <li><span>Öppna appen från hemskärmen. Den startar i eget fönster.</span></li>
+    </ol>
+  </section>
+
+  <section class="title">
+    <div class="glow"></div><div class="glow g2"></div>
+    <div class="hero">
+      <span class="eyebrow">Sammanfattning</span>
+      <h1>Enkelt för användaren.<br>Genomtänkt bakom kulisserna.</h1>
+      <p class="lead">Skriv ner det – och släpp det.</p>
+    </div>
+  </section>
+
+</main>
+<nav class="nav" aria-label="Bläddra">
+  <button type="button" class="prev" id="prev">‹ Föregående</button>
+  <span class="count" id="count" aria-live="polite"></span>
+  <button type="button" class="next" id="next">Nästa ›</button>
+</nav>
+
+<script src="presentation.js"></script>
+</body>
+</html>

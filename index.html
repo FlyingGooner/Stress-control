@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#fef7ff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141218" media="(prefers-color-scheme: dark)">
+  <title>Stress kontroll</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="status" role="status" aria-live="polite"></div>
+  <header class="topbar">
+    <span class="brand">Stress kontroll</span>
+    <span id="version" class="version" aria-label="Appversion"></span>
+  </header>
+  <main id="app"></main>
+  <nav class="tabbar" aria-label="Vyer">
+    <a class="tab" href="#cases" data-view="cases"><span aria-hidden="true">📋</span>Ärenden</a>
+    <a class="tab" href="#overview" data-view="overview"><span aria-hidden="true">📊</span>Överblick</a>
+    <a class="tab" href="#archive" data-view="archive"><span aria-hidden="true">🗄️</span>Arkiv</a>
+    <a class="tab" href="#settings" data-view="settings"><span aria-hidden="true">⚙️</span>Inst.</a>
+  </nav>
+  <!-- In-app manual (Inställningar → Hjälp), cloned by helpCard() in views/settings.js. Built from docs/MANUAL.md by tools/build-help.ps1 – edit only MANUAL.md. -->
+  <template id="help-tpl">
+    <section class="card help">
+      <h2>Hjälp</h2>
+      <details><summary>Kom igång</summary>
+        <p>Det som snurrar i huvudet tar energi. Skriv ner det som ett ärende med nästa steg – då kan du släppa tanken, appen håller reda på den.</p>
+        <p>Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Resten kan du fylla i senare.</p>
+      </details>
+      <details><summary>Ärenden</summary>
+        <p>Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.</p>
+        <p>Allt sparas direkt när du lämnar ett fält.</p>
+        <p>Delmål bockar du av. Många typer lägger in förslag på delmål, t.ex. Ring vårdcentralen.</p>
+        <p>Logg: skriv en kort anteckning med dagens datum, t.ex. Ringde, fick tid 18/11.</p>
+        <p>Färgen visar kategorin: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb, lila Relationer, grå Övrigt. Filtrera med knapparna överst.</p>
+      </details>
+      <details><summary>Stänga och arkivera</summary>
+        <p>När ärendet är klart: tryck Klart – stäng ärendet. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.</p>
+        <p>I Arkiv kan du söka och öppna ett ärende igen.</p>
+        <p>Ta bort raderar ärendet helt (Ångra finns några sekunder).</p>
+      </details>
+      <details><summary>Överblick</summary>
+        <p>Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.</p>
+        <p>Äldsta öppna ärendet visas – kan något göras idag, eller kan det stängas?</p>
+      </details>
+      <details><summary>Ärendetyper och kategorier</summary>
+        <p>Inställningar → Ärenden → Ärendetyper: bocka i fler typer, t.ex. Bostadsköp, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.</p>
+        <p>+ Egen ärendetyp: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal och bock – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.</p>
+        <p>Förslag på delmål (ett per rad) läggs in i varje nytt ärende av typen.</p>
+        <p>Kategorier: byt namn och färg, eller lägg till nya.</p>
+      </details>
+      <details><summary>Bakåt</summary>
+        <p>Bakåt stänger det som är öppet (ett ärende, typväljaren, en ärendetyp eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.</p>
+      </details>
+      <details><summary>Backup och flytt</summary>
+        <p>Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.</p>
+        <p>För att läsa tillbaka: tryck Läs in backup-fil, kontrollera sammanfattningen och tryck Ersätt. All nuvarande data ersätts – Ångra finns direkt efteråt.</p>
+        <p>Appen påminner om backup varje månad (ändra under Data).</p>
+      </details>
+      <details><summary>Installera och offline</summary>
+        <p>Android (Chrome): menyn ⋮ → Installera app. iPhone (Safari): Dela → Lägg till på hemskärmen. Appen fungerar sedan utan nät.</p>
+      </details>
+      <details><summary>Integritet</summary>
+        <p>Appen gör inga anrop – ingen server, ingen analys, inget konto. Allt du skriver finns bara i den här telefonen.</p>
+      </details>
+    </section>
+  </template>
+  <dialog id="confirm-dialog" aria-labelledby="cd-title">
+    <form method="dialog">
+      <h2 id="cd-title">Radera all data?</h2>
+      <p class="muted">All data tas bort från den här enheten. Det går inte att ångra – spara en backup-fil först om du vill kunna få tillbaka den.</p>
+      <div class="dlg-actions">
+        <button type="submit" class="btn-text" value="cancel">Avbryt</button>
+        <button type="submit" class="btn-danger" value="ok" id="cd-ok">Radera</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="discard-dialog" aria-labelledby="dd-title">
+    <form method="dialog">
+      <h2 id="dd-title">Släng ändringarna?</h2>
+      <p class="muted">Det finns ändringar som inte är sparade.</p>
+      <div class="dlg-actions">
+        <button type="submit" class="btn-text" value="cancel">Fortsätt redigera</button>
+        <button type="submit" class="btn-danger" value="ok" id="dd-ok">Släng</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="pw-dialog" aria-labelledby="pw-title">
+    <form method="dialog" novalidate>
+      <h2 id="pw-title">Spara backup-fil</h2>
+      <p class="muted" id="pw-text"></p>
+      <input type="text" id="pw-user" name="username" autocomplete="username" value="Stress kontroll backup" readonly tabindex="-1" aria-hidden="true" class="sr-only">
+      <label class="field" id="pw-1-row"><span>Lösenord</span><input type="password" id="pw-1" name="password" maxlength="200" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+      <label class="field" id="pw-2-row"><span>Upprepa lösenord</span><input type="password" id="pw-2" name="confirm-password" maxlength="200" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+      <label class="check" id="pw-show-row"><input type="checkbox" id="pw-show" autocomplete="off"> Visa lösenord</label>
+      <div class="pw-preview-row"><p class="pw-preview" id="pw-preview" aria-hidden="true" hidden></p><button type="button" class="btn-text" id="pw-copy" hidden>Kopiera</button></div>
+      <button type="button" class="btn-text" id="pw-gen">Skapa slumpmässigt lösenord</button>
+      <p class="muted small" id="pw-note" role="status"></p>
+      <p class="muted small" id="pw-hint">Minst 8 tecken med stor och liten bokstav, siffra och specialtecken. Välj inte ett vanligt ord + årtal.</p>
+      <p class="muted" id="pw-warn"></p>
+      <p class="import-error small" id="pw-error" role="alert"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn-text" id="pw-cancel">Avbryt</button>
+        <button type="submit" class="btn-filled" id="pw-ok">Spara krypterad</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="import-dialog" aria-labelledby="imp-title">
+    <form method="dialog">
+      <h2 id="imp-title">Ersätta all data?</h2>
+      <p id="imp-sum"></p>
+      <p class="muted" id="imp-note">All nuvarande data i appen ersätts. Du kan ångra direkt efteråt.</p>
+      <div class="dlg-actions">
+        <button type="submit" class="btn-text" value="cancel">Avbryt</button>
+        <button type="submit" class="btn-filled" value="ok" id="imp-ok">Ersätt</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="backup-dialog" aria-labelledby="bk-title">
+    <form method="dialog">
+      <h2 id="bk-title">Dags för backup?</h2>
+      <p id="bk-sum"></p>
+      <p class="muted">All data finns bara på den här enheten. Påminnelsen ändrar du under Inställningar → Allmänt → Data.</p>
+      <div class="dlg-actions">
+        <button type="submit" class="btn-text" value="later" id="bk-later">Inte nu</button>
+        <button type="submit" class="btn-filled" value="save" id="bk-ok">Spara backup</button>
+      </div>
+    </form>
+  </dialog>
+  <div id="snackbar" role="status" aria-live="polite" hidden><span id="snack-text"></span><button type="button" id="snack-action"></button></div>
+  <script src="version.js"></script>
+  <script src="backup.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
