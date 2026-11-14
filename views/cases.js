@@ -1,5 +1,5 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, typeOf, catOf, personOf, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT } from '../store.js';
+import { openCases, typeOf, catOf, personOf, childrenOf, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
@@ -96,7 +96,10 @@ const dayName = (k) => parseKey(k).toLocaleDateString('sv-SE', { weekday: 'short
 // A days field: each day with Ansökt to tick off one by one, hours away = normal day (the person's) − hours worked.
 // mode 'view' (tick + add), 'edit' and 'draft' (also hours worked and remove). c = the case or the Ny tråd draft.
 export function daysBlock(c, fd, mode) {
-  const list = c.f?.[fd.id] || [], who = personOf(S.state, c), dh = dayHours(S.state, c), full = mode !== 'view';
+  const list = c.f?.[fd.id] || [], who = personOf(S.state, c), dh = dayHours(S.state, c), full = mode !== 'view', kids = childrenOf(S.state);
+  const kidName = (k) => S.state.people.find((x) => x.id === k)?.name;
+  const lastKid = list.at(-1)?.[3] ?? (kids.length === 1 ? kids[0].id : '');
+  const kidSel = (attrs, cur) => el('select', { class: 'day-kid', ...attrs }, el('option', { value: '', selected: !cur, text: 'Barn…' }), kids.map((x) => el('option', { value: x.id, selected: x.id === cur, text: x.name })));
   return el('div', { class: 'days' },
     el('h2', { class: 'sub-h', text: fd.name + (list.length ? ` · ${list.filter((x) => x[2]).length} av ${list.length} ansökta` : '') }),
     // The working day everything is counted from: one cell per hour, and where the number comes from.
@@ -107,14 +110,18 @@ export function daysBlock(c, fd, mode) {
     list.length ? el('ul', { class: 'day-list' }, list.map(([d, w, a], i) => el('li', { class: a ? 'done' : '' },
       el('label', { class: 'day-main' }, el('input', { type: 'checkbox', checked: !!a, 'data-act': 'dayapp', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ansökt för ${dayName(d)}` }),
         el('span', { class: 'day-txt' }, el('span', { text: dayName(d) }),
-          el('small', { text: `${hrs(absentHours(S.state, c, w))} av ${hrs(dh)} tim borta` + (w ? ` · jobbat ${hrs(w)}` : '') + (a ? ' · ansökt' : '') }),
+          el('small', { text: (kidName(list[i][3]) ? `👶 ${kidName(list[i][3])} · ` : '') + `${hrs(absentHours(S.state, c, w))} av ${hrs(dh)} tim borta` + (w ? ` · jobbat ${hrs(w)}` : '') + (a ? ' · ansökt' : '') }),
           el('progress', { class: 'day-bar', max: dh || 1, value: absentHours(S.state, c, w), 'aria-hidden': 'true' }))),
-      full ? el('input', { type: 'text', inputmode: 'decimal', class: 'day-w', value: w ? hrs(w) : '', placeholder: '0', 'data-act': 'dayw', 'data-id': fd.id, 'data-i': i, 'aria-label': `Arbetade timmar ${dayName(d)}`, autocomplete: 'off' }) : null,
-      full ? el('button', { class: 'icon sm', 'data-act': 'daydel', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ta bort ${dayName(d)}`, text: '✕' }) : null))) : null,
+      full ? el('div', { class: 'day-ctl' },
+        kids.length ? kidSel({ 'data-act': 'dayk', 'data-id': fd.id, 'data-i': i, 'aria-label': `Barn ${dayName(d)}` }, list[i][3]) : null,
+        el('input', { type: 'text', inputmode: 'decimal', class: 'day-w', value: w ? hrs(w) : '', placeholder: '0', 'data-act': 'dayw', 'data-id': fd.id, 'data-i': i, 'aria-label': `Arbetade timmar ${dayName(d)}`, autocomplete: 'off' }),
+        el('button', { class: 'icon sm', 'data-act': 'daydel', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ta bort ${dayName(d)}`, text: '✕' })) : null))) : null,
     el('div', { class: 'pick-row day-add' },
       el('label', { class: 'day-lab' }, el('span', { text: 'Dag' }), el('input', { type: 'date', id: 'dy-d-' + fd.id, class: 'step-date', value: today() })),
+      kids.length ? el('label', { class: 'day-lab' }, el('span', { text: 'Barn' }), kidSel({ id: 'dy-k-' + fd.id }, lastKid)) : null,
       el('label', { class: 'day-lab' }, el('span', { text: `Jobbade, av ${hrs(dh)} tim` }), el('input', { type: 'text', inputmode: 'decimal', id: 'dy-w-' + fd.id, class: 'day-w', placeholder: '0', autocomplete: 'off' })),
       el('button', { class: 'weigh-save add-btn', 'data-act': 'dayadd', 'data-id': fd.id, 'aria-label': 'Lägg till dag', text: '+' })),
+    kids.length ? null : el('p', { class: 'muted small', text: 'Vill du välja barn per dag: lägg till barnet under Inställningar → Personer med Relation Barn.' }),
     el('p', { class: 'import-error small', id: 'dy-e-' + fd.id, role: 'alert' }));
 }
 

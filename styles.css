@@ -447,3 +447,5 @@ progress.day-bar::-moz-progress-bar { background: var(--cc, var(--primary)); }
 .props-ed { margin-top: 14px; border-top: 1px solid var(--outline-variant); padding-top: 4px; }
 .props-ed > summary { cursor: pointer; padding: 8px 0; }
 .props-ed .field-edit > input { flex: 1 1 10em; min-width: 0; } .props-ed .field-edit > select { flex: 0 1 8em; max-width: 8em; }
+select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface); color: var(--fg); font: inherit; font-size: .85rem; } .day-add { flex-wrap: wrap; }
+.day-list li { flex-wrap: wrap; } .day-ctl { display: flex; align-items: center; gap: 8px; flex-basis: 100%; padding: 0 0 8px 34px; } .day-ctl select.day-kid { flex: 1; max-width: none; } .day-add { flex-wrap: nowrap; gap: 6px; } .day-add .step-date { width: 8.4em; } .day-add select.day-kid { max-width: 5.5em; } .day-lab input.day-w { width: 4.5em; }

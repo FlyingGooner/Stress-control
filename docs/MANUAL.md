@@ -47,6 +47,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Vad väljer du i en lista: VAB (tillfällig föräldrapenning), föräldrapenning, sjukpenning, sjukersättning, aktivitetsersättning, rehabiliteringspenning, graviditetspenning, närståendepenning med flera. Saknas det du söker: välj + Eget val… längst ner och skriv det. Det läggs då till i listan. Listan ändras också under Inställningar → Typer → Försäkringskassan.
 - Typen Försäkringskassan har fältet Dagar. Lägg till varje dag du vabbat eller varit föräldraledig: välj datum, skriv hur många timmar du hann jobba (t.ex. 2, 2,5 eller 1:30, tomt = inget) och tryck +.
 - Appen räknar ut hur många timmar du var borta: normal arbetsdag minus det du jobbade. Normal arbetsdag = personens arbetstid per vecka delat med 5 (40 tim/vecka = 8 tim/dag, 30 tim/vecka = 6 tim/dag). Ställ in tim/v per person under Inställningar → Trådar → Personer, och välj Vem utför i tråden. Utan person räknas 40 tim/vecka.
+- Barn: har du lagt till barn under Personer (Relation Barn) väljer du vilket barn dagen gäller när du lägger till den. Appen föreslår samma barn som förra dagen, eller det enda barnet. Byt barn under Redigera.
 - Bocka av varje dag när du har ansökt. Listan visar t.ex. 1/2 ansökta, så du ser vad som är kvar. Arbetade timmar och ta bort en dag gör du under Redigera.
 
 ## Personer

@@ -123,7 +123,7 @@ export function cleanValue(kind, v) {
       if (!Array.isArray(v)) return undefined;
       const seen = new Set();
       const out = v.filter((x) => Array.isArray(x) && validDate(x[0]) && !seen.has(x[0]) && seen.add(x[0])).slice(0, DAYS_MAX)
-        .map(([d, w, a]) => [d, typeof w === 'number' && w > 0 && w <= 24 ? Math.round(w * 100) / 100 : 0, a ? 1 : 0]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+        .map(([d, w, a, k]) => { const r = [d, typeof w === 'number' && w > 0 && w <= 24 ? Math.round(w * 100) / 100 : 0, a ? 1 : 0]; if (okId(k)) r.push(k); return r; }).sort((a, b) => (a[0] < b[0] ? -1 : 1));
       return out.length ? out : undefined;
     }
     default: return undefined;
@@ -307,6 +307,7 @@ export function trashArchivedBefore(state, date, today) {
 }
 
 /* ---------- Cases ---------- */
+export const childrenOf = (state) => state.people.filter((x) => x.v?.rel === REL_CHILD);   // Relation = Barn
 export const personOf = (state, c) => (c.p ? state.people.find((x) => x.id === c.p) : undefined);
 export const typeOf = (state, c) => state.types.find((t) => t.id === c.t);
 export const catOf = (state, t) => state.cats.find((c) => c.id === t?.cat) || { id: '', name: 'Övrigt', color: 'gray' };
@@ -350,15 +351,16 @@ export function parseHours(input) {
   return Number.isFinite(v) && v >= 0 && v <= 24 ? Math.round(v * 100) / 100 : false;
 }
 // c = a case or the Ny tråd draft (both keep values in c.f). Returns false when nothing changed.
-export function addDay(c, fieldId, date, worked, today) {
+export function addDay(c, fieldId, date, worked, today, kid) {
   const list = Array.isArray(c.f?.[fieldId]) ? c.f[fieldId] : [];
   if (!validDate(date) || list.length >= DAYS_MAX || list.some((x) => x[0] === date) || worked === false) return false;
-  c.f = { ...(c.f || {}), [fieldId]: cleanValue('days', [...list, [date, worked, 0]]) }; c.u = today; return true;
+  c.f = { ...(c.f || {}), [fieldId]: cleanValue('days', [...list, kid ? [date, worked, 0, kid] : [date, worked, 0]]) }; c.u = today; return true;
 }
 export function setDay(c, fieldId, i, patch, today) {
   const x = c.f?.[fieldId]?.[i]; if (!x) return false;
   if ('w' in patch) { if (patch.w === false) return false; x[1] = patch.w; }
   if ('a' in patch) x[2] = patch.a ? 1 : 0;
+  if ('k' in patch) { if (patch.k && okId(patch.k)) { x[2] ??= 0; x[3] = patch.k; } else x.length = 3; }
   c.u = today; return true;
 }
 export function delDay(c, fieldId, i, today) {
@@ -541,7 +543,7 @@ export const EXPORT_SCHEMA = {
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1, barn? person-id]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna trådar, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan tråden raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
