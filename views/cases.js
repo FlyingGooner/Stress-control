@@ -1,4 +1,4 @@
-// Vy: Ärenden (öppna ärenden, filter per kategori), typväljaren och ärendet (lager – Bakåt stänger). Ärendet används också från Arkiv.
+// Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
 import { openCases, typeOf, catOf, progress, daysBetween, KINDS, REPEAT } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
@@ -10,13 +10,13 @@ export function caseRow(c) {
   return el('li', { class: `case-li c-${cat.color}` + (open ? ' open' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'copen', 'data-id': c.id },
     el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
-      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängt ' + shortDate(c.x) : 'ändrat ' + ago(c.u)}` })),
+      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
     ),
     el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
     open ? caseSummary(c, t, cat) : null);
 }
-// Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna ärendet.
+// Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna tråden.
 export const showVal = (fd, v) => fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
 export function caseSummary(c, t, cat, actions) {
   const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined);
@@ -26,9 +26,9 @@ export function caseSummary(c, t, cat, actions) {
     c.o?.some((x) => x[2] != null) ? el('dl', { class: 'sum-old' }, c.o.filter((x) => x[2] != null).map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
     c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd, dn]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
-    actions || el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet →' }));
+    actions || el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna tråden →' }));
 }
-// Category chips over a list of cases (Ärenden, Arkiv, Papperskorg). key = the S property holding the filter, act = its data-act.
+// Category chips over a list of cases (Trådar, Arkiv, Papperskorg). key = the S property holding the filter, act = its data-act.
 // Returns [chips, filtered list]; a filter whose category is now empty falls back to Alla.
 export function catFilter(all, key, act) {
   const counts = new Map();
@@ -40,13 +40,13 @@ export function catFilter(all, key, act) {
   return [chips, S[key] === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S[key])];
 }
 
-// Nytt ärende in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).
+// Ny tråd in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).
 function picker() {
   const types = S.state.types.filter((t) => t.on), d = S.draft, dt = d && types.find((t) => t.id === d.t);
   return el('section', { class: 'card' },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'pickclose', 'aria-label': 'Stäng', text: '✕' }),
-      el('h1', { class: 'add-title', text: 'Nytt ärende' })),
+      el('h1', { class: 'add-title', text: 'Ny tråd' })),
     el('input', { type: 'text', id: 'new-title', class: 'search', maxlength: 80, value: S.newTitle, placeholder: 'Rubrik, t.ex. Ont i knät', 'aria-label': 'Rubrik', autocomplete: 'off' }),
     el('p', { class: 'import-error small', id: 'new-error', role: 'alert' }),
     el('p', { class: 'muted small', text: 'Välj typ – fälten visas under. Fyll i det du vet, resten kan vänta.' }),
@@ -57,11 +57,11 @@ function picker() {
       dt.fields.map((fd) => fieldInput(d, fd, 'dv')),
       el('p', { class: 'import-error small', id: 'd-error', role: 'alert' }),
       dt.steps?.length ? [el('h2', { class: 'sub-h', text: 'Delmål' }),
-        el('p', { class: 'muted small', text: 'Förslag från typen. Bocka ur det du inte behöver – ändra förslagen under Inställningar → Ärendetyper.' }),
+        el('p', { class: 'muted small', text: 'Förslag från typen. Bocka ur det du inte behöver – ändra förslagen under Inställningar → Typer.' }),
         el('ul', { class: 'steps' }, dt.steps.map((x, i) => el('li', {}, el('label', {},
           el('input', { type: 'checkbox', checked: !(d.skip || []).includes(i), 'data-act': 'dstep', 'data-i': i }), el('span', { text: x })))))] : null,
-      el('button', { class: 'primary', 'data-act': 'cnew', 'data-id': dt.id, text: 'Skapa ärende' })) : null,
-    el('p', { class: 'muted small', text: 'Fler typer, och egna, under Inställningar → Ärendetyper.' }));
+      el('button', { class: 'primary', 'data-act': 'cnew', 'data-id': dt.id, text: 'Skapa tråd' })) : null,
+    el('p', { class: 'muted small', text: 'Fler typer, och egna, under Inställningar → Typer.' }));
 }
 
 function fieldInput(c, fd, act = 'fv') {
@@ -87,11 +87,11 @@ export function caseEditor() {
       el('select', { class: 'cat-chip', 'data-act': 'ctype', 'aria-label': 'Typ' },
         S.state.types.filter((x) => x.on || x.id === c.t).map((x) => el('option', { value: x.id, selected: x.id === c.t, text: `${x.icon} ${x.name} · ${catOf(S.state, x).name}` })))),
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
-    el('p', { class: 'muted small', text: `Skapat ${longDate(c.c)}` + (c.x ? ` · stängt ${longDate(c.x)}` : '') }),
+    el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') }),
     (t?.fields || []).map((fd) => fieldInput(c, fd)),
     el('details', { class: 'old-fields' + (c.o?.length ? '' : ' empty'), 'data-sec': 'extra', open: !!c.o?.length || setOpen.has('extra') },   // folded until used
       el('summary', { class: 'sub-h', text: c.o?.length ? `Extra fält (${c.o.length})` : '+ Extra fält' }),
-      el('p', { class: 'muted small', text: 'Fält bara i det här ärendet – typen ändras inte.' }),
+      el('p', { class: 'muted small', text: 'Fält bara i det här tråden – typen ändras inte.' }),
       (c.o || []).map(([n, k, v, fr], i) => el('div', { class: 'extra' },
         fieldInput({ f: v == null ? {} : { ['o' + i]: v } }, { id: 'o' + i, name: fr ? `${n} (från ${fr})` : n, kind: k }, 'ov'),
         el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' }))),
@@ -100,7 +100,7 @@ export function caseEditor() {
         el('select', { id: 'o-kind', 'aria-label': 'Sort' }, Object.entries(KINDS).map(([kk, l]) => el('option', { value: kk, text: l }))),
         el('button', { class: 'weigh-save', 'data-act': 'oadd', text: 'Lägg till' })),
       c.o?.length ? el('div', { class: 'old-actions' },
-        el('button', { class: 'link', 'data-act': 'tfromcase', text: '+ Spara som ny ärendetyp' }),
+        el('button', { class: 'link', 'data-act': 'tfromcase', text: '+ Spara som ny typ' }),
         el('button', { class: 'link', 'data-act': 'oclear', text: 'Ta bort alla' })) : null),
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     el('h2', { class: 'sub-h', text: all ? `Delmål ${done}/${all}` : 'Delmål' }),
@@ -124,13 +124,13 @@ export function caseEditor() {
       el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
     el('label', { class: 'goal-row' }, el('span', { text: 'Upprepa' }),
       el('select', { 'data-act': 'crep', id: 'c-rep' }, [['', 'Nej'], ...Object.entries(REPEAT)].map(([k, l]) => el('option', { value: k, selected: (c.r || '') === k, text: l })))),
-    c.r && !c.x ? el('p', { class: 'muted small', text: 'När du arkiverar ärendet skapas ett nytt, med alla datum flyttade ' + (c.r === 'y' ? 'ett år' : 'en månad') + ' framåt.' }) : null,
+    c.r && !c.x ? el('p', { class: 'muted small', text: 'När du arkiverar tråden skapas en ny, med alla datum flyttade ' + (c.r === 'y' ? 'ett år' : 'en månad') + ' framåt.' }) : null,
     el('div', { class: 'row-actions case-actions' },
       el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
       c.x ? el('button', { class: 'link', 'data-act': 'creopen', text: 'Öppna igen' })
         : el('button', { class: 'link', 'data-act': 'cdone', text: 'Löst – arkivera' })),
     el('button', { class: 'primary save-case', 'data-act': 'cclose', text: 'Spara' }),
-    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara stänger ärendet.' }));
+    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara stänger tråden.' }));
 }
 
 export function viewCases() {
@@ -141,8 +141,8 @@ export function viewCases() {
   return [
     chips,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
-      : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna ärenden i den här kategorin.' : 'Inga öppna ärenden. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
-    el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Nytt ärende' }),
+      : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar i den här kategorin.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
+    el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Ny tråd' }),
   ];
 }
 export { KINDS };

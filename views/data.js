@@ -14,7 +14,7 @@ export function startImport(text) {
   errText('import-error', '');
   if (r.error) { importError(r.error); return; }
   pendingImport = r.data;
-  $('imp-sum').textContent = `${r.cases} ärenden` + (r.exported ? `. Exporterad ${r.exported}.` : '.') + (r.skipped ? ` ${r.skipped} ogiltiga hoppas över.` : '');
+  $('imp-sum').textContent = `${r.cases} trådar` + (r.exported ? `. Exporterad ${r.exported}.` : '.') + (r.skipped ? ` ${r.skipped} ogiltiga hoppas över.` : '');
   $('import-dialog').showModal();
 }
 const BACKUP_MSG = {

@@ -1,6 +1,8 @@
 # Stress kontroll – specifikation
 
 ## Idé
+> Namn i appen: det som här kallas **ärende** heter **tråd** för användaren (Ärendetyp = Typ). I koden heter det `case`.
+
 Ett enkelt ärendesystem för livet: logga det som oroar dig eller måste göras – ett symptom, en uppgift, en jobbansökan, ett husköp – med nästa steg, datum och anteckningar. Stäng ärendet när det är klart och få överblick över det som är kvar. Syftet är att kunna **släppa** saker: när de är nedskrivna med nästa steg behöver de inte snurra i huvudet.
 
 ## Mål

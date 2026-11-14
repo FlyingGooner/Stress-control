@@ -1,4 +1,4 @@
-// Vy: Arkiv – stängda ärenden, senast stängda först, filter per kategori och sök i rubrik. Ett ärende öppnas i samma lager som från Ärenden.
+// Vy: Arkiv – stängda trådar, senast stängda först, filter per kategori och sök i rubrik. En tråd öppnas i samma lager som från Trådar.
 import { closedCases, archReady } from '../store.js';
 import { S, el } from '../ui.js';
 import { caseRow, caseEditor, catFilter } from './cases.js';
@@ -11,7 +11,7 @@ export function archiveList() {
   const shown = list.slice(0, S.alimit), more = list.length - shown.length;
   return list.length ? [el('ul', { class: 'cases' }, shown.map(caseRow)),
     more > 0 ? el('button', { class: 'link more', 'data-act': 'amore', text: `Visa fler (${more} kvar)` }) : null]
-    : el('p', { class: 'muted small', text: q ? 'Ingen träff.' : 'Inga stängda ärenden än. Det du stänger sparas här.' });
+    : el('p', { class: 'muted small', text: q ? 'Ingen träff.' : 'Inga stängda trådar än. Det du stänger sparas här.' });
 }
 export function viewArchive() {
   if (S.tedit) return typeEditor();
@@ -20,7 +20,7 @@ export function viewArchive() {
   return [
     el('h1', { class: 'view-title', text: 'Arkiv' }),
     all.length ? chips : null,
-    el('input', { type: 'search', id: 'arch-q', class: 'search', value: S.q, placeholder: 'Sök i stängda ärenden', 'aria-label': 'Sök', autocomplete: 'off' }),
+    el('input', { type: 'search', id: 'arch-q', class: 'search', value: S.q, placeholder: 'Sök i stängda trådar', 'aria-label': 'Sök', autocomplete: 'off' }),
     el('div', { id: 'arch-list' }, archiveList()),
   ];
 }

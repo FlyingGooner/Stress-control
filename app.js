@@ -171,16 +171,16 @@ app.addEventListener('click', (ev) => {
   const cs = () => S.state.cases.find((x) => x.id === S.open);
   const touch = (c) => { c.u = today(); };
   switch (act) {
-    // Ärenden
+    // Trådar
     case 'filter': S.filter = id; break;
     case 'afilter': S.afilter = id; S.alimit = 100; break;
     case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
     case 'aclean': {   // Rensa arkivet: old archived cases go to the Papperskorg (can be restored there)
       const years = Number(document.getElementById('aclean-age')?.value) || 2, before = addDays(today(), -365 * years);
       const n = S.state.cases.filter((c) => c.x && c.x < before).length;
-      if (!n) { snackbar(`Inga arkiverade ärenden äldre än ${years} år`, null, null, 3000); return; }
-      confirmDelete(`Flytta ${n} ärenden till papperskorgen?`, `Arkiverade ärenden som stängdes före ${longDate(before)}. De kan återställas från papperskorgen tills den rensas.`, () => {
-        withUndo(`${n} ärenden flyttade till papperskorgen`, () => { trashArchivedBefore(S.state, before, today()); });
+      if (!n) { snackbar(`Inga arkiverade trådar äldre än ${years} år`, null, null, 3000); return; }
+      confirmDelete(`Flytta ${n} trådar till papperskorgen?`, `Arkiverade trådar som stängdes före ${longDate(before)}. De kan återställas från papperskorgen tills den rensas.`, () => {
+        withUndo(`${n} trådar flyttade till papperskorgen`, () => { trashArchivedBefore(S.state, before, today()); });
       });
       return;
     }
@@ -200,11 +200,11 @@ app.addEventListener('click', (ev) => {
       const title = document.getElementById('new-title')?.value;
       if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
       const c = newCase(S.state, id, title, today());
-      if (!c) { errText('new-error', `Max ${LIM.open} öppna ärenden (${LIM.cases} totalt). Arkivera eller ta bort något först.`); return; }
+      if (!c) { errText('new-error', `Max ${LIM.open} öppna trådar (${LIM.cases} totalt). Arkivera eller ta bort något först.`); return; }
       if (S.draft?.t === id && S.draft.skip?.length && c.s) { c.s = c.s.filter((_, i) => !S.draft.skip.includes(i)); if (!c.s.length) delete c.s; }
       if (S.draft?.t === id && S.draft.f) { const ty = S.state.types.find((x) => x.id === id), f = {}; for (const [k, v] of Object.entries(S.draft.f)) if (ty?.fields.some((x) => x.id === k)) f[k] = v; if (Object.keys(f).length) c.f = f; }
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
-      snackbar(`${c.title} är sparat`, null, null, 2500); return;
+      snackbar(`${c.title} är sparad`, null, null, 2500); return;
     }
     case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
     case 'stepsclose': S.steps = false; break;
@@ -217,7 +217,7 @@ app.addEventListener('click', (ev) => {
       c.x = today(); touch(c); S.open = null;
       const nc = nextCase(S.state, c, today()), fd = nc && firstDate(S.state, nc);
       persist();
-      snackbar(nc ? `${c.title} är arkiverat. Nästa är skapat${fd ? ' till ' + longDate(fd) : ''}` : `${c.title} är stängt och arkiverat`, 'Ångra', () => {
+      snackbar(nc ? `${c.title} är arkiverad. Nästa är skapad${fd ? ' till ' + longDate(fd) : ''}` : `${c.title} är stängd och arkiverad`, 'Ångra', () => {
         delete c.x; c.u = u0; if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc); persist(); render();
       });
       break;
@@ -226,7 +226,7 @@ app.addEventListener('click', (ev) => {
       const c = cs(); if (!c) return;
       const nc = c.r && S.state.cases.find((x) => x !== c && !x.x && x.t === c.t && x.title === c.title && x.r === c.r && x.c >= c.x && x.u === x.c && !x.l && !(x.s || []).some((y) => y[1]));
       if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc);
-      delete c.x; touch(c); persist(); snackbar(`${c.title} är öppet igen` + (nc ? ' – nästa upprepning togs bort' : ''), null, null, 3000); break;
+      delete c.x; touch(c); persist(); snackbar(`${c.title} är öppen igen` + (nc ? ' – nästa upprepning togs bort' : ''), null, null, 3000); break;
     }
     case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
       const c = cs(); if (!c) return;
@@ -235,19 +235,19 @@ app.addEventListener('click', (ev) => {
       return;
     }
     case 'trest': {
-      const c = restoreCase(S.state, id); if (!c) { snackbar(`Max ${LIM.open} öppna ärenden – arkivera något först`, null, null, 3000); return; }
-      persist(); render(); snackbar(`${c.title} är återställt` + (c.x ? ' till Arkiv' : ''), null, null, 2500); return;
+      const c = restoreCase(S.state, id); if (!c) { snackbar(`Max ${LIM.open} öppna trådar – arkivera något först`, null, null, 3000); return; }
+      persist(); render(); snackbar(`${c.title} är återställd` + (c.x ? ' till Arkiv' : ''), null, null, 2500); return;
     }
     case 'tpurge': {
       const c = S.state.trash.find((x) => x.id === id); if (!c) return;
-      confirmDelete(`Radera ${c.title} för gott?`, 'Ärendet tas bort helt och kan inte återställas.', () => {
+      confirmDelete(`Radera ${c.title} för gott?`, 'Tråden tas bort helt och kan inte återställas.', () => {
         S.state.trash = S.state.trash.filter((x) => x !== c); persist(); render();
       });
       return;
     }
     case 'tempty': {
       const n = S.state.trash.length; if (!n) return;
-      confirmDelete('Töm papperskorgen?', `${n} ${n === 1 ? 'ärende raderas' : 'ärenden raderas'} för gott och kan inte återställas.`, () => {
+      confirmDelete('Töm papperskorgen?', `${n} ${n === 1 ? 'tråd raderas' : 'trådar raderas'} för gott och kan inte återställas.`, () => {
         S.state.trash = []; persist(); render();
       });
       return;
@@ -271,7 +271,7 @@ app.addEventListener('click', (ev) => {
     case 'ladd': {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
       if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
-      if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per ärende – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
+      if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per tråd – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
       const ld = document.getElementById('l-date')?.value, d = validDate(ld) && ld <= today() ? ld : today();
       const l = (c.l ||= []); let i = l.length; while (i > 0 && l[i - 1][0] > d) i--;   // kept in date order: an earlier date goes in its place
       l.splice(i, 0, [d, x]); touch(c); persist(); break;
@@ -284,7 +284,7 @@ app.addEventListener('click', (ev) => {
       });
       return;
     }
-    // Inställningar: ärendetyper och kategorier
+    // Inställningar: typer och kategorier
     case 'topen': case 'tnew': {
       const t0 = act === 'tnew' ? { id: 't' + uid(), name: '', icon: '📌', cat: S.state.cats[0].id, on: 1, fields: [{ id: 'f1', name: 'Kommentar', kind: 'note' }], isNew: true }
         : S.state.types.find((x) => x.id === id);
@@ -328,7 +328,7 @@ app.addEventListener('click', (ev) => {
       }
       const fc = S.teditFor && S.state.cases.find((x) => x.id === S.teditFor);
       if (fc && fc.t !== clean.id) changeType(S.state, fc, clean.id, today());
-      S.tedit = null; S.teditFor = null; persist(true); snackbar(fc ? `${clean.name} sparad – ärendet använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
+      S.tedit = null; S.teditFor = null; persist(true); snackbar(fc ? `${clean.name} sparad – tråden använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
     }
     case 'tdel': {
       const d = S.tedit; if ([...S.state.cases, ...S.state.trash].some((c) => c.t === d.id)) return;
@@ -366,7 +366,7 @@ app.addEventListener('input', (ev) => {
   if (t.dataset.act === 'fname') { const f = d.fields[Number(t.dataset.i)]; if (f) f.name = t.value; }
   if (t.dataset.act === 'tsteps') d.steps = t.value.split('\n').map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
 });
-/* ---------- Swipe sideways between the category filters in Ärenden (no layer open; not from the screen edges = system Back) ---------- */
+/* ---------- Swipe sideways between the category filters in Trådar (no layer open; not from the screen edges = system Back) ---------- */
 let swipe = null;
 document.addEventListener('touchstart', (ev) => {
   const t = ev.touches[0];
@@ -398,7 +398,7 @@ app.addEventListener('change', (ev) => {
   switch (t.dataset.act) {
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
     case 'dstep': { const d = S.draft; if (!d) return; const i = Number(t.dataset.i); d.skip = (d.skip || []).filter((x) => x !== i); if (!t.checked) d.skip.push(i); return; }
-    case 'dv': {   // a field in Nytt ärende: kept in the draft until Skapa
+    case 'dv': {   // a field in Ny tråd: kept in the draft until Skapa
       const d = S.draft; if (!d) return;
       const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
       errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');

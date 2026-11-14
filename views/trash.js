@@ -10,7 +10,7 @@ export function viewTrash() {
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'trashclose', 'aria-label': 'Stäng', text: '✕' }),
       el('h1', { class: 'add-title', text: `Papperskorg (${all.length})` })),
-    el('p', { class: 'muted small', text: days ? `Ärenden raderas ${days === 365 ? 'ett år' : days + ' dagar'} efter att de tagits bort. Ändra under Inställningar → Papperskorg.` : 'Ärenden raderas aldrig automatiskt.' }),
+    el('p', { class: 'muted small', text: days ? `Trådar raderas ${days === 365 ? 'ett år' : days + ' dagar'} efter att de tagits bort. Ändra under Inställningar → Papperskorg.` : 'Trådar raderas aldrig automatiskt.' }),
     all.length ? chips : null,
     list.length ? el('ul', { class: 'cases' }, list.map((c) => {
       const t = typeOf(S.state, c), cat = catOf(S.state, t), open = S.exp === c.id;

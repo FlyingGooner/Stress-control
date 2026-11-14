@@ -30,7 +30,7 @@ export function viewOverview() {
         acute.length ? [el('h3', { class: 'up-h acute-h', text: 'Akut – försenat, idag eller imorgon' }), el('ul', { class: 'alert-list' }, acute.map(row))] : null,
         soon.length ? [acute.length ? el('h3', { class: 'up-h', text: `Snart – inom ${n} dagar` }) : null, el('ul', { class: 'alert-list' }, soon.map(row))] : null]
         : el('p', { class: 'muted small', text: `Inget som närmar sig de närmaste ${n} dagarna.` })),
-    el('section', { class: 'card stats3' }, stat(o.open, 'öppna ärenden'), el('button', { class: 'stat stat-btn', 'data-act': 'stepsopen', 'aria-label': `${o.steps} delmål kvar – visa alla` }, el('span', { class: 'stat-n', text: String(o.steps) }), el('span', { text: 'delmål kvar ›' })), stat(o.closed30, 'stängda, 30 dagar')),
+    el('section', { class: 'card stats3' }, stat(o.open, 'öppna trådar'), el('button', { class: 'stat stat-btn', 'data-act': 'stepsopen', 'aria-label': `${o.steps} delmål kvar – visa alla` }, el('span', { class: 'stat-n', text: String(o.steps) }), el('span', { text: 'delmål kvar ›' })), stat(o.closed30, 'stängda, 30 dagar')),
     el('section', { class: 'card' }, el('h2', { text: 'Per kategori' }),
       el('ul', { class: 'bars' }, o.per.map(({ cat, n }) => el('li', { class: `c-${cat.color}` },
         el('span', { class: 'bar-name', text: cat.name }),
@@ -61,5 +61,5 @@ function stepsView() {
           el('small', { text: `${ty?.icon || '📌'} ${c.title}` })),
         d ? el('span', { class: 'step-when', text: when(d) }) : null);
     })) : el('p', { class: 'muted', text: 'Inga delmål kvar. Bra jobbat!' }),
-    el('p', { class: 'muted small', text: 'Bocka av direkt här, eller tryck på ett delmål för att öppna ärendet.' }));
+    el('p', { class: 'muted small', text: 'Bocka av direkt här, eller tryck på ett delmål för att öppna tråden.' }));
 }
