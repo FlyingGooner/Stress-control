@@ -355,7 +355,7 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .link.more { display: block; margin: 12px auto 0; min-height: 44px; }
 
 /* Compact height: text areas grow with their text (field-sizing where supported), folded Extra fält, one-row add rows. */
-.cfield textarea, #l-new { field-sizing: content; min-height: 44px; max-height: 50vh; }
+.cfield textarea, #l-new { field-sizing: content; min-height: 44px; max-height: calc(5lh + 16px); overflow-y: auto; resize: none; }   /* grows to 5 lines, then scrolls inside */
 .old-fields > summary { list-style: none; cursor: pointer; min-height: 40px; display: flex; align-items: center; margin: 0; }
 .old-fields > summary::-webkit-details-marker { display: none; }
 .old-fields[open] { padding-bottom: 10px; }
