@@ -182,6 +182,7 @@ app.addEventListener('click', (ev) => {
       if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
       const c = newCase(S.state, id, title, today());
       if (!c) { errText('new-error', `Max ${LIM.cases} ärenden.`); return; }
+      if (S.draft?.t === id && S.draft.skip?.length && c.s) { c.s = c.s.filter((_, i) => !S.draft.skip.includes(i)); if (!c.s.length) delete c.s; }
       if (S.draft?.t === id && S.draft.f) { const ty = S.state.types.find((x) => x.id === id), f = {}; for (const [k, v] of Object.entries(S.draft.f)) if (ty?.fields.some((x) => x.id === k)) f[k] = v; if (Object.keys(f).length) c.f = f; }
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
       snackbar(`${c.title} är sparat`, null, null, 2500); return;
@@ -372,6 +373,7 @@ app.addEventListener('change', (ev) => {
   const t = ev.target;
   switch (t.dataset.act) {
     case 'importfile': readBackup(t); return;
+    case 'dstep': { const d = S.draft; if (!d) return; const i = Number(t.dataset.i); d.skip = (d.skip || []).filter((x) => x !== i); if (!t.checked) d.skip.push(i); return; }
     case 'dv': {   // a field in Nytt ärende: kept in the draft until Skapa
       const d = S.draft; if (!d) return;
       const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());

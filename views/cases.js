@@ -56,7 +56,10 @@ function picker() {
       el('h2', { class: 'sub-h', text: `${dt.icon} ${dt.name}` }),
       dt.fields.map((fd) => fieldInput(d, fd, 'dv')),
       el('p', { class: 'import-error small', id: 'd-error', role: 'alert' }),
-      dt.steps?.length ? el('p', { class: 'muted small', text: 'Delmål som läggs in: ' + dt.steps.join(', ') }) : null,
+      dt.steps?.length ? [el('h2', { class: 'sub-h', text: 'Delmål' }),
+        el('p', { class: 'muted small', text: 'Förslag från typen. Bocka ur det du inte behöver – ändra förslagen under Inställningar → Ärendetyper.' }),
+        el('ul', { class: 'steps' }, dt.steps.map((x, i) => el('li', {}, el('label', {},
+          el('input', { type: 'checkbox', checked: !(d.skip || []).includes(i), 'data-act': 'dstep', 'data-i': i }), el('span', { text: x })))))] : null,
       el('button', { class: 'primary', 'data-act': 'cnew', 'data-id': dt.id, text: 'Skapa ärende' })) : null,
     el('p', { class: 'muted small', text: 'Fler typer, och egna, under Inställningar → Ärendetyper.' }));
 }

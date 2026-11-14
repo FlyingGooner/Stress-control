@@ -35,7 +35,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 ## Ärendetyper och kategorier
 - Inställningar → Ärenden → Ärendetyper: bocka i fler typer, t.ex. Bostadsköp, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.
 - + Egen ärendetyp: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal och bock – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
-- Förslag på delmål (ett per rad) läggs in i varje nytt ärende av typen.
+- Förslag på delmål (ett per rad, längst ner i typen) läggs in i varje nytt ärende av typen. I Nytt ärende syns förslagen under fälten, och du kan bocka ur dem du inte behöver. Listan över typer visar hur många delmål varje typ har.
 - Tar du bort ett fält (eller byter dess sort) flyttas ifyllda värden till Extra fält i ärendena av typen – inget försvinner.
 - Kategorier: byt namn och färg, eller lägg till nya.
 

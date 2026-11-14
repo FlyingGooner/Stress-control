@@ -64,7 +64,7 @@ export function viewSettings() {
         el('ul', { class: 'edit-list' }, S.state.types.map((t) => el('li', { class: 'type-row' },
           el('input', { type: 'checkbox', checked: !!t.on, 'data-act': 'ton', 'data-id': t.id, 'aria-label': `Visa ${t.name}` }),
           el('button', { class: 'food-row', 'data-act': 'topen', 'data-id': t.id },
-            el('span', { class: 'post-name' }, `${t.icon} ${t.name}`, el('small', { text: `${S.state.cats.find((c) => c.id === t.cat)?.name ?? ''} · ${t.fields.length} fält` })))))),
+            el('span', { class: 'post-name' }, `${t.icon} ${t.name}`, el('small', { text: `${S.state.cats.find((c) => c.id === t.cat)?.name ?? ''} · ${t.fields.length} fält` + (t.steps?.length ? ` · ${t.steps.length} delmål` : '') })))))),
         S.state.types.length < LIM.types ? el('button', { class: 'link', 'data-act': 'tnew', text: '+ Egen ärendetyp' }) : null),
       sec('cats', 'Kategorier', S.state.cats.map((c) => c.name).join(', '),
         el('ul', { class: 'edit-list' }, S.state.cats.map((c) => el('li', { class: `cat-row c-${c.color}` },
