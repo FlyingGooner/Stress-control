@@ -233,7 +233,9 @@ html, body { overflow-x: clip; }
 .case-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .case-main small { color: var(--muted); font-size: .8rem; }
 .case-prog { flex: none; min-width: 40px; padding: 2px 8px; border-radius: var(--r-sm); background: var(--cc-c); color: var(--cc-on); font-size: .8rem; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
-.new-case { margin-top: 4px; }
+.new-case { position: fixed; right: 16px; bottom: calc(104px + env(safe-area-inset-bottom)); width: auto; min-height: 56px; padding: 0 22px; border-radius: 28px; font-size: 1.05rem; z-index: 5; box-shadow: 0 3px 8px rgba(0,0,0,.25); transition: bottom .2s; }
+body:has(#snackbar:not([hidden])) .new-case { bottom: calc(160px + env(safe-area-inset-bottom)); }
+main:has(.new-case) { padding-bottom: 180px; }
 .type-btn span:last-child { overflow-wrap: break-word; hyphens: auto; }
 .type-btn.on { outline: 3px solid var(--cc); outline-offset: 1px; }
 .draft { margin: 12px 0 4px; padding-top: 4px; border-top: 4px solid var(--cc); }

@@ -344,7 +344,7 @@ setTimeout(maybeAskBackup, 800);
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   const hadController = !!navigator.serviceWorker.controller;
-  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => { /* app still works */ });
+  navigator.serviceWorker.register(window.trustedTypes ? trustedTypes.createPolicy('sw', { createScriptURL: (u) => (u === 'sw.js' ? u : '') }).createScriptURL('sw.js') : 'sw.js', { updateViaCache: 'none' }).catch(() => { /* app still works */ });
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (hadController) snackbar('Ny version finns', 'Ladda om', () => location.reload(), 0);
   });
