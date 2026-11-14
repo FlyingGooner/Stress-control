@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, COLORS, COLOR_NAMES, KINDS, LIM } from '../store.js';
+import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData } from './data.js';
 
@@ -51,6 +51,10 @@ export function viewSettings() {
   const group = (id, title, hint, ...kids) => el('details', { class: 'set-group-wrap', 'data-sec': 'g-' + id, open: setOpen.has('g-' + id) },
     el('summary', { class: 'set-group' }, el('span', { class: 'set-gtitle', text: title }), el('span', { class: 'set-hint', text: hint })), kids);
   const last = S.state.backup.last, old = !last || addDays(last, 30) <= today();
+  const used = storageUsed(), full = used >= STORAGE_QUOTA * 0.8;
+  const mb = (n) => { const d = n < 1e5 ? 2 : 1; return (n / 1e6).toLocaleString('sv-SE', { minimumFractionDigits: d, maximumFractionDigits: d }); };
+  let installed = false;
+  try { installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { /* old browser */ }
   return [
     el('h1', { class: 'view-title', text: 'Inställningar' }),
     group('cases', 'Ärenden', `${S.state.types.filter((t) => t.on).length} typer · ${S.state.cats.length} kategorier`,
@@ -72,6 +76,9 @@ export function viewSettings() {
     group('app', 'Allmänt', 'Data, hjälp',
       sec('data', 'Data', 'Backup, import, radera',
         el('p', { class: 'small', text: 'All data sparas bara i den här webbläsaren (localStorage). Rensar du webbplatsdata eller avinstallerar appen försvinner den – spara en backup-fil då och då.' }),
+        installed ? null : el('p', { class: 'small bk-warn', text: 'Appen är inte installerad. På iPhone kan Safari rensa datan för sidor du inte besökt på ett tag – lägg appen på hemskärmen (Dela → Lägg till på hemskärmen) och spara backup regelbundet.' }),
+        el('p', { class: 'bk-status' + (full ? ' bk-old' : '') }, `Använder ${mb(used)} MB av cirka ${mb(STORAGE_QUOTA)} MB`,
+          full ? el('small', { text: 'Lagringen börjar bli full. Spara en backup-fil och ta bort gamla ärenden.' }) : null),
         el('p', { class: 'muted small', text: 'Backup-filen innehåller all din data och krypteras alltid med ett lösenord du väljer. Du kan också låta appen skapa ett slumpmässigt lösenord. Glömmer du det går filen inte att öppna. Läs in filen på en annan enhet för att flytta din data.' }),
         el('p', { class: 'bk-status' + (old && hasData() ? ' bk-old' : '') },
           last ? `Senaste backup: ${shortDate(last)}` : 'Ingen backup sparad än',

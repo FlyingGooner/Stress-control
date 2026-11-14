@@ -7,6 +7,8 @@ export const S = {
   state: load(),
   open: null,          // Ärenden/Arkiv: id of the open case (a layer, see nav.js)
   pick: false,         // Ärenden: type picker for a new case is open (a layer)
+  newTitle: '',        // Nytt ärende: rubrik, kept across re-renders
+  draft: null,         // Nytt ärende: { t, f } – chosen type and field values before Skapa
   tedit: null,         // Inställningar: case type draft being edited (a layer) or null
   teditOrig: '',       // JSON copy of the draft when the editor opened (unsaved changes → "Släng ändringarna?")
   filter: 'all',       // Ärenden: category filter

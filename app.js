@@ -1,7 +1,7 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, cleanText, uid, newCase, setField, cleanType, LIM, COLORS, KINDS } from './store.js';
-import { today, S, setOpen } from './ui.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { today, S, setOpen, longDate, shortDate } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases } from './views/cases.js';
 import { viewOverview } from './views/overview.js';
@@ -15,20 +15,24 @@ const app = document.getElementById('app');
 const tabbar = document.querySelector('.tabbar');
 const errText = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
 
-function persist() {
-  if (!save(S.state)) status('Kunde inte spara – lagringen är full eller blockerad.', true);
-  else if (saveFailed) updateOnline();
-}
-
 /* ---------- Status line (#status) – fixed texts only ---------- */
 let saveFailed = false;
+function persist() {
+  if (!save(S.state)) status('Ändringen sparades inte – lagringen är full eller blockerad. Spara en backup-fil och ta bort gamla ärenden.', true);
+  else if (saveFailed) updateOnline();
+}
 function status(text, isError = false) {
   const s = document.getElementById('status');
   s.textContent = text;
   s.classList.toggle('error', isError);
   saveFailed = isError;
 }
-function updateOnline() { status(navigator.onLine ? '' : 'Offline – allt fungerar ändå, data finns på enheten.'); }
+// Unreadable saved data (store.js load()): the warning stays until reload; the raw text is kept under sk.data.broken.
+const LOAD_MSG = 'Den sparade datan gick inte att läsa. En kopia av den finns kvar i webbläsaren. Spara en backup-fil av det du lägger in nu.';
+function updateOnline() {
+  if (loadFailed()) { status(LOAD_MSG, true); saveFailed = false; return; }
+  status(navigator.onLine ? '' : 'Offline – allt fungerar ändå, data finns på enheten.');
+}
 addEventListener('online', updateOnline);
 addEventListener('offline', updateOnline);
 updateOnline();
@@ -53,6 +57,19 @@ function withUndo(label, change) {
   snackbar(label, 'Ångra', () => { S.state = JSON.parse(before); persist(); render(); });
 }
 
+/* ---------- Confirm delete (#del-dialog): focus starts on Avbryt ---------- */
+let delAction = null;
+function confirmDelete(title, text, action) {
+  document.getElementById('del-title').textContent = title;
+  document.getElementById('del-text').textContent = text;
+  delAction = action;
+  const dlg = document.getElementById('del-dialog');
+  dlg.showModal();
+  document.getElementById('del-cancel').focus();
+}
+document.getElementById('del-ok').addEventListener('click', () => { const a = delAction; delAction = null; if (a) a(); });
+document.getElementById('del-dialog').addEventListener('close', () => { delAction = null; });
+
 /* ---------- Router (mobile only, see ../STIL.md) ---------- */
 const VIEWS = { cases: viewCases, overview: viewOverview, archive: viewArchive, settings: viewSettings };
 let view = CONFIG.startView;
@@ -66,7 +83,7 @@ function render() {
   }
   syncHistory();
 }
-/* ---------- Bakåt (som sn v0.14): flikar och lager i historiken, popstate stänger det översta ---------- */
+/* ---------- Bakåt (som simple-nutrition): flikar och lager i historiken, popstate stänger det översta ---------- */
 // Bakåt stänger det översta lagret (nav.js), sedan föregående flik; appen stängs först i startvyn.
 // histDepth = open layers that have a history step. A layer that opens gets pushState; one closed by a button goes back
 // with history.go(), so no step points at a closed layer. While our own history.go() runs (ownNav) nothing is pushed:
@@ -117,7 +134,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.tedit = null; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -126,7 +143,7 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.tedit = null;
+  S.open = null; S.pick = false; S.draft = null; S.tedit = null;
   go(t.dataset.view);
 });
 
@@ -140,28 +157,41 @@ app.addEventListener('click', (ev) => {
   switch (act) {
     // Ärenden
     case 'filter': S.filter = id; break;
-    case 'pickopen': S.pick = true; render(); scrollTo(0, 0); document.getElementById('new-title')?.focus(); return;
-    case 'pickclose': S.pick = false; break;
+    case 'pickopen': S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); document.getElementById('new-title')?.focus(); return;
+    case 'pickclose': S.pick = false; S.draft = null; break;
+    case 'ptype': {   // choose type: its form opens below; values already typed in fields with the same id are kept
+      if (S.draft?.t === id) return;
+      S.draft = { t: id, f: S.draft?.f };
+      if (!S.draft.f) delete S.draft.f;
+      const ty = S.state.types.find((x) => x.id === id);
+      if (S.draft.f) { for (const k of Object.keys(S.draft.f)) if (!ty?.fields.some((f) => f.id === k)) delete S.draft.f[k]; }
+      render(); app.querySelector('.draft')?.scrollIntoView({ block: 'nearest' }); return;
+    }
     case 'cnew': {   // the picker layer becomes the case layer (same history step)
       const title = document.getElementById('new-title')?.value;
       if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
       const c = newCase(S.state, id, title, today());
       if (!c) { errText('new-error', `Max ${LIM.cases} ärenden.`); return; }
-      S.pick = false; S.open = c.id; persist(); render(); scrollTo(0, 0); return;
+      if (S.draft?.t === id && S.draft.f) { const f = {}; for (const [k, v] of Object.entries(S.draft.f)) f[k] = v; c.f = f; }
+      S.pick = false; S.draft = null; S.open = c.id; persist(); render(); scrollTo(0, 0); return;
     }
     case 'copen': S.open = id; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
     case 'cdone': {
       const c = cs(); if (!c) return;
+      const u0 = c.u;
       c.x = today(); touch(c); S.open = null; persist();
-      snackbar(`${c.title} är stängt och arkiverat`, 'Ångra', () => { delete c.x; persist(); render(); });
+      snackbar(`${c.title} är stängt och arkiverat`, 'Ångra', () => { delete c.x; c.u = u0; persist(); render(); });
       break;
     }
     case 'creopen': { const c = cs(); if (!c) return; delete c.x; touch(c); persist(); snackbar(`${c.title} är öppet igen`, null, null, 2500); break; }
-    case 'cdel': {
+    case 'cdel': {   // confirm first; Ångra stays as a second net
       const c = cs(); if (!c) return;
-      S.open = null;
-      withUndo(`${c.title} togs bort`, () => { S.state.cases = S.state.cases.filter((x) => x.id !== c.id); });
+      const nl = (c.l || []).length, ns = (c.s || []).length;
+      confirmDelete(`Ta bort ${c.title}?`, `${nl} ${nl === 1 ? 'loggrad' : 'loggrader'} och ${ns} delmål tas bort. Senast ändrat ${longDate(c.u)}.`, () => {
+        S.open = null;
+        withUndo(`${c.title} togs bort`, () => { S.state.cases = S.state.cases.filter((x) => x.id !== c.id); });
+      });
       return;
     }
     case 'sadd': {
@@ -178,7 +208,11 @@ app.addEventListener('click', (ev) => {
     }
     case 'ldel': {
       const c = cs(), i = Number(t.dataset.i); if (!c?.l?.[i]) return;
-      withUndo('Anteckningen togs bort', () => { c.l.splice(i, 1); if (!c.l.length) delete c.l; }); return;
+      const [d, x] = c.l[i];
+      confirmDelete('Ta bort anteckningen?', `${shortDate(d)}: ${x.length > 120 ? x.slice(0, 120) + '…' : x}`, () => {
+        withUndo('Anteckningen togs bort', () => { c.l.splice(i, 1); if (!c.l.length) delete c.l; });
+      });
+      return;
     }
     // Inställningar: ärendetyper och kategorier
     case 'topen': case 'tnew': {
@@ -235,6 +269,7 @@ app.addEventListener('click', (ev) => {
 });
 app.addEventListener('input', (ev) => {
   const t = ev.target, d = S.tedit;
+  if (t.id === 'new-title') { S.newTitle = t.value; return; }
   if (t.id === 'arch-q') { S.q = t.value; document.getElementById('arch-list')?.replaceChildren(archiveList()); return; }
   if (!d) return;
   if (t.dataset.act === 'tset' && ['name', 'icon'].includes(t.dataset.id)) d[t.dataset.id] = t.value;
@@ -254,6 +289,12 @@ app.addEventListener('change', (ev) => {
   const t = ev.target;
   switch (t.dataset.act) {
     case 'importfile': readBackup(t); return;
+    case 'dv': {   // a field in Nytt ärende: kept in the draft until Skapa
+      const d = S.draft; if (!d) return;
+      const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
+      errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
+      return;
+    }
     case 'fv': {   // a case field: saved directly; invalid input gives a message and is not saved
       const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
       const ok = setField(S.state, c, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());

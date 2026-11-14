@@ -13,22 +13,29 @@ export function caseRow(c) {
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null));
 }
 
+// Nytt ärende in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).
 function picker() {
-  const types = S.state.types.filter((t) => t.on);
+  const types = S.state.types.filter((t) => t.on), d = S.draft, dt = d && types.find((t) => t.id === d.t);
   return el('section', { class: 'card' },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'pickclose', 'aria-label': 'Stäng', text: '✕' }),
       el('h1', { class: 'add-title', text: 'Nytt ärende' })),
-    el('input', { type: 'text', id: 'new-title', class: 'search', maxlength: 80, placeholder: 'Rubrik, t.ex. Ont i knät', 'aria-label': 'Rubrik', autocomplete: 'off' }),
+    el('input', { type: 'text', id: 'new-title', class: 'search', maxlength: 80, value: S.newTitle, placeholder: 'Rubrik, t.ex. Ont i knät', 'aria-label': 'Rubrik', autocomplete: 'off' }),
     el('p', { class: 'import-error small', id: 'new-error', role: 'alert' }),
-    el('p', { class: 'muted small', text: 'Välj typ – fälten kan fyllas i senare.' }),
-    el('ul', { class: 'type-grid' }, types.map((t) => el('li', {}, el('button', { class: `type-btn c-${catOf(S.state, t).color}`, 'data-act': 'cnew', 'data-id': t.id },
+    el('p', { class: 'muted small', text: 'Välj typ – fälten visas under. Fyll i det du vet, resten kan vänta.' }),
+    el('ul', { class: 'type-grid' }, types.map((t) => el('li', {}, el('button', { class: `type-btn c-${catOf(S.state, t).color}` + (dt === t ? ' on' : ''), 'data-act': 'ptype', 'data-id': t.id, 'aria-pressed': String(dt === t) },
       el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t.icon }), el('span', { text: t.name }))))),
+    dt ? el('div', { class: `draft c-${catOf(S.state, dt).color}` },
+      el('h2', { class: 'sub-h', text: `${dt.icon} ${dt.name}` }),
+      dt.fields.map((fd) => fieldInput(d, fd, 'dv')),
+      el('p', { class: 'import-error small', id: 'd-error', role: 'alert' }),
+      dt.steps?.length ? el('p', { class: 'muted small', text: 'Delmål som läggs in: ' + dt.steps.join(', ') }) : null,
+      el('button', { class: 'primary', 'data-act': 'cnew', 'data-id': dt.id, text: 'Skapa ärende' })) : null,
     el('p', { class: 'muted small', text: 'Fler typer, och egna, under Inställningar → Ärendetyper.' }));
 }
 
-function fieldInput(c, fd) {
-  const v = c.f?.[fd.id], id = 'f-' + fd.id, common = { id, 'data-act': 'fv', 'data-id': fd.id, autocomplete: 'off' };
+function fieldInput(c, fd, act = 'fv') {
+  const v = c.f?.[fd.id], id = 'f-' + fd.id, common = { id, 'data-act': act, 'data-id': fd.id, autocomplete: 'off' };
   const label = (...kids) => el('label', { class: 'cfield' + (fd.kind === 'check' ? ' cfield-check' : '') }, kids);
   switch (fd.kind) {
     case 'check': return label(el('input', { ...common, type: 'checkbox', checked: v === 1 }), el('span', { text: fd.name }));
@@ -83,7 +90,7 @@ export function viewCases() {
     el('div', { class: 'chips cat-chips', role: 'group', 'aria-label': 'Kategori' }, chip('all', `Alla ${all.length}`),
       cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color))),
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
-      : el('section', { class: 'card empty' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna ärenden i den här kategorin.' : 'Inga öppna ärenden. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
+      : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna ärenden i den här kategorin.' : 'Inga öppna ärenden. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
     el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Nytt ärende' }),
   ];
 }

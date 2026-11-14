@@ -17,3 +17,21 @@ test('bakåt: osparad ärendetyp', () => {
   assert.equal(isDirty(structuredClone(d), orig), false);
   assert.equal(isDirty({ ...d, name: 'Hus 2' }, orig), true);
 });
+test('bakåt: öppet ärende stängs, sedan inget mer', () => {
+  const S = { pick: false, open: 'c1', tedit: null };
+  assert.equal(layerDepth(S), 1);
+  assert.equal(closeTop(S), true); assert.equal(S.open, null);
+  assert.equal(closeTop(S), false, 'dubbeltryck på Bakåt stänger inget mer');
+});
+test('bakåt: typväljaren släpper utkastet till nytt ärende', () => {
+  const S = { pick: true, draft: { t: 'sym', f: { s1: 'Knä' } }, open: null, tedit: null };
+  closeTop(S);
+  assert.equal(S.pick, false); assert.equal(S.draft, null);
+});
+test('bakåt: typredigerare med osparade ändringar räknas som ändrad', () => {
+  const d = { id: 't', name: 'Hus', fields: [{ id: 'f1', name: 'A', kind: 'text' }] }, orig = JSON.stringify(d);
+  const S = { tedit: { ...d, fields: [...d.fields, { id: 'f2', name: '', kind: 'text' }] }, teditOrig: orig };
+  assert.equal(topLayer(S), 'tedit');
+  assert.equal(isDirty(S.tedit, S.teditOrig), true);
+  assert.equal(isDirty(null, orig), false);
+});

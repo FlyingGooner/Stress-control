@@ -35,8 +35,8 @@ Ett enkelt ärendesystem för livet: logga det som oroar dig eller måste göras
 │ Ärenden  Överblick  Arkiv  Inst. │
 └──────────────────────────┘
 ```
-1. **Ärenden** (startvy): öppna ärenden, nyast ändrade först, filter per kategori. "+ Nytt ärende" öppnar typväljaren (ett lager).
-2. **Ärende** (lager, Bakåt stänger): rubrik, typens fält i ordning, delmål (lägg till, bocka av, ta bort), logg (daterad anteckning), knappar Stäng ärende / Öppna igen, Ta bort (med ångra). Ändringar sparas direkt.
+1. **Ärenden** (startvy): öppna ärenden, nyast ändrade först, filter per kategori. "+ Nytt ärende" öppnar typväljaren (ett lager): rubrik, typ, och den valda typens fält direkt under – allt i ett steg, "Skapa ärende" sparar.
+2. **Ärende** (lager, Bakåt stänger): rubrik, typens fält i ordning, delmål (lägg till, bocka av, ta bort), logg (daterad anteckning), knappar Stäng ärende / Öppna igen, Ta bort (bekräftelsedialog med antal loggrader och delmål, fokus på Avbryt, sedan ångra). Loggrader tas också bort via bekräftelse. Ändringar sparas direkt.
 3. **Överblick:** antal öppna per kategori (färgade staplar), äldsta öppna, stängda senaste 30 dagarna, öppna delmål totalt.
 4. **Arkiv:** stängda ärenden, senast stängda först, sök i rubrik.
 5. **Inställningar:** Ärendetyper (slå på/av förslag, skapa egen typ, ändra namn, kategori, fält), Kategorier (namn och färg), Allmänt (Data, Hjälp).

@@ -33,7 +33,7 @@
       <h2>Hjälp</h2>
       <details><summary>Kom igång</summary>
         <p>Det som snurrar i huvudet tar energi. Skriv ner det som ett ärende med nästa steg – då kan du släppa tanken, appen håller reda på den.</p>
-        <p>Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Resten kan du fylla i senare.</p>
+        <p>Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa ärende. Resten kan du fylla i senare.</p>
       </details>
       <details><summary>Ärenden</summary>
         <p>Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.</p>
@@ -45,7 +45,7 @@
       <details><summary>Stänga och arkivera</summary>
         <p>När ärendet är klart: tryck Klart – stäng ärendet. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.</p>
         <p>I Arkiv kan du söka och öppna ett ärende igen.</p>
-        <p>Ta bort raderar ärendet helt (Ångra finns några sekunder).</p>
+        <p>Ta bort frågar först och visar hur många loggrader och delmål som försvinner. Sedan raderas ärendet helt (Ångra finns några sekunder). Samma sak gäller en loggrad.</p>
       </details>
       <details><summary>Överblick</summary>
         <p>Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.</p>
@@ -64,9 +64,11 @@
         <p>Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.</p>
         <p>För att läsa tillbaka: tryck Läs in backup-fil, kontrollera sammanfattningen och tryck Ersätt. All nuvarande data ersätts – Ångra finns direkt efteråt.</p>
         <p>Appen påminner om backup varje månad (ändra under Data).</p>
+        <p>Under Data ser du hur mycket lagring appen använder. Närmar den sig gränsen (cirka 5 MB): spara en backup-fil och ta bort gamla ärenden.</p>
       </details>
       <details><summary>Installera och offline</summary>
         <p>Android (Chrome): menyn ⋮ → Installera app. iPhone (Safari): Dela → Lägg till på hemskärmen. Appen fungerar sedan utan nät.</p>
+        <p>På iPhone: installera appen på hemskärmen. Safari kan annars rensa sparad data för sidor du inte besökt på ett tag. Spara en backup-fil regelbundet ändå.</p>
       </details>
       <details><summary>Integritet</summary>
         <p>Appen gör inga anrop – ingen server, ingen analys, inget konto. Allt du skriver finns bara i den här telefonen.</p>
@@ -80,6 +82,16 @@
       <div class="dlg-actions">
         <button type="submit" class="btn-text" value="cancel">Avbryt</button>
         <button type="submit" class="btn-danger" value="ok" id="cd-ok">Radera</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="del-dialog" aria-labelledby="del-title" aria-describedby="del-text">
+    <form method="dialog">
+      <h2 id="del-title">Ta bort?</h2>
+      <p class="muted" id="del-text"></p>
+      <div class="dlg-actions">
+        <button type="submit" class="btn-text" value="cancel" id="del-cancel" autofocus>Avbryt</button>
+        <button type="submit" class="btn-danger" value="ok" id="del-ok">Ta bort</button>
       </div>
     </form>
   </dialog>

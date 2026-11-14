@@ -63,3 +63,12 @@ T.test('export → import ger samma data, annan app avvisas', () => {
   T.ok(importText('{"app":"annan","format":1,"data":{}}').error);
   T.ok(importText('inte json').error);
 });
+T.test('trasig sparad data: kopia bevaras och load() säger till', async () => {
+  const mem = { 'sk.data': '{trasig' };
+  globalThis.localStorage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = String(v); } };
+  const st = await import('../../store.js');
+  T.eq(st.load().cases, []);
+  T.ok(st.loadFailed(), 'loadFailed');
+  T.eq(mem['sk.data.broken'], '{trasig');
+  T.ok(st.storageUsed() > 0, 'storleken räknas');
+});

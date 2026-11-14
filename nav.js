@@ -1,4 +1,4 @@
-// nav.js – pure navigation logic for Bakåt (as simple-nutrition v0.14). No DOM, no storage: tested in Node
+// nav.js – pure navigation logic for Bakåt (same pattern as simple-nutrition). No DOM, no storage: tested in Node
 // (tools/tests/nav.node.mjs). Layers, topmost first: type picker (pick), open case (open), type editor (tedit).
 
 export function topLayer(S) {
@@ -11,7 +11,7 @@ export const layerDepth = (S) => (S.pick ? 1 : 0) + (S.open ? 1 : 0) + (S.tedit 
 // Closes the topmost layer. Returns true if something closed.
 export function closeTop(S) {
   const l = topLayer(S);
-  if (l === 'pick') S.pick = false;
+  if (l === 'pick') { S.pick = false; S.draft = null; }
   else if (l === 'open') S.open = null;
   else if (l === 'tedit') S.tedit = null;
   return l !== null;

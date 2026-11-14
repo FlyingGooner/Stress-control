@@ -4,7 +4,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Kom igång
 - Det som snurrar i huvudet tar energi. Skriv ner det som ett ärende med nästa steg – då kan du släppa tanken, appen håller reda på den.
-- Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Resten kan du fylla i senare.
+- Tryck + Nytt ärende, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa ärende. Resten kan du fylla i senare.
 
 ## Ärenden
 - Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.
@@ -16,7 +16,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 ## Stänga och arkivera
 - När ärendet är klart: tryck Klart – stäng ärendet. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.
 - I Arkiv kan du söka och öppna ett ärende igen.
-- Ta bort raderar ärendet helt (Ångra finns några sekunder).
+- Ta bort frågar först och visar hur många loggrader och delmål som försvinner. Sedan raderas ärendet helt (Ångra finns några sekunder). Samma sak gäller en loggrad.
 
 ## Överblick
 - Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.
@@ -35,9 +35,11 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.
 - För att läsa tillbaka: tryck Läs in backup-fil, kontrollera sammanfattningen och tryck Ersätt. All nuvarande data ersätts – Ångra finns direkt efteråt.
 - Appen påminner om backup varje månad (ändra under Data).
+- Under Data ser du hur mycket lagring appen använder. Närmar den sig gränsen (cirka 5 MB): spara en backup-fil och ta bort gamla ärenden.
 
 ## Installera och offline
 - Android (Chrome): menyn ⋮ → Installera app. iPhone (Safari): Dela → Lägg till på hemskärmen. Appen fungerar sedan utan nät.
+- På iPhone: installera appen på hemskärmen. Safari kan annars rensa sparad data för sidor du inte besökt på ett tag. Spara en backup-fil regelbundet ändå.
 
 ## Integritet
 - Appen gör inga anrop – ingen server, ingen analys, inget konto. Allt du skriver finns bara i den här telefonen.

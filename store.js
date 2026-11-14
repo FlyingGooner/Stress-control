@@ -142,8 +142,26 @@ export function validate(raw) {
   }
   return s;
 }
+// Unreadable saved data is never overwritten silently: the raw text is kept under BROKEN_KEY and loadFailed() says so.
+export const BROKEN_KEY = KEY + '.broken';
+let failed = false;
+export const loadFailed = () => failed;
 export function load() {
-  try { const t = localStorage.getItem(KEY); return t ? validate(JSON.parse(t)) : defaults(); } catch { return defaults(); }
+  let t;
+  try { t = localStorage.getItem(KEY); } catch { return defaults(); }
+  if (!t) return defaults();
+  try { return validate(JSON.parse(t)); } catch {
+    failed = true;
+    try { localStorage.setItem(BROKEN_KEY, t); } catch { /* no room: the next save still overwrites, but the user is warned */ }
+    return defaults();
+  }
+}
+// Storage used by the app, in characters (browsers count localStorage in UTF-16 units; about 5 million per site).
+export const STORAGE_QUOTA = 5000000;
+export function storageUsed() {
+  let n = 0;
+  try { for (const k of [KEY, BROKEN_KEY]) { const v = localStorage.getItem(k); if (v) n += k.length + v.length; } } catch { /* blocked */ }
+  return n;
 }
 export function save(state) {
   try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch { return false; }
