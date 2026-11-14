@@ -269,7 +269,8 @@ app.addEventListener('click', (ev) => {
     case 'ladd': {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
       if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
-      (c.l ||= []).push([today(), x]); if (c.l.length > LIM.log) c.l.shift(); touch(c); persist(); break;
+      if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per ärende – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
+      (c.l ||= []).push([today(), x]); touch(c); persist(); break;
     }
     case 'ldel': {
       const c = cs(), i = Number(t.dataset.i); if (!c?.l?.[i]) return;
