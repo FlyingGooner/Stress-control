@@ -53,7 +53,8 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Inställningar → Trådar → Personer: lägg till de som kan utföra en tråd, t.ex. du själv, en partner eller en hantverkare. Byt namn direkt i listan; ✕ tar bort personen (med Ångra) och den tas då bort från alla trådar.
 - Välj Vem utför när du skapar en tråd (under typens rubrik) eller i redigeringen. Personen syns i listan (👤) och överst i tråden. En återkommande tråd behåller personen.
 - När någon tråd har en person visas en lista 👤 Alla först bland filterknapparna i Trådar och Arkiv. Välj en person, eller Ingen för trådar utan person. Den går att kombinera med kategorifiltret.
-- Tim/v bredvid namnet är personens normala arbetstid per vecka (standard 40). Den används för timmar borta i Försäkringskassan.
+- Tryck på en person för att fälla ut fler uppgifter: namn, relation (Jag, Partner, Barn, Förälder, Annan), född, arbetstid per vecka, telefon, e-post, arbetsgivare eller skola och en anteckning. Allt sparas direkt. Raden visar en kort sammanfattning, t.ex. Barn · 5 år eller 30 tim/v.
+- Arbetstiden per vecka (standard 40) används för timmar borta i Försäkringskassan. För barn visas den inte.
 
 ## Bakåt
 - Bakåt stänger det som är öppet (redigeringen, en tråd, typväljaren, en typ, delmålslistan eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.

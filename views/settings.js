@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, WEEK_HOURS, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
+import { addDays, WEEK_HOURS, RELS, PERSON_TEXT, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData, savedPassword, rememberOn } from './data.js';
 
@@ -76,12 +76,8 @@ export function viewSettings() {
         el('p', { class: 'muted small', text: 'En kategori som används av en typ kan inte tas bort.' }),
         S.state.cats.length < LIM.cats ? el('button', { class: 'link', 'data-act': 'knew', text: '+ Ny kategori' }) : null),
       sec('people', 'Personer', S.state.people.length ? S.state.people.map((x) => x.name).join(', ') : 'Inga',
-        el('p', { class: 'muted small', text: 'Lägg till de som kan utföra en tråd. Välj Vem utför när du skapar eller redigerar en tråd, och filtrera på person i Trådar och Arkiv. Tim/v = normal arbetstid per vecka (40 = heltid, 30 = 75 %), används för timmar borta i Försäkringskassan.' }),
-        el('ul', { class: 'edit-list' }, S.state.people.map((x) => el('li', { class: 'cat-row' },
-          el('span', { 'aria-hidden': 'true', text: '👤' }),
-          el('input', { type: 'text', maxlength: 30, value: x.name, 'aria-label': 'Personens namn', 'data-act': 'pname', 'data-id': x.id, autocomplete: 'off' }),
-          el('label', { class: 'p-hours' }, el('input', { type: 'text', inputmode: 'decimal', value: String(x.h ?? WEEK_HOURS).replace('.', ','), 'aria-label': `Arbetstimmar per vecka för ${x.name}`, 'data-act': 'phours', 'data-id': x.id, autocomplete: 'off' }), el('span', { text: 'tim/v' })),
-          el('button', { class: 'icon sm danger', 'data-act': 'pdel', 'data-id': x.id, 'aria-label': `Ta bort ${x.name}`, text: '✕' })))),
+        el('p', { class: 'muted small', text: 'Lägg till de som kan utföra en tråd. Välj Vem utför när du skapar eller redigerar en tråd, och filtrera på person i Trådar och Arkiv. Tryck på en person för fler uppgifter. Arbetstid per vecka (40 = heltid, 30 = 75 %) används för timmar borta i Försäkringskassan.' }),
+        el('ul', { class: 'person-list' }, S.state.people.map(personCard)),
         S.state.people.length < LIM.people ? el('button', { class: 'link', 'data-act': 'pnew', text: '+ Ny person' }) : null)),
     sec('alerts', 'Påminnelser', `${S.state.alertDays ?? 7} dagar innan`,
       el('label', { class: 'goal-row' }, el('span', { text: 'Visa i Aktuellt' }),
@@ -127,6 +123,24 @@ export function viewSettings() {
       helpCard()),
     el('p', { class: 'muted small center', text: `Stress kontroll v${self.APP_VERSION} · inga externa anrop` }),
   ];
+}
+
+// A person: folded row (name + short summary), open = all details. Saved on change (data-act pname/phours/pset).
+function personCard(x) {
+  const age = x.born ? Math.floor((Number(today().replace(/-/g, '')) - Number(x.born.replace(/-/g, ''))) / 10000) : null;
+  const hint = [x.rel ? RELS[x.rel] : null, age != null && age >= 0 ? `${age} år` : null, x.rel !== 'child' ? `${String(x.h ?? WEEK_HOURS).replace('.', ',')} tim/v` : null].filter(Boolean).join(' · ');
+  const row = (label, input) => el('label', { class: 'p-field' }, el('span', { text: label }), input);
+  const txt = (k, label, max, multi) => row(label, el(multi ? 'textarea' : 'input', { ...(multi ? { rows: 2, text: x[k] ?? '' } : { type: k === 'mail' ? 'email' : k === 'tel' ? 'tel' : 'text', value: x[k] ?? '' }), maxlength: max, 'data-act': 'pset', 'data-id': x.id, 'data-key': k, autocomplete: 'off' }));
+  return el('li', {}, el('details', { class: 'person', 'data-sec': 'p-' + x.id, open: setOpen.has('p-' + x.id) },
+    el('summary', {}, el('span', { class: 'p-name', text: '👤 ' + x.name }), el('span', { class: 'set-hint', text: hint })),
+    el('div', { class: 'p-body' },
+      row('Namn', el('input', { type: 'text', maxlength: 30, value: x.name, 'data-act': 'pname', 'data-id': x.id, autocomplete: 'off' })),
+      row('Relation', el('select', { 'data-act': 'pset', 'data-id': x.id, 'data-key': 'rel' }, el('option', { value: '', selected: !x.rel, text: '–' }),
+        Object.entries(RELS).map(([k, l]) => el('option', { value: k, selected: x.rel === k, text: l })))),
+      row('Född', el('input', { type: 'date', value: x.born ?? '', max: today(), 'data-act': 'pset', 'data-id': x.id, 'data-key': 'born' })),
+      x.rel === 'child' ? null : row('Arbetstid, tim/vecka', el('input', { type: 'text', inputmode: 'decimal', value: String(x.h ?? WEEK_HOURS).replace('.', ','), 'data-act': 'phours', 'data-id': x.id, autocomplete: 'off' })),
+      PERSON_TEXT.map(([k, label, max, multi]) => txt(k, label, max, multi)),
+      el('button', { class: 'link danger', 'data-act': 'pdel', 'data-id': x.id, text: `Ta bort ${x.name}` }))));
 }
 
 export const trashLabel = (d) => (d ? `Efter ${d === 365 ? '1 år' : d + ' dagar'}` : 'Aldrig');

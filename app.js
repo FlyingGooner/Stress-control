@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, RELS, PERSON_TEXT, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -359,8 +359,8 @@ app.addEventListener('click', (ev) => {
     case 'owncancel': S.own = null; break;
     case 'pnew': {
       if (S.state.people.length >= LIM.people) return;
-      S.state.people.push({ id: 'p' + uid(), name: 'Ny person' }); persist(); render();
-      app.querySelector('.set-sec[data-sec="people"] li:last-of-type input')?.select(); return;
+      const id = 'p' + uid(); S.state.people.push({ id, name: 'Ny person' }); setOpen.add('p-' + id); persist(); render();
+      app.querySelector(`[data-sec="p-${id}"] [data-act=pname]`)?.select(); return;
     }
     case 'pdel': {   // removing a person clears it from every case (open, archived, trash) – with Ångra
       const x = S.state.people.find((p) => p.id === id); if (!x) return;
@@ -451,6 +451,14 @@ app.addEventListener('change', (ev) => {
       if (!ok) { errText('dy-e-' + t.dataset.id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
       if (!S.pick) persist(); render(); return;
     }
+    case 'pset': {   // Personer: relation, born and the text details
+      const x = S.state.people.find((p) => p.id === t.dataset.id), k = t.dataset.key; if (!x) return;
+      const spec = PERSON_TEXT.find((s) => s[0] === k);
+      const v = k === 'rel' ? (Object.hasOwn(RELS, t.value) ? t.value : '') : k === 'born' ? (validDate(t.value) ? t.value : '') : spec ? cleanText(t.value, spec[2], !!spec[3]) : null;
+      if (v === null) return;
+      if (v) x[k] = v; else delete x[k];
+      persist(); if (!spec) render(); return;   // text: no re-render, so focus stays in the next field
+    }
     case 'phours': {
       const x = S.state.people.find((p) => p.id === t.dataset.id), v = Number(String(t.value).replace(',', '.'));
       if (!x) return;
@@ -460,7 +468,7 @@ app.addEventListener('change', (ev) => {
     case 'cperson': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (S.state.people.some((x) => x.id === t.value)) c.p = t.value; else delete c.p; c.u = today(); persist(); return; }
     case 'pname': {
       const x = S.state.people.find((p) => p.id === t.dataset.id), v = cleanText(t.value, 30);
-      if (x && v) { x.name = v; persist(); render(); } else if (x) t.value = x.name;
+      if (x && v) { x.name = v; persist(); const n = t.closest('details')?.querySelector('.p-name'); if (n) n.textContent = '👤 ' + v; } else if (x) t.value = x.name;
       return;
     }
     case 'crep': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (REPEAT[t.value]) c.r = t.value; else delete c.r; touch(c); persist(); render(); return; }

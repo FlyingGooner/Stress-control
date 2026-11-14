@@ -9,7 +9,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 |---|---|---|
 | `version` | tal | `5`. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. Före version 4 byts dess ikon 👶 mot 🛟. Före version 5 blir dess textfält Vad (`wh`) ett val i lista med Försäkringskassans ersättningar. |
 | `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
-| `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30, h? }`. `h` = arbetstimmar per vecka 1–80 (saknas = 40); en normal arbetsdag är `h / 5`. |
+| `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30, h? }`. `h` = arbetstimmar per vecka 1–80 (saknas = 40); en normal arbetsdag är `h / 5`. Valfritt även `rel` (`me` \| `partner` \| `child` \| `parent` \| `other`), `born` (datum), `tel` ≤ 30, `mail` ≤ 80, `work` ≤ 60 (arbetsgivare eller skola) och `note` ≤ 500 (radbrytningar). |
 | `cats` | lista, 1–12 | Kategorier. |
 | `types` | lista, 1–30 | Ärendetyper. |
 | `cases` | lista, ≤ 10 000 (varav ≤ 500 öppna) | Ärenden. Över taket behålls alla öppna och de senast stängda. |

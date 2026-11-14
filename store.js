@@ -9,6 +9,9 @@ export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange:
 export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', choice: 'Val i lista', days: 'Dagar (VAB m.m.)' };
 // Dagar: [[datum, arbetade timmar 0–24, ansökt 0|1]] – a list of days (VAB, föräldrapenning) ticked off one by one.
 export const DAYS_MAX = 60, WEEK_HOURS = 40, OPTS_MAX = 30;
+// Personer: optional details. rel = relation, born = date, the rest text [key, label, max length, multi-line].
+export const RELS = { me: 'Jag', partner: 'Partner', child: 'Barn', parent: 'Förälder', other: 'Annan' };
+export const PERSON_TEXT = [['tel', 'Telefon', 30], ['mail', 'E-post', 80], ['work', 'Arbetsgivare eller skola', 60], ['note', 'Anteckning', 500, 1]];
 // Försäkringskassan's benefits for private persons (forsakringskassan.se), the most common first. Own choices are added to the type.
 export const FK_OPTS = ['VAB (tillfällig föräldrapenning)', 'Föräldrapenning', 'Sjukpenning', 'Sjukersättning', 'Aktivitetsersättning', 'Rehabiliteringspenning',
   'Graviditetspenning', 'Närståendepenning', 'Smittbärarpenning', 'Bostadsbidrag', 'Underhållsstöd', 'Barnbidrag', 'Omvårdnadsbidrag', 'Merkostnadsersättning',
@@ -167,7 +170,14 @@ export function validate(raw) {
   const types = new Map(s.types.map((t) => [t.id, t]));
   if (Array.isArray(raw.people)) {   // Personer: who does a case (case.p)
     const seen = new Set();
-    s.people = raw.people.filter((x) => isObj(x) && okId(x.id) && cleanText(x.name, 30) && !seen.has(x.id) && seen.add(x.id)).slice(0, LIM.people).map((x) => ({ id: x.id, name: cleanText(x.name, 30), ...(typeof x.h === 'number' && x.h >= 1 && x.h <= 80 && x.h !== WEEK_HOURS ? { h: Math.round(x.h * 10) / 10 } : {}) }));
+    s.people = raw.people.filter((x) => isObj(x) && okId(x.id) && cleanText(x.name, 30) && !seen.has(x.id) && seen.add(x.id)).slice(0, LIM.people).map((x) => {
+      const p = { id: x.id, name: cleanText(x.name, 30) };
+      if (typeof x.h === 'number' && x.h >= 1 && x.h <= 80 && x.h !== WEEK_HOURS) p.h = Math.round(x.h * 10) / 10;
+      if (Object.hasOwn(RELS, x.rel)) p.rel = x.rel;
+      if (validDate(x.born)) p.born = x.born;
+      for (const [k, , max, multi] of PERSON_TEXT) { const v = cleanText(x[k], max, !!multi); if (v) p[k] = v; }
+      return p;
+    });
   }
   const people = new Set(s.people.map((x) => x.id));
   if (Array.isArray(raw.cases)) {
@@ -515,7 +525,7 @@ export function importText(text) {
 export const EXPORT_README = 'Backup från Stress kontroll. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
   version: 'tal, 5 (äldre: typen Försäkringskassan läggs till vid import)',
-  people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}) }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
+  people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}), rel?: ${Object.keys(RELS).join(' | ')}, born?: datum, tel? ≤ 30, mail? ≤ 80, work? ≤ 60, note? ≤ 500 }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,

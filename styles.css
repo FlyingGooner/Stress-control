@@ -426,3 +426,13 @@ progress.day-bar::-moz-progress-bar { background: var(--cc, var(--primary)); }
 .day-add { align-items: flex-end; }
 .day-lab { display: grid; gap: 2px; font-size: .75rem; color: var(--muted); }
 .day-lab input.day-w { width: 6.5em; }
+.person-list { list-style: none; margin: 0; padding: 0; }
+.person-list > li + li { border-top: 1px solid var(--outline-variant); }
+.person > summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 48px; cursor: pointer; list-style: none; }
+.person > summary::-webkit-details-marker { display: none; }
+.person > summary::after { content: "▾"; color: var(--muted); } .person[open] > summary::after { content: "▴"; }
+.p-name { font-weight: 500; } .person .set-hint { margin-left: auto; }
+.p-body { display: grid; gap: 8px; padding: 0 0 12px; }
+.p-field { display: grid; gap: 2px; font-size: .8rem; color: var(--muted); }
+.p-field input, .p-field select, .p-field textarea { width: 100%; box-sizing: border-box; min-height: 44px; padding: 8px 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-md); background: var(--surface); color: var(--fg); font: inherit; font-size: 1rem; }
+.p-body .link.danger { justify-self: start; }
