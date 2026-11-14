@@ -8,7 +8,7 @@ import { viewOverview } from './views/overview.js';
 import { viewArchive, archiveList } from './views/archive.js';
 import { viewTrash } from './views/trash.js';
 import { viewSettings } from './views/settings.js';
-import { initData, saveBackup, maybeAskBackup, readBackup, openImport } from './views/data.js';
+import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, forgetPassword } from './views/data.js';
 
 const CONFIG = { startView: 'cases' };
 document.getElementById('version').textContent = 'v' + self.APP_VERSION;
@@ -149,7 +149,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -158,7 +158,7 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false;
+  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false;
   go(t.dataset.view);
 });
 
@@ -355,6 +355,9 @@ app.addEventListener('click', (ev) => {
     case 'wipe': document.getElementById('confirm-dialog').showModal(); return;
     case 'import': openImport(document.getElementById('import-text').value); return;
     case 'backupsave': saveBackup(); return;
+    case 'pwdset': rememberPassword(); return;
+    case 'pwdforget': forgetPassword(); S.showPwd = false; return;
+    case 'pwdshow': S.showPwd = !S.showPwd; break;
     default: return;
   }
   render();

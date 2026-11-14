@@ -25,8 +25,28 @@ const BACKUP_MSG = {
   error: 'Kunde inte spara filen',
   nocrypto: 'Den här webbläsaren kan inte kryptera – ingen fil sparades',
 };
+/* ---------- Remembered backup password (optional) ----------
+   Kept only on this device under sk.pwd – never in sk.data, so never inside a backup file. The data in localStorage is
+   plain anyway; the password protects the file once it leaves the device. Radera all data forgets it too. */
+const PWD_KEY = 'sk.pwd', SLUG = 'stress-kontroll';
+export function savedPassword() { try { const p = localStorage.getItem(PWD_KEY); return p && !Backup.checkPassword(p) ? p : ''; } catch { return ''; } }
+export async function rememberPassword() {
+  const a = await Backup.askPassword('export'); if (!a) return;
+  try { localStorage.setItem(PWD_KEY, a.pwd); } catch { snackbar('Kunde inte spara lösenordet', null, null, 3000); return; }
+  render(); snackbar('Lösenordet sparas på den här enheten. Ha det kvar i din lösenordshanterare också.', null, null, 6000);
+}
+export function forgetPassword() { try { localStorage.removeItem(PWD_KEY); } catch { /* blocked */ } render(); snackbar('Lösenordet är borttaget från enheten', null, null, 3000); }
+let busy = false;
 export async function saveBackup() {
-  const r = await Backup.saveWithPassword({ slug: 'stress-kontroll', today: today(), text: exportText(S.state, today()) });
+  const pwd = savedPassword();
+  let r;
+  if (pwd) {   // one tap: encrypt with the remembered password, no dialog
+    if (busy) return; busy = true;
+    try {
+      snackbar('Krypterar backup…', null, null, 2000);
+      r = await Backup.save({ slug: SLUG, today: today(), text: await Backup.encrypt(exportText(S.state, today()), pwd, SLUG) });
+    } catch { r = 'error'; } finally { busy = false; }
+  } else r = await Backup.saveWithPassword({ slug: SLUG, today: today(), text: exportText(S.state, today()) });
   if (r === 'saved' || r === 'fallback') {
     S.state.backup.last = today(); S.state.backup.asked = null; persist();
     if (currentView() === 'settings') render();
@@ -71,7 +91,12 @@ export async function readBackup(input) {
 }
 // Encrypted backup: an envelope asks for the password, then the same checks as plain text.
 export async function openImport(text) {
-  const r = await Backup.openText(text, 'stress-kontroll', MAX_IMPORT_CHARS);
+  const pwd = savedPassword();   // the remembered password first; another password → the usual question
+  if (pwd && Backup.isEncrypted(text)) {
+    let t; try { t = await Backup.decrypt(text, pwd, SLUG, MAX_IMPORT_CHARS); } catch { t = null; }
+    if (t && typeof t.text === 'string') { startImport(t.text); return; }
+  }
+  const r = await Backup.openText(text, SLUG, MAX_IMPORT_CHARS);
   if (r.cancelled) return;
   if (r.error) { importError(r.error); return; }
   startImport(r.text);
@@ -92,7 +117,7 @@ export function initData(ctx) {
     snackbar('Data importerad', 'Ångra', () => { S.state = before; persist(); render(); });
   });
   $('cd-ok').addEventListener('click', () => {
-    S.state = defaults(); S.open = null; S.pick = false; S.tedit = null; persist(); render();
+    S.state = defaults(); S.open = null; S.pick = false; S.tedit = null; try { localStorage.removeItem(PWD_KEY); } catch { /* blocked */ } persist(); render();
     snackbar('All data är raderad', null, null, 3000);
   });
 }

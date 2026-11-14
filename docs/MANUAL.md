@@ -53,6 +53,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Appen påminner om backup varje månad (ändra under Data).
 - Under Data ser du hur mycket lagring appen använder. Närmar den sig gränsen (cirka 5 MB): spara en backup-fil och ta bort gamla trådar.
 
+- Kom ihåg lösenordet (Inställningar → Data): skriv eller klistra in ditt lösenord en gång, så sparas backup sedan med ett tryck. Lösenordet sparas bara på den här enheten, aldrig i backup-filen, och filen är lika krypterad som förut. Visa visar lösenordet, Byt ändrar det, Glöm tar bort det. Läser du in en backup provas det sparade lösenordet först. Behåll lösenordet i din lösenordshanterare – utan det går backupen inte att öppna på en ny telefon.
 ## Installera och offline
 - Android (Chrome): menyn ⋮ → Installera app. iPhone (Safari): Dela → Lägg till på hemskärmen. Appen fungerar sedan utan nät.
 - På iPhone: installera appen på hemskärmen. Safari kan annars rensa sparad data för sidor du inte besökt på ett tag. Spara en backup-fil regelbundet ändå.

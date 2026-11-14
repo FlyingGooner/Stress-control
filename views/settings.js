@@ -1,7 +1,7 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
 import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
-import { hasData } from './data.js';
+import { hasData, savedPassword } from './data.js';
 
 // In-app manual: static <template id="help-tpl"> in index.html (built from docs/MANUAL.md), cloned – never parsed as HTML text.
 function helpCard() {
@@ -103,6 +103,7 @@ export function viewSettings() {
           el('button', { class: 'btn-file btn-filled', 'data-act': 'backupsave', text: 'Spara backup-fil' }),
           el('label', { class: 'btn-file' }, 'Läs in backup-fil',
             el('input', { type: 'file', id: 'import-file', accept: '.txt,.json', 'data-act': 'importfile' }))),
+        pwdBox(),
         el('p', { class: 'import-error small', id: 'import-error', role: 'alert' }),
         el('details', { class: 'data-text' }, el('summary', { text: 'Klistra in text' }),
           el('label', { class: 'data-box' }, el('span', { class: 'small', text: 'Importera (ersätter all data)' }),
@@ -120,3 +121,19 @@ export function viewSettings() {
 }
 
 export const trashLabel = (d) => (d ? `Efter ${d === 365 ? '1 år' : d + ' dagar'}` : 'Aldrig');
+
+// Remembered backup password: off by default. On: one tap saves, Visa shows it (to write down), Byt, Glöm.
+function pwdBox() {
+  const p = savedPassword();
+  if (!p) return el('div', { class: 'pwd-box' },
+    el('button', { class: 'link', 'data-act': 'pwdset', text: 'Kom ihåg lösenordet på den här enheten…' }),
+    el('p', { class: 'muted small', text: 'Då sparas backup med ett tryck, utan att du skriver lösenordet. Filen är lika skyddad som förut.' }));
+  return el('div', { class: 'pwd-box' },
+    el('p', { class: 'small', text: '🔑 Lösenordet sparas på den här enheten – backup sparas med ett tryck.' }),
+    S.showPwd ? el('p', { class: 'pwd-show', text: p }) : null,
+    el('div', { class: 'row-actions' },
+      el('button', { class: 'link', 'data-act': 'pwdshow', text: S.showPwd ? 'Dölj' : 'Visa' }),
+      el('button', { class: 'link', 'data-act': 'pwdset', text: 'Byt' }),
+      el('button', { class: 'link danger', 'data-act': 'pwdforget', text: 'Glöm' })),
+    el('p', { class: 'muted small', text: 'Ha lösenordet kvar i din lösenordshanterare: utan det går backupen inte att öppna på en ny telefon.' }));
+}

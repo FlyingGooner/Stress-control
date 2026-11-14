@@ -45,6 +45,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 - `sk.data`: allt utom stängda ärenden och papperskorg, plus `arch: 1`. Skrivs vid varje ändring. Saknas `arch` är `sk.data` komplett och `sk.arch` ignoreras.
 - `sk.arch`: `[stängda ärenden, papperskorg]` som JSON, komprimerat med deflate-raw (webbläsarens `CompressionStream`) och packat 15 bitar per tecken (tecken 0x20–0x801F): `Z<antal byte>:<tecken>`. Utan `CompressionStream` sparas `J<json>`.
 - När arkivdelen ändras skrivs först hela datan okomprimerat till `sk.data`, sedan `sk.arch` och till sist den lilla `sk.data`. Stängs appen mitt i finns allt kvar.
+- `sk.pwd`: valfritt sparat backup-lösenord (Inställningar → Data). Bara på enheten, aldrig i `sk.data` eller i backup-filen; Radera all data tar bort det.
 - Oläsbar data skrivs aldrig över: den sparas under `sk.data.broken` eller `sk.arch.broken`.
 - Uppmätt: 10 000 arkiverade + 100 öppna ärenden tar 1,1 M tecken (normala) till 3,6 M tecken (långa anteckningar) av cirka 5 M; okomprimerat 12–39 M.
 
