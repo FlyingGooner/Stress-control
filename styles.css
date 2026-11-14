@@ -365,3 +365,5 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .pick-row .step-date { flex: 0 0 auto; width: 8.5em; }
 .case-h { margin-top: 6px; }
 .step-date.done-date { color: var(--muted); }
+.icon.sm.rep { width: auto; min-width: 32px; padding: 0 6px; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.icon.sm.rep.on { color: var(--primary); font-weight: 600; }

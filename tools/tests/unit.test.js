@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -201,4 +201,14 @@ T.test('delmål: avbockning sparar klart-datum, deadline behålls, avbockning å
   T.eq(c.s[0], ['Ring', 0, '2026-11-20']);
   const v = validate({ cases: [{ id: 'a', t: 'sym', title: 'x', c: '2026-01-01', s: [['A', 1, 0, '2026-11-14'], ['B', 0, 0, '2026-11-14'], ['C', 1, 'x', 'bad']] }] });
   T.eq(v.cases[0].s, [['A', 1, 0, '2026-11-14'], ['B', 0], ['C', 1]]);
+});
+T.test('delmål som upprepas: avbockning ger nästa tur, ångrad avbockning tar bort den', () => {
+  const c = { s: [['Byt däck', 0, '2026-11-01']] };
+  T.ok(setStepRepeat(c, 0, 'y', '2026-11-14'));
+  setStepDone(c, 0, 1, '2026-11-14');
+  T.eq(c.s, [['Byt däck', 1, '2026-11-01', '2026-11-14'], ['Byt däck', 0, '2027-11-01', 0, 'y']]);
+  setStepDone(c, 0, 0, '2026-11-14');
+  T.eq(c.s, [['Byt däck', 0, '2026-11-01', 0, 'y']]);
+  const m = { s: [['Tanka', 0, 0, 0, 'm']] }; setStepDone(m, 0, 1, '2026-01-31');
+  T.eq(m.s[1], ['Tanka', 0, '2026-02-28', 0, 'm']);
 });

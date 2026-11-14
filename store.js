@@ -115,7 +115,7 @@ function cleanCase(c, types) {
   const o = (Array.isArray(c.o) ? c.o : []).filter((x) => Array.isArray(x) && Object.hasOwn(KINDS, x[1]) && cleanText(x[0], 40)).slice(0, LIM.fields)
     .map((x) => [cleanText(x[0], 40), x[1], cleanValue(x[1], x[2]) ?? null, cleanText(x[3], 30)]);
   if (o.length) out.o = o;
-  const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => cleanStep(x[0], x[1], x[2], x[3]));
+  const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => cleanStep(x[0], x[1], x[2], x[3], x[4]));
   if (s.length) out.s = s;
   const l = (Array.isArray(c.l) ? c.l : []).filter((x) => Array.isArray(x) && validDate(x[0]) && cleanText(x[1], 500, true)).slice(-LIM.logKeep).map((x) => [x[0], cleanText(x[1], 500, true)]);
   if (l.length) out.l = l;
@@ -342,7 +342,7 @@ export function nextCase(state, c, today) {
   if (c.f) nc.f = Object.fromEntries(Object.entries(c.f).filter(([k]) => t?.fields.some((f) => f.id === k && f.kind !== 'check')).map(([k, v]) => [k, dated.has(k) ? mv(v) : v]));
   if (nc.f && !Object.keys(nc.f).length) delete nc.f;
   if (c.o) nc.o = c.o.map(([nm, k, v, fr]) => [nm, k, v == null || k === 'check' ? null : (k === 'date' || k === 'dt') ? mv(v) : v, fr]);
-  if (c.s) nc.s = c.s.map(([x, , d]) => (d ? [x, 0, mv(d)] : [x, 0]));
+  if (c.s) nc.s = c.s.map(([x, , d, , r]) => cleanStep(x, 0, d ? mv(d) : 0, 0, r));
   state.cases.unshift(nc);
   return nc;
 }
@@ -373,16 +373,29 @@ export function purgeTrash(state, today) {
   if (state.trashDays) state.trash = state.trash.filter((c) => purgeDate(state, c) > today);
   return n - state.trash.length;
 }
-// A sub-goal: [text, done 0|1, deadline date or 0, done date] – trailing empty parts left out.
-export function cleanStep(text, done, due, doneOn) {
-  const r = [cleanText(text, 80), done ? 1 : 0];
-  if (done && validDate(doneOn)) r.push(validDate(due) ? due : 0, doneOn); else if (validDate(due)) r.push(due);
+// A sub-goal: [text, done 0|1, deadline date or 0, done date or 0, repeat 'm'|'y'] – trailing empty parts left out.
+export function cleanStep(text, done, due, doneOn, rep) {
+  const r = [cleanText(text, 80), done ? 1 : 0, validDate(due) ? due : 0, done && validDate(doneOn) ? doneOn : 0, REPEAT[rep] ? rep : 0];
+  while (r.length > 2 && !r[r.length - 1]) r.pop();
   return r;
 }
-// Ticks a sub-goal on or off; ticked gets today as its done date (can be changed afterwards).
+// Ticks a sub-goal on or off; ticked gets today as its done date (can be changed afterwards). A repeating sub-goal
+// adds its next turn (same text, deadline a month or year on – from the deadline, else from today) right after it;
+// unticking takes that turn away again if it is still untouched.
 export function setStepDone(c, i, done, today) {
   const x = c.s?.[i]; if (!x) return false;
-  c.s[i] = cleanStep(x[0], done, x[2], done ? today : null); c.u = today; return true;
+  const rep = x[4], nx = c.s[i + 1];
+  if (done && !x[1] && REPEAT[rep] && c.s.length < LIM.steps) {
+    c.s.splice(i + 1, 0, cleanStep(x[0], 0, addMonths(x[2] || today, rep === 'y' ? 12 : 1), 0, rep));
+    c.s[i] = cleanStep(x[0], 1, x[2], today);   // the done one keeps its history, the repeat moves on
+  } else if (!done && x[1] && nx && !nx[1] && nx[0] === x[0] && REPEAT[nx[4]]) {
+    c.s.splice(i + 1, 1); c.s[i] = cleanStep(x[0], 0, x[2], 0, nx[4]);
+  } else c.s[i] = cleanStep(x[0], done, x[2], done ? today : 0, rep);
+  c.u = today; return true;
+}
+export function setStepRepeat(c, i, rep, today) {
+  const x = c.s?.[i]; if (!x || x[1]) return false;
+  c.s[i] = cleanStep(x[0], 0, x[2], 0, rep); c.u = today; return true;
 }
 export const progress = (c) => [(c.s || []).filter((x) => x[1]).length, (c.s || []).length];
 export const openCases = (state) => state.cases.filter((c) => !c.x).sort((a, b) => (a.u < b.u ? 1 : a.u > b.u ? -1 : 0));
@@ -439,7 +452,7 @@ export const EXPORT_SCHEMA = {
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum? (bara när avbockat)]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna ärenden, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan ärendet raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
