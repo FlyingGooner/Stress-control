@@ -381,3 +381,5 @@ body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none
 input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 .pwd-box { margin-top: 8px; }
 .pwd-show { margin: 4px 0; padding: 8px 12px; border-radius: var(--r-md); background: var(--surface-container-high); font-family: ui-monospace, monospace; font-size: 1rem; letter-spacing: .04em; overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.welcome-actions > * { flex: 1 1 12rem; text-align: center; }
