@@ -461,3 +461,4 @@ select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6p
 .sel-box { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid var(--muted); border-radius: 6px; font-weight: 700; }
 .case-li.marked .case-line { background: var(--primary-container, #eaddff); }
 .case-li.marked .sel-box { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
+.cases, .sel-bar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

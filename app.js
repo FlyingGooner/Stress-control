@@ -445,13 +445,16 @@ app.addEventListener('pointerdown', (ev) => {
   if (!row || view !== 'cases' || topLayer(S) || ev.button > 0) return;
   press = { x: ev.clientX, y: ev.clientY, timer: setTimeout(() => {
     press = null; pressFired = true;
-    S.sel = [row.dataset.id]; S.exp = null; navigator.vibrate?.(20); render();
+    getSelection()?.removeAllRanges(); S.sel = [row.dataset.id]; S.exp = null; navigator.vibrate?.(20); render();
   }, CONFIG.longPressMs) };
 });
 app.addEventListener('pointermove', (ev) => { if (press && Math.hypot(ev.clientX - press.x, ev.clientY - press.y) > 10) endPress(); });
 for (const t of ['pointerup', 'pointercancel', 'scroll']) addEventListener(t, endPress, { passive: true, capture: true });
 app.addEventListener('click', (ev) => { if (pressFired) { pressFired = false; ev.stopImmediatePropagation(); ev.preventDefault(); } }, true);
 app.addEventListener('contextmenu', (ev) => { if (ev.target.closest('.case-row')) ev.preventDefault(); });
+
+// Android starts its own text selection on a long press (on the text next to the row too): clear it while marking.
+document.addEventListener('selectionchange', () => { if ((press || S.sel) && !document.activeElement?.matches?.('input, textarea')) getSelection()?.removeAllRanges(); });
 
 /* ---------- Swipe sideways between the category filters in Trådar (no layer open; not from the screen edges = system Back) ---------- */
 let swipe = null;
