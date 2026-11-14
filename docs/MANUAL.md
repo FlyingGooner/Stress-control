@@ -33,6 +33,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Bakåt
 - Bakåt stänger det som är öppet (ett ärende, typväljaren, en ärendetyp eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
+- Svep åt vänster eller höger för att byta flik (inte när ett ärende eller formulär är öppet).
 
 ## Backup och flytt
 - Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.

@@ -295,6 +295,21 @@ app.addEventListener('input', (ev) => {
   if (t.dataset.act === 'fname') { const f = d.fields[Number(t.dataset.i)]; if (f) f.name = t.value; }
   if (t.dataset.act === 'tsteps') d.steps = t.value.split('\n').map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
 });
+/* ---------- Swipe sideways between the tabs (only with no layer open; not from the screen edges = system Back) ---------- */
+let swipe = null;
+document.addEventListener('touchstart', (ev) => {
+  const t = ev.touches[0];
+  swipe = ev.touches.length === 1 && !topLayer(S) && t.clientX > 24 && t.clientX < innerWidth - 24
+    && !ev.target.closest('input, textarea, select, dialog') ? { x: t.clientX, y: t.clientY } : null;
+}, { passive: true });
+document.addEventListener('touchend', (ev) => {
+  if (!swipe) return;
+  const t = ev.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+  swipe = null;
+  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
+  const tabs = [...document.querySelectorAll('.tabbar .tab')], i = tabs.findIndex((x) => x.getAttribute('aria-current') === 'page');
+  tabs[i + (dx < 0 ? 1 : -1)]?.click();
+}, { passive: true });
 app.addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter') return;
   if (ev.target.id === 's-new') { ev.preventDefault(); app.querySelector('[data-act="sadd"]')?.click(); }
