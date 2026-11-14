@@ -117,6 +117,7 @@ export function viewCases() {
   if (S.tedit) return typeEditor();
   if (S.open) return caseEditor();
   const all = openCases(S.state), cats = S.state.cats;
+  if (S.filter !== 'all' && !all.some((c) => typeOf(S.state, c)?.cat === S.filter)) S.filter = 'all';   // category emptied (closed, moved): back to Alla
   const list = S.filter === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S.filter);
   const chip = (id, label, color) => el('button', { class: 'chip' + (color ? ` c-${color}` : '') + (S.filter === id ? ' on' : ''), 'data-act': 'filter', 'data-id': id, 'aria-pressed': String(S.filter === id), text: label });
   const counts = new Map();

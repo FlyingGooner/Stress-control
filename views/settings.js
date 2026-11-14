@@ -33,7 +33,7 @@ export function typeEditor() {
       el('button', { class: 'icon sm danger', 'data-act': 'fdel', 'data-i': i, 'aria-label': 'Ta bort fältet', text: '✕' }),
       f.kind === 'date' || f.kind === 'dt' ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: !!f.due, 'data-act': 'fdue', 'data-i': i }), el('span', { text: 'Deadline – påminn även när datumet passerat' })) : null))),
     d.fields.length < LIM.fields ? el('button', { class: 'link', 'data-act': 'fadd', text: '+ Lägg till fält' }) : null,
-    el('p', { class: 'muted small', text: 'Sorter: text, lång text, datum, datum och tid, tal och bock (t.ex. Pratat med banken ✓). Data i ett borttaget fält sparas inte längre.' }),
+    el('p', { class: 'muted small', text: 'Sorter: text, lång text, datum, datum och tid, tal och bock (t.ex. Pratat med banken ✓). Tar du bort ett fält flyttas ifyllda värden till Extra fält i ärendena, så inget försvinner.' }),
     el('h2', { class: 'sub-h', text: 'Förslag på delmål' }),
     el('textarea', { id: 't-steps', rows: 3, 'aria-label': 'Förslag på delmål, ett per rad', placeholder: 'Ett per rad, t.ex. Prata med banken', 'data-act': 'tsteps', text: d.steps.join('\n') }),
     el('p', { class: 'muted small', text: 'Läggs in som delmål när ett nytt ärende av typen skapas.' }),

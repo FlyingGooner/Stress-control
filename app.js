@@ -170,7 +170,6 @@ app.addEventListener('click', (ev) => {
       S.draft = { t: id, f: S.draft?.f };
       if (!S.draft.f) delete S.draft.f;
       const ty = S.state.types.find((x) => x.id === id);
-      if (S.draft.f) { for (const k of Object.keys(S.draft.f)) if (!ty?.fields.some((f) => f.id === k)) delete S.draft.f[k]; }
       render(); app.querySelector('.draft')?.scrollIntoView({ block: 'nearest' }); return;
     }
     case 'cnew': {   // creates the case (open, not archived) and closes the picker
@@ -178,7 +177,7 @@ app.addEventListener('click', (ev) => {
       if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
       const c = newCase(S.state, id, title, today());
       if (!c) { errText('new-error', `Max ${LIM.cases} ärenden.`); return; }
-      if (S.draft?.t === id && S.draft.f) { const f = {}; for (const [k, v] of Object.entries(S.draft.f)) f[k] = v; c.f = f; }
+      if (S.draft?.t === id && S.draft.f) { const ty = S.state.types.find((x) => x.id === id), f = {}; for (const [k, v] of Object.entries(S.draft.f)) if (ty?.fields.some((x) => x.id === k)) f[k] = v; if (Object.keys(f).length) c.f = f; }
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
       snackbar(`${c.title} är sparat`, null, null, 2500); return;
     }
@@ -261,8 +260,17 @@ app.addEventListener('click', (ev) => {
       if (!clean) { errText('t-error', 'Ge typen ett namn.'); return; }
       const i = S.state.types.findIndex((x) => x.id === clean.id);
       if (i >= 0) S.state.types[i] = clean; else S.state.types.push(clean);
-      // Values of removed fields are dropped from the type's cases (same as validate()).
-      for (const c of S.state.cases) if (c.t === clean.id && c.f) { for (const k of Object.keys(c.f)) if (!clean.fields.some((f) => f.id === k)) delete c.f[k]; if (!Object.keys(c.f).length) delete c.f; }
+      // Values of removed fields (or fields whose kind changed) are kept as extra fields in each case – never dropped silently.
+      const old = i >= 0 ? JSON.parse(S.teditOrig) : null;
+      for (const c of S.state.cases) if (c.t === clean.id && c.f) {
+        for (const k of Object.keys(c.f)) {
+          const nf = clean.fields.find((f) => f.id === k), of = old?.fields.find((f) => f.id === k);
+          if (nf && nf.kind === of?.kind) continue;
+          if (of && (c.o || []).length < LIM.fields) (c.o ||= []).push([of.name, of.kind, c.f[k], clean.name]);
+          delete c.f[k];
+        }
+        if (!Object.keys(c.f).length) delete c.f;
+      }
       const fc = S.teditFor && S.state.cases.find((x) => x.id === S.teditFor);
       if (fc && fc.t !== clean.id) changeType(S.state, fc, clean.id, today());
       S.tedit = null; S.teditFor = null; persist(); snackbar(fc ? `${clean.name} sparad – ärendet använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
