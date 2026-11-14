@@ -43,10 +43,16 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Tar du bort ett fält (eller byter dess sort) flyttas ifyllda värden till Extra fält i trådarna av typen – inget försvinner.
 - Kategorier: byt namn och färg, eller lägg till nya.
 
+## Försäkringskassan (VAB, föräldrapenning)
+- Typen Försäkringskassan har fältet Dagar. Lägg till varje dag du vabbat eller varit föräldraledig: välj datum, skriv hur många timmar du hann jobba (t.ex. 2, 2,5 eller 1:30, tomt = inget) och tryck +.
+- Appen räknar ut hur många timmar du var borta: normal arbetsdag minus det du jobbade. Normal arbetsdag = personens arbetstid per vecka delat med 5 (40 tim/vecka = 8 tim/dag, 30 tim/vecka = 6 tim/dag). Ställ in tim/v per person under Inställningar → Trådar → Personer, och välj Vem utför i tråden. Utan person räknas 40 tim/vecka.
+- Bocka av varje dag när du har ansökt. Listan visar t.ex. 1/2 ansökta, så du ser vad som är kvar. Arbetade timmar och ta bort en dag gör du under Redigera.
+
 ## Personer
 - Inställningar → Trådar → Personer: lägg till de som kan utföra en tråd, t.ex. du själv, en partner eller en hantverkare. Byt namn direkt i listan; ✕ tar bort personen (med Ångra) och den tas då bort från alla trådar.
 - Välj Vem utför när du skapar en tråd (under typens rubrik) eller i redigeringen. Personen syns i listan (👤) och överst i tråden. En återkommande tråd behåller personen.
 - När någon tråd har en person visas en lista 👤 Alla först bland filterknapparna i Trådar och Arkiv. Välj en person, eller Ingen för trådar utan person. Den går att kombinera med kategorifiltret.
+- Tim/v bredvid namnet är personens normala arbetstid per vecka (standard 40). Den används för timmar borta i Försäkringskassan.
 
 ## Bakåt
 - Bakåt stänger det som är öppet (redigeringen, en tråd, typväljaren, en typ, delmålslistan eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.

@@ -1,23 +1,23 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, typeOf, catOf, personOf, progress, daysBetween, KINDS, REPEAT } from '../store.js';
+import { openCases, typeOf, catOf, personOf, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
 const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' : d === 1 ? 'igår' : `${d} dagar`; };
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
 export function caseRow(c) {
-  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id, who = personOf(S.state, c);
+  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id, who = personOf(S.state, c), dd = daysCount(c, t);
   return el('li', { class: `case-li c-${cat.color}` + (open ? ' open' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'copen', 'data-id': c.id },
     el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
-      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` + (who ? ` · 👤 ${who.name}` : '') })),
+      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` + (who ? ` · 👤 ${who.name}` : '') + (dd ? ` · ${dd[1]}/${dd[0]} ansökta` : '') })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
     ),
     el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
     open ? caseSummary(c, t, cat) : null);
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna tråden.
-export const showVal = (fd, v) => fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
+export const showVal = (fd, v) => fd.kind === 'days' ? `${v.length} ${v.length === 1 ? 'dag' : 'dagar'} · ${v.filter((x) => x[2]).length} ansökta` : fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
 export function caseSummary(c, t, cat, actions) {
   const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined);
   const log = (c.l || []).slice(-3).reverse();
@@ -86,7 +86,35 @@ function picker() {
     el('p', { class: 'muted small', text: 'Fler typer, och egna, under Inställningar → Typer.' }));
 }
 
+// Dagar (VAB, föräldrapenning): [count, applied] over the type's days fields, or null.
+function daysCount(c, t) {
+  const rows = (t?.fields || []).filter((fd) => fd.kind === 'days').flatMap((fd) => c.f?.[fd.id] || []);
+  return rows.length ? [rows.length, rows.filter((x) => x[2]).length] : null;
+}
+const hrs = (n) => n.toLocaleString('sv-SE', { maximumFractionDigits: 2 });
+const dayName = (k) => parseKey(k).toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' });
+// A days field: each day with Ansökt to tick off one by one, hours away = normal day (the person's) − hours worked.
+// mode 'view' (tick + add), 'edit' and 'draft' (also hours worked and remove). c = the case or the Ny tråd draft.
+export function daysBlock(c, fd, mode) {
+  const list = c.f?.[fd.id] || [], who = personOf(S.state, c), dh = dayHours(S.state, c), full = mode !== 'view';
+  return el('div', { class: 'days' },
+    el('h2', { class: 'sub-h', text: fd.name + (list.length ? ` · ${list.filter((x) => x[2]).length} av ${list.length} ansökta` : '') }),
+    el('p', { class: 'muted small', text: `Normal arbetsdag ${hrs(dh)} tim (${who ? `${who.name}, ${hrs(weekHours(S.state, c))} tim/vecka` : 'ingen person vald, 40 tim/vecka'}). Ändra under Inställningar → Personer.` }),
+    list.length ? el('ul', { class: 'day-list' }, list.map(([d, w, a], i) => el('li', { class: a ? 'done' : '' },
+      el('label', { class: 'day-main' }, el('input', { type: 'checkbox', checked: !!a, 'data-act': 'dayapp', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ansökt för ${dayName(d)}` }),
+        el('span', { class: 'day-txt' }, el('span', { text: dayName(d) }),
+          el('small', { text: `${hrs(absentHours(S.state, c, w))} tim borta` + (w ? ` · jobbat ${hrs(w)}` : '') + (a ? ' · ansökt' : '') }))),
+      full ? el('input', { type: 'text', inputmode: 'decimal', class: 'day-w', value: w ? hrs(w) : '', placeholder: 'Jobbat', 'data-act': 'dayw', 'data-id': fd.id, 'data-i': i, 'aria-label': `Arbetade timmar ${dayName(d)}`, autocomplete: 'off' }) : null,
+      full ? el('button', { class: 'icon sm', 'data-act': 'daydel', 'data-id': fd.id, 'data-i': i, 'aria-label': `Ta bort ${dayName(d)}`, text: '✕' }) : null))) : null,
+    el('div', { class: 'pick-row day-add' },
+      el('input', { type: 'date', id: 'dy-d-' + fd.id, class: 'step-date', value: today(), 'aria-label': 'Datum' }),
+      el('input', { type: 'text', inputmode: 'decimal', id: 'dy-w-' + fd.id, class: 'day-w', placeholder: 'Jobbat, tim', 'aria-label': 'Arbetade timmar den dagen (valfritt)', autocomplete: 'off' }),
+      el('button', { class: 'weigh-save add-btn', 'data-act': 'dayadd', 'data-id': fd.id, 'aria-label': 'Lägg till dag', text: '+' })),
+    el('p', { class: 'import-error small', id: 'dy-e-' + fd.id, role: 'alert' }));
+}
+
 function fieldInput(c, fd, act = 'fv') {
+  if (fd.kind === 'days') return daysBlock(c, fd, act === 'dv' ? 'draft' : 'edit');
   const v = c.f?.[fd.id], id = 'f-' + fd.id, common = { id, 'data-act': act, 'data-id': fd.id, autocomplete: 'off' };
   const label = (...kids) => el('label', { class: 'cfield' + (fd.kind === 'check' ? ' cfield-check' : '') }, kids);
   switch (fd.kind) {
@@ -105,7 +133,7 @@ export function caseView() {
   if (!c) return null;
   if (S.edit) return caseEditor();
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
-  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined), extra = (c.o || []).filter((x) => x[2] != null), who = personOf(S.state, c);
+  const fields = (t?.fields || []).filter((fd) => fd.kind !== 'days' && c.f?.[fd.id] !== undefined), extra = (c.o || []).filter((x) => x[2] != null), who = personOf(S.state, c);
   return el('section', { class: `card case c-${cat.color}` },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
@@ -115,7 +143,8 @@ export function caseView() {
     who ? el('p', { class: 'case-who', text: `👤 ${who.name} utför` }) : null,
     fields.length || extra.length ? el('dl', { class: 'view-fields' },
       fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })]),
-      extra.map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+      extra.map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : t?.fields.some((fd) => fd.kind === 'days') ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+    (t?.fields || []).filter((fd) => fd.kind === 'days').map((fd) => daysBlock(c, fd, 'view')),
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     c.s?.length ? [el('h2', { class: 'sub-h', text: `Delmål ${done}/${all}` }),
       el('ul', { class: 'steps' }, c.s.map(([x, d, dd, dn], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
@@ -152,7 +181,7 @@ export function caseEditor() {
         el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' }))),
       el('div', { class: 'pick-row extra-add' },
         el('input', { type: 'text', id: 'o-name', maxlength: 40, placeholder: 'Fältnamn', 'aria-label': 'Namn på nytt fält', autocomplete: 'off' }),
-        el('select', { id: 'o-kind', 'aria-label': 'Sort' }, Object.entries(KINDS).map(([kk, l]) => el('option', { value: kk, text: l }))),
+        el('select', { id: 'o-kind', 'aria-label': 'Sort' }, Object.entries(KINDS).filter(([kk]) => kk !== 'days').map(([kk, l]) => el('option', { value: kk, text: l }))),
         el('button', { class: 'weigh-save', 'data-act': 'oadd', text: 'Lägg till' })),
       c.o?.length ? el('div', { class: 'old-actions' },
         el('button', { class: 'link', 'data-act': 'tfromcase', text: '+ Spara som ny typ' }),

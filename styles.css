@@ -394,3 +394,14 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
 .pwd-head .btn, .pwd-head .link { min-height: 40px; padding: 0 12px; }
 .pwd-card .pwd-show { margin: 2px 8px 6px 0; background: var(--surface); }
 .pwd-card .pwd-note { margin: 2px 8px 0 0; }
+/* Dagar (Försäkringskassan): tick each day as applied; hours worked per day */
+.day-list { list-style: none; margin: 0; padding: 0; }
+.day-list li { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--outline-variant); }
+.day-main { display: flex; align-items: center; gap: 12px; min-height: 48px; flex: 1; min-width: 0; }
+.day-main input { width: 22px; height: 22px; accent-color: var(--cc, var(--primary)); flex: none; }
+.day-txt { display: flex; flex-direction: column; }
+.day-txt small { color: var(--muted); }
+.day-list li.done .day-txt > span { color: var(--muted); }
+input.day-w { flex: none; width: 4.6em; min-height: 36px; padding: 2px 8px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; }
+.p-hours { display: flex; align-items: center; gap: 4px; flex: none; font-size: .8rem; color: var(--muted); }
+.edit-list .p-hours input { flex: none; width: 3.2em; min-height: 40px; padding: 0 6px; text-align: right; }

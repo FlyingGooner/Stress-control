@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, addDay, setDay, delDay, parseHours } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -348,6 +348,14 @@ app.addEventListener('click', (ev) => {
       if (S.state.cats.length >= LIM.cats) return;
       S.state.cats.push({ id: 'k' + uid(), name: 'Ny kategori', color: COLORS[S.state.cats.length % COLORS.length] }); persist(); break;
     }
+    case 'dayadd': case 'daydel': {   // Dagar: in the open case or in the Ny tråd draft
+      const c = S.pick ? S.draft : cs(); if (!c) return;
+      if (act === 'daydel') { if (delDay(c, id, Number(t.dataset.i), today())) { if (!S.pick) persist(); render(); } return; }
+      const d = document.getElementById('dy-d-' + id)?.value, w = parseHours(document.getElementById('dy-w-' + id)?.value);
+      if (w === false) { errText('dy-e-' + id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
+      if (!addDay(c, id, d, w, today())) { errText('dy-e-' + id, c.f?.[id]?.some((x) => x[0] === d) ? 'Den dagen finns redan.' : 'Välj ett datum.'); return; }
+      if (!S.pick) persist(); render(); return;
+    }
     case 'pnew': {
       if (S.state.people.length >= LIM.people) return;
       S.state.people.push({ id: 'p' + uid(), name: 'Ny person' }); persist(); render();
@@ -433,7 +441,19 @@ app.addEventListener('change', (ev) => {
     }
     case 'pfilter': S.pfilter = t.value; render(); return;
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
-    case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; } return;
+    case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; render(); } return;
+    case 'dayapp': case 'dayw': {
+      const c = S.pick ? S.draft : S.state.cases.find((x) => x.id === S.open); if (!c) return;
+      const ok = setDay(c, t.dataset.id, Number(t.dataset.i), t.dataset.act === 'dayapp' ? { a: t.checked } : { w: parseHours(t.value) }, today());
+      if (!ok) { errText('dy-e-' + t.dataset.id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
+      if (!S.pick) persist(); render(); return;
+    }
+    case 'phours': {
+      const x = S.state.people.find((p) => p.id === t.dataset.id), v = Number(String(t.value).replace(',', '.'));
+      if (!x) return;
+      if (Number.isFinite(v) && v >= 1 && v <= 80) { if (v === 40) delete x.h; else x.h = Math.round(v * 10) / 10; persist(); }
+      render(); return;
+    }
     case 'cperson': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (S.state.people.some((x) => x.id === t.value)) c.p = t.value; else delete c.p; c.u = today(); persist(); return; }
     case 'pname': {
       const x = S.state.people.find((p) => p.id === t.dataset.id), v = cleanText(t.value, 30);

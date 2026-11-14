@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
+import { addDays, WEEK_HOURS, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData, savedPassword, rememberOn } from './data.js';
 
@@ -75,10 +75,11 @@ export function viewSettings() {
         el('p', { class: 'muted small', text: 'En kategori som används av en typ kan inte tas bort.' }),
         S.state.cats.length < LIM.cats ? el('button', { class: 'link', 'data-act': 'knew', text: '+ Ny kategori' }) : null),
       sec('people', 'Personer', S.state.people.length ? S.state.people.map((x) => x.name).join(', ') : 'Inga',
-        el('p', { class: 'muted small', text: 'Lägg till de som kan utföra en tråd. Välj Vem utför när du skapar eller redigerar en tråd, och filtrera på person i Trådar och Arkiv.' }),
+        el('p', { class: 'muted small', text: 'Lägg till de som kan utföra en tråd. Välj Vem utför när du skapar eller redigerar en tråd, och filtrera på person i Trådar och Arkiv. Tim/v = normal arbetstid per vecka (40 = heltid, 30 = 75 %), används för timmar borta i Försäkringskassan.' }),
         el('ul', { class: 'edit-list' }, S.state.people.map((x) => el('li', { class: 'cat-row' },
           el('span', { 'aria-hidden': 'true', text: '👤' }),
           el('input', { type: 'text', maxlength: 30, value: x.name, 'aria-label': 'Personens namn', 'data-act': 'pname', 'data-id': x.id, autocomplete: 'off' }),
+          el('label', { class: 'p-hours' }, el('input', { type: 'text', inputmode: 'decimal', value: String(x.h ?? WEEK_HOURS).replace('.', ','), 'aria-label': `Arbetstimmar per vecka för ${x.name}`, 'data-act': 'phours', 'data-id': x.id, autocomplete: 'off' }), el('span', { text: 'tim/v' })),
           el('button', { class: 'icon sm danger', 'data-act': 'pdel', 'data-id': x.id, 'aria-label': `Ta bort ${x.name}`, text: '✕' })))),
         S.state.people.length < LIM.people ? el('button', { class: 'link', 'data-act': 'pnew', text: '+ Ny person' }) : null)),
     sec('alerts', 'Påminnelser', `${S.state.alertDays ?? 7} dagar innan`,

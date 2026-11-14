@@ -6,7 +6,9 @@ export const MAX_IMPORT_CHARS = 2000000;
 export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 50, logKeep: 200, typeSteps: 10, people: 20 };   // log: new notes per case; logKeep: older data with more is kept, never cut
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
-export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock' };
+export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', days: 'Dagar (VAB m.m.)' };
+// Dagar: [[datum, arbetade timmar 0–24, ansökt 0|1]] – a list of days (VAB, föräldrapenning) ticked off one by one.
+export const DAYS_MAX = 60, WEEK_HOURS = 40;
 const ID_RE = /^[A-Za-z0-9_-]{1,40}$/, DATE_RE = /^\d{4}-\d{2}-\d{2}$/, DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
 const BAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const okId = (v) => typeof v === 'string' && ID_RE.test(v) && !BAD_KEYS.has(v);
@@ -53,6 +55,8 @@ export const DEFAULT_TYPES = [
   { id: 'dent', name: 'Tandvård', icon: '🦷', cat: 'h', on: 0, fields: [F('wh', 'Vad'), F('bk', 'Bokad tid', 'dt'), F('co', 'Kostnad', 'num'), F('cm', 'Kommentar', 'note')] },
   { id: 'worry', name: 'Oro eller tanke', icon: '🧠', cat: 'h', on: 0,
     fields: [F('wh', 'Vad oroar', 'note'), F('ws', 'Värsta utfall', 'note'), F('lk', 'Troligaste utfall', 'note'), F('can', 'Vad kan jag göra', 'note'), F('rl', 'Släppt', 'check')] },
+  { id: 'fk', name: 'Försäkringskassan', icon: '👶', cat: 'e', on: 1,
+    fields: [F('wh', 'Vad'), F('dy', 'Dagar', 'days'), F('cm', 'Kommentar', 'note')] },
   { id: 'gov', name: 'Myndighet', icon: '🏛️', cat: 'o', on: 0,
     fields: [F('ag', 'Myndighet'), F('no', 'Ärendenummer'), F('se', 'Skickat', 'date'), F('du', 'Svar senast', 'date', 1), F('an', 'Svar', 'note')] },
   { id: 'ins', name: 'Försäkring', icon: '🛡️', cat: 'e', on: 0,
@@ -67,7 +71,7 @@ export const DEFAULT_TYPES = [
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 2, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 3, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -97,6 +101,13 @@ export function cleanValue(kind, v) {
     case 'dt': { const m = typeof v === 'string' && DT_RE.exec(v); return m && validDate(m[1]) ? v : undefined; }
     case 'num': return typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= 1e9 ? Math.round(v * 100) / 100 : undefined;
     case 'check': return v === 1 || v === true ? 1 : undefined;
+    case 'days': {   // sorted by date, one row per date
+      if (!Array.isArray(v)) return undefined;
+      const seen = new Set();
+      const out = v.filter((x) => Array.isArray(x) && validDate(x[0]) && !seen.has(x[0]) && seen.add(x[0])).slice(0, DAYS_MAX)
+        .map(([d, w, a]) => [d, typeof w === 'number' && w > 0 && w <= 24 ? Math.round(w * 100) / 100 : 0, a ? 1 : 0]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+      return out.length ? out : undefined;
+    }
     default: return undefined;
   }
 }
@@ -136,6 +147,7 @@ export function validate(raw) {
     const seen = new Set();
     const types = raw.types.map((t) => cleanType(t, catIds)).filter((t) => t && !seen.has(t.id) && seen.add(t.id)).slice(0, LIM.types);
     if (types.length) s.types = types;
+    if (!(raw.version >= 3) && !s.types.some((t) => t.id === 'fk') && s.types.length < LIM.types) s.types.push(cleanType(clone(DEFAULT_TYPES.find((t) => t.id === 'fk')), catIds));   // new default type in version 3
     if (!(raw.version >= 2)) for (const t of s.types) {   // version 1 had no deadlines: mark the default ones
       const d = DEFAULT_TYPES.find((x) => x.id === t.id);
       for (const f of t.fields) if (d?.fields.some((g) => g.id === f.id && g.due && g.kind === f.kind)) f.due = 1;
@@ -144,7 +156,7 @@ export function validate(raw) {
   const types = new Map(s.types.map((t) => [t.id, t]));
   if (Array.isArray(raw.people)) {   // Personer: who does a case (case.p)
     const seen = new Set();
-    s.people = raw.people.filter((x) => isObj(x) && okId(x.id) && cleanText(x.name, 30) && !seen.has(x.id) && seen.add(x.id)).slice(0, LIM.people).map((x) => ({ id: x.id, name: cleanText(x.name, 30) }));
+    s.people = raw.people.filter((x) => isObj(x) && okId(x.id) && cleanText(x.name, 30) && !seen.has(x.id) && seen.add(x.id)).slice(0, LIM.people).map((x) => ({ id: x.id, name: cleanText(x.name, 30), ...(typeof x.h === 'number' && x.h >= 1 && x.h <= 80 && x.h !== WEEK_HOURS ? { h: Math.round(x.h * 10) / 10 } : {}) }));
   }
   const people = new Set(s.people.map((x) => x.id));
   if (Array.isArray(raw.cases)) {
@@ -285,7 +297,7 @@ function parseInput(kind, input) {
 // Extra fields only in this case (c.o: [name, kind, value|null, from-type?]) – added by hand or left from an earlier type.
 export function addExtra(c, name, kind, today) {
   const n = cleanText(name, 40);
-  if (!n || !Object.hasOwn(KINDS, kind) || (c.o || []).length >= LIM.fields || (c.o || []).some((x) => x[0] === n)) return false;
+  if (!n || !Object.hasOwn(KINDS, kind) || kind === 'days' || (c.o || []).length >= LIM.fields || (c.o || []).some((x) => x[0] === n)) return false;
   (c.o ||= []).push([n, kind, null, '']); c.u = today; return true;
 }
 export function setExtra(c, i, input, today) {
@@ -294,6 +306,34 @@ export function setExtra(c, i, input, today) {
   x[2] = v === undefined ? null : v; c.u = today; return true;
 }
 // Sets one field from input text (by the field's kind). Returns false if the input is invalid (nothing changed).
+// Dagar: normal hours per day from the case's person (h = hours per week, default 40, 5 days a week).
+export const weekHours = (state, c) => personOf(state, c)?.h ?? WEEK_HOURS;
+export const dayHours = (state, c) => Math.round(weekHours(state, c) / 5 * 100) / 100;
+export const absentHours = (state, c, worked) => Math.max(0, Math.round((dayHours(state, c) - (worked || 0)) * 100) / 100);
+// Hours as typed: "2", "2,5", "1:30" → number 0–24; '' → 0; false = not valid.
+export function parseHours(input) {
+  const t = String(input ?? '').trim().replace(',', '.');
+  if (!t) return 0;
+  const m = /^(\d{1,2}):([0-5]\d)$/.exec(t), v = m ? Number(m[1]) + Number(m[2]) / 60 : Number(t);
+  return Number.isFinite(v) && v >= 0 && v <= 24 ? Math.round(v * 100) / 100 : false;
+}
+// c = a case or the Ny tråd draft (both keep values in c.f). Returns false when nothing changed.
+export function addDay(c, fieldId, date, worked, today) {
+  const list = Array.isArray(c.f?.[fieldId]) ? c.f[fieldId] : [];
+  if (!validDate(date) || list.length >= DAYS_MAX || list.some((x) => x[0] === date) || worked === false) return false;
+  c.f = { ...(c.f || {}), [fieldId]: cleanValue('days', [...list, [date, worked, 0]]) }; c.u = today; return true;
+}
+export function setDay(c, fieldId, i, patch, today) {
+  const x = c.f?.[fieldId]?.[i]; if (!x) return false;
+  if ('w' in patch) { if (patch.w === false) return false; x[1] = patch.w; }
+  if ('a' in patch) x[2] = patch.a ? 1 : 0;
+  c.u = today; return true;
+}
+export function delDay(c, fieldId, i, today) {
+  const list = c.f?.[fieldId]; if (!list?.[i]) return false;
+  list.splice(i, 1); if (!list.length) { delete c.f[fieldId]; if (!Object.keys(c.f).length) delete c.f; }
+  c.u = today; return true;
+}
 export function setField(state, c, fieldId, input, today) {
   const fd = typeOf(state, c)?.fields.find((f) => f.id === fieldId);
   if (!fd) return false;
@@ -347,7 +387,7 @@ export function nextCase(state, c, today) {
   const t = typeOf(state, c), dated = new Set((t?.fields || []).filter((f) => f.kind === 'date' || f.kind === 'dt').map((f) => f.id));
   const nc = { id: uid(), t: c.t, title: c.title, c: today, u: today, r: c.r };
   if (c.p) nc.p = c.p;   // the repeat keeps who does it
-  if (c.f) nc.f = Object.fromEntries(Object.entries(c.f).filter(([k]) => t?.fields.some((f) => f.id === k && f.kind !== 'check')).map(([k, v]) => [k, dated.has(k) ? mv(v) : v]));
+  if (c.f) nc.f = Object.fromEntries(Object.entries(c.f).filter(([k]) => t?.fields.some((f) => f.id === k && f.kind !== 'check' && f.kind !== 'days')).map(([k, v]) => [k, dated.has(k) ? mv(v) : v]));
   if (nc.f && !Object.keys(nc.f).length) delete nc.f;
   if (c.o) nc.o = c.o.map(([nm, k, v, fr]) => [nm, k, v == null || k === 'check' ? null : (k === 'date' || k === 'dt') ? mv(v) : v, fr]);
   if (c.s) nc.s = c.s.map(([x, , d, , r]) => cleanStep(x, 0, d ? mv(d) : 0, 0, r));
@@ -456,19 +496,19 @@ export function importText(text) {
 // Same rules as validate() above – change validate(), change here and in docs/DATA.md.
 export const EXPORT_README = 'Backup från Stress kontroll. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
-  version: 'tal, 2',
-  people: `lista { id, name ≤ 30 }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
+  version: 'tal, 3 (äldre: typen Försäkringskassan läggs till vid import)',
+  people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}) }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna trådar, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan tråden raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
-  version: 2,
-  people: [{ id: 'p1', name: 'Anna' }],
+  version: 3,
+  people: [{ id: 'p1', name: 'Anna', h: 30 }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],
   types: [{ id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1, fields: [{ id: 's1', name: 'Symptom', kind: 'text' }, { id: 's3', name: 'Kontaktat vården', kind: 'check' }] }],
   cases: [{ id: 'c1', t: 'sym', title: 'Ont i knät', p: 'p1', c: '2026-11-10', u: '2026-11-12', f: { s1: 'Värk vid trappor', s3: 1 }, s: [['Ring vårdcentralen', 1], ['Gå på besöket', 0]], l: [['2026-11-12', 'Fick tid 18/11']] }],
