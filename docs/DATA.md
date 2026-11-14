@@ -7,7 +7,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 ## Toppnivå
 | Nyckel | Typ | Beskrivning |
 |---|---|---|
-| `version` | tal | `3`. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. |
+| `version` | tal | `4`. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. Före version 4 byts dess ikon 👶 mot 🛟. |
 | `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
 | `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30, h? }`. `h` = arbetstimmar per vecka 1–80 (saknas = 40); en normal arbetsdag är `h / 5`. |
 | `cats` | lista, 1–12 | Kategorier. |
@@ -53,7 +53,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 
 ## Exempel
 ```json
-{ "version": 3, "alertDays": 7,
+{ "version": 4, "alertDays": 7,
   "people": [{ "id": "p1", "name": "Anna", "h": 30 }],
   "cats": [{ "id": "e", "name": "Ekonomi", "color": "green" }],
   "types": [{ "id": "eco", "name": "Ekonomi", "icon": "💸", "cat": "e", "on": 1,

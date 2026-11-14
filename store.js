@@ -55,7 +55,7 @@ export const DEFAULT_TYPES = [
   { id: 'dent', name: 'Tandvård', icon: '🦷', cat: 'h', on: 0, fields: [F('wh', 'Vad'), F('bk', 'Bokad tid', 'dt'), F('co', 'Kostnad', 'num'), F('cm', 'Kommentar', 'note')] },
   { id: 'worry', name: 'Oro eller tanke', icon: '🧠', cat: 'h', on: 0,
     fields: [F('wh', 'Vad oroar', 'note'), F('ws', 'Värsta utfall', 'note'), F('lk', 'Troligaste utfall', 'note'), F('can', 'Vad kan jag göra', 'note'), F('rl', 'Släppt', 'check')] },
-  { id: 'fk', name: 'Försäkringskassan', icon: '👶', cat: 'e', on: 1,
+  { id: 'fk', name: 'Försäkringskassan', icon: '🛟', cat: 'e', on: 1,
     fields: [F('wh', 'Vad'), F('dy', 'Dagar', 'days'), F('cm', 'Kommentar', 'note')] },
   { id: 'gov', name: 'Myndighet', icon: '🏛️', cat: 'o', on: 0,
     fields: [F('ag', 'Myndighet'), F('no', 'Ärendenummer'), F('se', 'Skickat', 'date'), F('du', 'Svar senast', 'date', 1), F('an', 'Svar', 'note')] },
@@ -71,7 +71,7 @@ export const DEFAULT_TYPES = [
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 3, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 4, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -148,6 +148,7 @@ export function validate(raw) {
     const types = raw.types.map((t) => cleanType(t, catIds)).filter((t) => t && !seen.has(t.id) && seen.add(t.id)).slice(0, LIM.types);
     if (types.length) s.types = types;
     if (!(raw.version >= 3) && !s.types.some((t) => t.id === 'fk') && s.types.length < LIM.types) s.types.push(cleanType(clone(DEFAULT_TYPES.find((t) => t.id === 'fk')), catIds));   // new default type in version 3
+    if (!(raw.version >= 4)) for (const t of s.types) if (t.id === 'fk' && t.icon === '👶') t.icon = '🛟';   // 0.2.47 had a baby icon – not only about children
     if (!(raw.version >= 2)) for (const t of s.types) {   // version 1 had no deadlines: mark the default ones
       const d = DEFAULT_TYPES.find((x) => x.id === t.id);
       for (const f of t.fields) if (d?.fields.some((g) => g.id === f.id && g.due && g.kind === f.kind)) f.due = 1;
@@ -496,7 +497,7 @@ export function importText(text) {
 // Same rules as validate() above – change validate(), change here and in docs/DATA.md.
 export const EXPORT_README = 'Backup från Stress kontroll. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
-  version: 'tal, 3 (äldre: typen Försäkringskassan läggs till vid import)',
+  version: 'tal, 4 (äldre: typen Försäkringskassan läggs till vid import)',
   people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}) }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
@@ -507,7 +508,7 @@ export const EXPORT_SCHEMA = {
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
-  version: 3,
+  version: 4,
   people: [{ id: 'p1', name: 'Anna', h: 30 }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],
   types: [{ id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1, fields: [{ id: 's1', name: 'Symptom', kind: 'text' }, { id: 's3', name: 'Kontaktat vården', kind: 'check' }] }],
