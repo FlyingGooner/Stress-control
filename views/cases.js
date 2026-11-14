@@ -1,5 +1,5 @@
 // Vy: Ärenden (öppna ärenden, filter per kategori), typväljaren och ärendet (lager – Bakåt stänger). Ärendet används också från Arkiv.
-import { openCases, typeOf, catOf, progress, daysBetween, KINDS } from '../store.js';
+import { openCases, typeOf, catOf, progress, daysBetween, KINDS, REPEAT } from '../store.js';
 import { today, S, el, shortDate, longDate } from '../ui.js';
 import { typeEditor } from './settings.js';
 
@@ -104,6 +104,9 @@ export function caseEditor() {
       el('button', { class: 'icon sm', 'data-act': 'ldel', 'data-i': i, 'aria-label': 'Ta bort anteckningen', text: '✕' })))),
     el('textarea', { id: 'l-new', rows: 2, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
     el('div', { class: 'save-row' }, el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
+    el('label', { class: 'cfield' }, el('span', { text: 'Upprepa' }),
+      el('select', { 'data-act': 'crep', id: 'c-rep' }, [['', 'Nej'], ...Object.entries(REPEAT)].map(([k, l]) => el('option', { value: k, selected: (c.r || '') === k, text: l })))),
+    c.r && !c.x ? el('p', { class: 'muted small', text: 'När du arkiverar ärendet skapas ett nytt, med alla datum flyttade ' + (c.r === 'y' ? 'ett år' : 'en månad') + ' framåt.' }) : null,
     el('div', { class: 'row-actions case-actions' },
       el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
       c.x ? el('button', { class: 'link', 'data-act': 'creopen', text: 'Öppna igen' })

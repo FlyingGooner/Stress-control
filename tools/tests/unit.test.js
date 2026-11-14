@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -126,4 +126,18 @@ T.test('delmål med datum: valideras och syns i Aktuellt tills det bockas av', (
   s.cases = [{ id: 'a', t: 'task', title: 'Bil', c: '2026-11-01', u: '2026-11-01', s: [['Boka service', 0, '2026-11-16'], ['Klart', 1, '2026-11-15'], ['Utan datum', 0]] }];
   T.eq(alerts(s, '2026-11-14').map((x) => [x.name, x.days]), [['Delmål Boka service', 2]]);
   T.eq(validate({ cases: [{ id: 'a', t: 'task', title: 'Bil', c: '2026-11-01', s: [['A', 0, '2026-13-01'], ['B', 0, '2026-11-20']] }] }).cases[0].s, [['A', 0], ['B', 0, '2026-11-20']]);
+});
+T.test('upprepa: arkiverat ärende ger ett nytt med datum flyttade, bockar och delmål nollställda', () => {
+  const s = validate({ cases: [{ id: 'c1', t: 'eco', title: 'Bilskatt', c: '2026-01-10', u: '2026-01-10', r: 'm', f: { wh: 'Skatt', du: '2026-01-31', pd: 1 },
+    s: [['Betala', 1, '2026-01-30'], ['Spara kvitto', 1]], l: [['2026-01-10', 'x']], o: [['Påminn', 'dt', '2026-01-29T08:00', '']] }] });
+  T.eq(s.cases[0].r, 'm');
+  const n = nextCase(s, s.cases[0], '2026-02-01');
+  T.eq(n.f, { wh: 'Skatt', du: '2026-02-28' });
+  T.eq(n.s, [['Betala', 0, '2026-02-28'], ['Spara kvitto', 0]]);
+  T.eq(n.o, [['Påminn', 'dt', '2026-02-28T08:00', '']]);
+  T.eq([n.r, n.l, n.c, s.cases.length], ['m', undefined, '2026-02-01', 2]);
+  T.eq(firstDate(s, n), '2026-02-28');
+  T.eq(addMonths('2028-02-29', 12), '2029-02-28');
+  T.eq(validate({ cases: [{ id: 'a', t: 'eco', title: 'x', c: '2026-01-10', r: 'w' }] }).cases[0].r, undefined);
+  T.eq(nextCase(s, { ...s.cases[0], r: undefined }, '2026-02-01'), null);
 });

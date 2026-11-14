@@ -18,6 +18,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Stänga och arkivera
 - Spara tar dig tillbaka till listan, ärendet ligger kvar som öppet. När ärendet är löst: tryck Löst – arkivera. Det flyttas till Arkiv och finns kvar där. Ångra finns direkt efteråt.
+- Återkommer något, som bilskatt eller service varje år? Välj Upprepa: Varje månad eller Varje år i ärendet. När du arkiverar det skapas ett nytt öppet ärende med samma fält och delmål, där alla datum flyttats fram en månad eller ett år. Bockar och delmål nollställs, loggen följer inte med. Ångra tar bort det nya också.
 - I Arkiv kan du söka och öppna ett ärende igen.
 - Ta bort frågar först och visar hur många loggrader och delmål som försvinner. Sedan raderas ärendet helt (Ångra finns några sekunder). Samma sak gäller en loggrad.
 

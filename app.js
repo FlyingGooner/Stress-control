@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -189,8 +189,12 @@ app.addEventListener('click', (ev) => {
     case 'cdone': {
       const c = cs(); if (!c) return;
       const u0 = c.u;
-      c.x = today(); touch(c); S.open = null; persist();
-      snackbar(`${c.title} är stängt och arkiverat`, 'Ångra', () => { delete c.x; c.u = u0; persist(); render(); });
+      c.x = today(); touch(c); S.open = null;
+      const nc = nextCase(S.state, c, today()), fd = nc && firstDate(S.state, nc);
+      persist();
+      snackbar(nc ? `${c.title} är arkiverat. Nästa är skapat${fd ? ' till ' + longDate(fd) : ''}` : `${c.title} är stängt och arkiverat`, 'Ångra', () => {
+        delete c.x; c.u = u0; if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc); persist(); render();
+      });
       break;
     }
     case 'creopen': { const c = cs(); if (!c) return; delete c.x; touch(c); persist(); snackbar(`${c.title} är öppet igen`, null, null, 2500); break; }
@@ -348,6 +352,7 @@ app.addEventListener('change', (ev) => {
       errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
       return;
     }
+    case 'crep': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (REPEAT[t.value]) c.r = t.value; else delete c.r; touch(c); persist(); render(); return; }
     case 'ctype': {   // change type afterwards: values follow by field name, the rest goes to the log
       const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
       const to = S.state.types.find((x) => x.id === t.value); if (!to) return;

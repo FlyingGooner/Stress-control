@@ -64,6 +64,7 @@ Ren HTML, CSS och JavaScript – inga ramverk, inga beroenden, inget byggsteg f�
 | `styles.css`, `app.js`, `ui.js`, `nav.js`, `views/` | Stil, router och klick, delat tillstånd, Bakåt-logik, en fil per vy (ES-moduler) |
 | `backup.js` | Krypterad backup-fil (gemensam) |
 | `docs/MANUAL.md` | Manualen – Hjälp i appen byggs från den (`tools/build-help.ps1`) |
+| `docs/DATA.md` | Datamodellen i `sk.data` och exportfilen |
 | `tools/tests/` | Tester: Node (logik) och Edge (klick i testfilen), körs av `tools/test.ps1` |
 | `store.js` | Lagring i `localStorage` och validering av sparad data |
 | `version.js` | Versionsnummer (enda källan) |
@@ -71,6 +72,8 @@ Ren HTML, CSS och JavaScript – inga ramverk, inga beroenden, inget byggsteg f�
 | `docs/SPEC.md` | Specifikation av funktioner och beteende |
 | `docs/presentation.html` | Fristående mobilpresentation av appen |
 | `tools/build-single.ps1` | Bygger testfilen |
+| `tools/test.ps1` | Kör testerna (`tools\test.ps1`, `ui` bygger även testfilen) |
+| `tools/node-unit.mjs` | Kör `unit.test.js` i Node |
 | `CLAUDE.md` | Regler för utveckling |
 
 Publiceras till GitHub Pages från `main`.

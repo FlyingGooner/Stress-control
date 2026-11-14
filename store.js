@@ -104,6 +104,7 @@ function cleanCase(c, types) {
   if (!type || !title) return null;
   const out = { id: c.id, t: c.t, title, c: c.c, u: validDate(c.u) && c.u >= c.c ? c.u : c.c };
   if (validDate(c.x)) out.x = c.x;
+  if (REPEAT[c.r]) out.r = c.r;
   if (isObj(c.f)) {
     const f = {};
     for (const fd of type.fields) { const v = cleanValue(fd.kind, c.f[fd.id]); if (v !== undefined) f[fd.id] = v; }
@@ -246,6 +247,33 @@ export function changeType(state, c, typeId, today, drop = false) {
   c.u = today;
   return true;
 }
+// Repeat (c.r: 'm' month | 'y' year): when the case is closed a new open copy is made with every date moved forward.
+export const REPEAT = { m: 'Varje månad', y: 'Varje år' };
+export function addMonths(k, n) {
+  const [y, m, d] = k.split('-').map(Number), t = new Date(y, m - 1 + n, 1, 12);
+  const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();   // 31 jan + 1 month = 28/29 feb
+  t.setDate(Math.min(d, last)); return dateKey(t);
+}
+export function nextCase(state, c, today) {
+  if (!REPEAT[c.r] || state.cases.length >= LIM.cases) return null;
+  const n = c.r === 'y' ? 12 : 1, mv = (v) => { const d = addMonths(v.slice(0, 10), n); return validDate(d) ? d + v.slice(10) : v; };
+  const t = typeOf(state, c), dated = new Set((t?.fields || []).filter((f) => f.kind === 'date' || f.kind === 'dt').map((f) => f.id));
+  const nc = { id: uid(), t: c.t, title: c.title, c: today, u: today, r: c.r };
+  if (c.f) nc.f = Object.fromEntries(Object.entries(c.f).filter(([k]) => t?.fields.some((f) => f.id === k && f.kind !== 'check')).map(([k, v]) => [k, dated.has(k) ? mv(v) : v]));
+  if (nc.f && !Object.keys(nc.f).length) delete nc.f;
+  if (c.o) nc.o = c.o.map(([nm, k, v, fr]) => [nm, k, v == null || k === 'check' ? null : (k === 'date' || k === 'dt') ? mv(v) : v, fr]);
+  if (c.s) nc.s = c.s.map(([x, , d]) => (d ? [x, 0, mv(d)] : [x, 0]));
+  state.cases.unshift(nc);
+  return nc;
+}
+// The earliest date in a case (fields, extra fields, sub-goals) – shown when a repeat is made.
+export function firstDate(state, c) {
+  const t = typeOf(state, c), ds = [];
+  for (const f of t?.fields || []) if ((f.kind === 'date' || f.kind === 'dt') && c.f?.[f.id]) ds.push(c.f[f.id].slice(0, 10));
+  for (const [, k, v] of c.o || []) if ((k === 'date' || k === 'dt') && v) ds.push(v.slice(0, 10));
+  for (const [, , d] of c.s || []) if (d) ds.push(d);
+  return ds.sort()[0] || '';
+}
 export const progress = (c) => [(c.s || []).filter((x) => x[1]).length, (c.s || []).length];
 export const openCases = (state) => state.cases.filter((c) => !c.x).sort((a, b) => (a.u < b.u ? 1 : a.u > b.u ? -1 : 0));
 export const closedCases = (state) => state.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : a.x > b.x ? -1 : 0));
@@ -301,7 +329,7 @@ export const EXPORT_SCHEMA = {
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, datum?]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, datum?]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
