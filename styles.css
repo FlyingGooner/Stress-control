@@ -311,3 +311,4 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .old-fields li > span { display: grid; flex: 1; min-width: 0; }
 .old-fields small, .sum-old dt { color: var(--muted); }
 .ty-drop { color: var(--error, #b3261e); }
+.old-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }

@@ -223,10 +223,18 @@ app.addEventListener('click', (ev) => {
       const t0 = act === 'tnew' ? { id: 't' + uid(), name: '', icon: '📌', cat: S.state.cats[0].id, on: 1, fields: [{ id: 'f1', name: 'Kommentar', kind: 'note' }], isNew: true }
         : S.state.types.find((x) => x.id === id);
       if (!t0) return;
-      S.tedit = { ...JSON.parse(JSON.stringify(t0)), steps: [...(t0.steps || [])] }; S.teditOrig = JSON.stringify(S.tedit);
+      S.teditFor = null; S.tedit = { ...JSON.parse(JSON.stringify(t0)), steps: [...(t0.steps || [])] }; S.teditOrig = JSON.stringify(S.tedit);
       render(); scrollTo(0, 0); return;
     }
-    case 'tclose': S.tedit = null; break;
+    case 'tfromcase': {   // new type = the case's type + its old fields; on Spara the case changes to it
+      const c = cs(), ty = c && S.state.types.find((x) => x.id === c.t); if (!c?.o) return;
+      const fields = [...(ty?.fields || []).map((f) => ({ name: f.name, kind: f.kind })), ...c.o.map(([n, k]) => ({ name: n, kind: k }))]
+        .filter((f, i, a) => a.findIndex((g) => g.name === f.name && g.kind === f.kind) === i).slice(0, LIM.fields).map((f, i) => ({ id: 'f' + (i + 1), ...f }));
+      S.tedit = { id: 't' + uid(), name: '', icon: ty?.icon || '📌', cat: ty?.cat || S.state.cats[0].id, on: 1, fields, steps: [], isNew: true };
+      S.teditOrig = JSON.stringify(S.tedit); S.teditFor = c.id;
+      render(); scrollTo(0, 0); return;
+    }
+    case 'tclose': S.tedit = null; S.teditFor = null; break;
     case 'fadd': {
       const d = S.tedit; if (d.fields.length >= LIM.fields) return;
       let n = d.fields.length + 1; while (d.fields.some((f) => f.id === 'f' + n)) n++;
@@ -242,7 +250,9 @@ app.addEventListener('click', (ev) => {
       if (i >= 0) S.state.types[i] = clean; else S.state.types.push(clean);
       // Values of removed fields are dropped from the type's cases (same as validate()).
       for (const c of S.state.cases) if (c.t === clean.id && c.f) { for (const k of Object.keys(c.f)) if (!clean.fields.some((f) => f.id === k)) delete c.f[k]; if (!Object.keys(c.f).length) delete c.f; }
-      S.tedit = null; persist(); snackbar(`${clean.name} sparad`, null, null, 2500); break;
+      const fc = S.teditFor && S.state.cases.find((x) => x.id === S.teditFor);
+      if (fc && fc.t !== clean.id) changeType(S.state, fc, clean.id, today());
+      S.tedit = null; S.teditFor = null; persist(); snackbar(fc ? `${clean.name} sparad – ärendet använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
     }
     case 'tdel': {
       const d = S.tedit; if (S.state.cases.some((c) => c.t === d.id)) return;

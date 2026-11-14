@@ -35,3 +35,9 @@ test('bakåt: typredigerare med osparade ändringar räknas som ändrad', () => 
   assert.equal(isDirty(S.tedit, S.teditOrig), true);
   assert.equal(isDirty(null, orig), false);
 });
+
+test('typeditor från ett ärende ligger överst och Bakåt stänger bara den', () => {
+  const S = { pick: false, open: 'c1', tedit: { id: 't1' }, teditFor: 'c1' };
+  assert.equal(topLayer(S), 'tedit'); assert.equal(layerDepth(S), 2);
+  closeTop(S); assert.equal(S.open, 'c1'); assert.equal(S.tedit, null); assert.equal(S.teditFor, null);
+});

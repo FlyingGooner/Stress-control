@@ -1,6 +1,7 @@
 // Vy: Ärenden (öppna ärenden, filter per kategori), typväljaren och ärendet (lager – Bakåt stänger). Ärendet används också från Arkiv.
 import { openCases, typeOf, catOf, progress, daysBetween, KINDS } from '../store.js';
 import { today, S, el, shortDate, longDate } from '../ui.js';
+import { typeEditor } from './settings.js';
 
 const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' : d === 1 ? 'igår' : `${d} dagar`; };
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
@@ -79,7 +80,9 @@ export function caseEditor() {
       el('ul', {}, c.o.map(([n, k, v, fr], i) => el('li', {},
         el('span', {}, el('small', { text: `${n} · ${fr}` }), el('span', { text: showVal({ kind: k }, v) })),
         el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' })))),
-      el('button', { class: 'link', 'data-act': 'oclear', text: 'Rensa alla' })) : null,
+      el('div', { class: 'old-actions' },
+        el('button', { class: 'link', 'data-act': 'tfromcase', text: '+ Skapa ny typ med de här fälten' }),
+        el('button', { class: 'link', 'data-act': 'oclear', text: 'Rensa alla' }))) : null,
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     el('h2', { class: 'sub-h', text: all ? `Delmål ${done}/${all}` : 'Delmål' }),
     el('ul', { class: 'steps' }, (c.s || []).map(([x, d], i) => el('li', { class: d ? 'done' : '' },
@@ -104,6 +107,7 @@ export function caseEditor() {
 
 export function viewCases() {
   if (S.pick) return picker();
+  if (S.tedit) return typeEditor();
   if (S.open) return caseEditor();
   const all = openCases(S.state), cats = S.state.cats;
   const list = S.filter === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S.filter);
