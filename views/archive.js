@@ -7,7 +7,9 @@ import { typeEditor } from './settings.js';
 export function archiveList() {
   const [, byCat] = catFilter(closedCases(S.state), 'afilter', 'afilter');
   const q = S.q.trim().toLowerCase(), list = byCat.filter((c) => !q || c.title.toLowerCase().includes(q));
-  return list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
+  const shown = list.slice(0, S.alimit), more = list.length - shown.length;
+  return list.length ? [el('ul', { class: 'cases' }, shown.map(caseRow)),
+    more > 0 ? el('button', { class: 'link more', 'data-act': 'amore', text: `Visa fler (${more} kvar)` }) : null]
     : el('p', { class: 'muted small', text: q ? 'Ingen träff.' : 'Inga stängda ärenden än. Det du stänger sparas här.' });
 }
 export function viewArchive() {

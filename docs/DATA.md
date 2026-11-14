@@ -1,6 +1,6 @@
 # Datamodell – Stress kontroll
 
-All data ligger i `localStorage` under nyckeln `sk.data`, som JSON. Den valideras med `validate()` i `store.js` vid varje inläsning och import: ogiltiga delar hoppas över, inget kraschar. Ändras modellen ska `validate()`, `EXPORT_SCHEMA`/`EXPORT_EXAMPLE` (i `store.js`) och den här filen ändras tillsammans.
+All data ligger i `localStorage`. `sk.data` innehåller inställningar och öppna ärenden som JSON. Stängda ärenden och papperskorgen ligger komprimerade i `sk.arch` (se Lagring nedan); modellen nedan är den hopslagna datan, samma som i exportfilen. Den valideras med `validate()` i `store.js` vid varje inläsning och import: ogiltiga delar hoppas över, inget kraschar. Ändras modellen ska `validate()`, `EXPORT_SCHEMA`/`EXPORT_EXAMPLE` (i `store.js`) och den här filen ändras tillsammans.
 
 Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `constructor`, `prototype`). Datum `ÅÅÅÅ-MM-DD` (2000–2100), datum och tid `ÅÅÅÅ-MM-DDTHH:MM`. Text rensas från styrtecken och kapas vid sin maxlängd. Tomma värden sparas inte.
 
@@ -11,7 +11,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
 | `cats` | lista, 1–12 | Kategorier. |
 | `types` | lista, 1–30 | Ärendetyper. |
-| `cases` | lista, ≤ 2 000 | Ärenden. |
+| `cases` | lista, ≤ 10 000 (varav ≤ 500 öppna) | Ärenden. Över taket behålls alla öppna och de senast stängda. |
 | `trash` | lista, ≤ 2 000 | Papperskorg: borttagna ärenden, samma form som ärenden plus `d` (borttagen datum). Id får inte finnas bland `cases`. |
 | `trashDays` | 7 \| 30 \| 90 \| 365 \| 0 | Dagar i papperskorgen innan ärendet raderas vid start (0 = aldrig, standard 30). |
 | `backup` | objekt | `{ remind: "week" \| "month" \| "off", last?: datum, asked?: datum }`. |
@@ -40,6 +40,13 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `o?` | Extra fält bara i ärendet, ≤ 20 × `[namn ≤ 40, kind, värde \| null, från-typ ≤ 30 eller ""]`. Tillagda för hand, kvar från en tidigare typ, eller flyttade hit när ett fält togs bort ur typen. |
 | `s?` | Delmål, ≤ 50 × `[text ≤ 80, 0 \| 1, datum?]`. Ett ej avbockat delmål med datum är en deadline i Aktuellt. |
 | `l?` | Logg, ≤ 200 × `[datum, text ≤ 500]` (de senaste behålls). |
+
+## Lagring
+- `sk.data`: allt utom stängda ärenden och papperskorg, plus `arch: 1`. Skrivs vid varje ändring. Saknas `arch` är `sk.data` komplett och `sk.arch` ignoreras.
+- `sk.arch`: `[stängda ärenden, papperskorg]` som JSON, komprimerat med deflate-raw (webbläsarens `CompressionStream`) och packat 15 bitar per tecken (tecken 0x20–0x801F): `Z<antal byte>:<tecken>`. Utan `CompressionStream` sparas `J<json>`.
+- När arkivdelen ändras skrivs först hela datan okomprimerat till `sk.data`, sedan `sk.arch` och till sist den lilla `sk.data`. Stängs appen mitt i finns allt kvar.
+- Oläsbar data skrivs aldrig över: den sparas under `sk.data.broken` eller `sk.arch.broken`.
+- Uppmätt: 10 000 arkiverade + 100 öppna ärenden tar 1,1 M tecken (normala) till 3,6 M tecken (långa anteckningar) av cirka 5 M; okomprimerat 12–39 M.
 
 ## Exempel
 ```json

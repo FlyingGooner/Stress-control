@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -18,9 +18,15 @@ const errText = (id, t) => { const e = document.getElementById(id); if (e) e.tex
 
 /* ---------- Status line (#status) – fixed texts only ---------- */
 let saveFailed = false;
-function persist() {
-  if (!save(S.state)) status('Ändringen sparades inte – lagringen är full eller blockerad. Spara en backup-fil och ta bort gamla ärenden.', true);
-  else if (saveFailed) updateOnline();
+const SAVE_MSG = 'Ändringen sparades inte – lagringen är full eller blockerad. Spara en backup-fil och rensa arkivet eller papperskorgen (Inställningar).';
+setSaveErrorHandler(() => status(SAVE_MSG, true));
+let saves = 0;
+// archTouched: a closed case is open in the editor, or types changed (cases updated in place) – see store.js save().
+function persist(archTouched = false) {
+  const oc = S.open && S.state.cases.find((x) => x.id === S.open);
+  if (!save(S.state, archTouched || !!oc?.x)) { status(SAVE_MSG, true); return; }
+  if (saveFailed) updateOnline();
+  if (++saves % 20 === 1 && storageUsed() > STORAGE_QUOTA * 0.9) snackbar('Lagringen är nästan full – rensa arkivet eller papperskorgen under Inställningar', null, null, 6000);
 }
 function status(text, isError = false) {
   const s = document.getElementById('status');
@@ -164,7 +170,17 @@ app.addEventListener('click', (ev) => {
   switch (act) {
     // Ärenden
     case 'filter': S.filter = id; break;
-    case 'afilter': S.afilter = id; break;
+    case 'afilter': S.afilter = id; S.alimit = 100; break;
+    case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
+    case 'aclean': {   // Rensa arkivet: old archived cases go to the Papperskorg (can be restored there)
+      const years = Number(document.getElementById('aclean-age')?.value) || 2, before = addDays(today(), -365 * years);
+      const n = S.state.cases.filter((c) => c.x && c.x < before).length;
+      if (!n) { snackbar(`Inga arkiverade ärenden äldre än ${years} år`, null, null, 3000); return; }
+      confirmDelete(`Flytta ${n} ärenden till papperskorgen?`, `Arkiverade ärenden som stängdes före ${longDate(before)}. De kan återställas från papperskorgen tills den rensas.`, () => {
+        withUndo(`${n} ärenden flyttade till papperskorgen`, () => { trashArchivedBefore(S.state, before, today()); });
+      });
+      return;
+    }
     case 'tfilter': S.tfilter = id; break;
     case 'trashopen': S.trash = true; S.exp = null; render(); scrollTo(0, 0); return;
     case 'trashclose': S.trash = false; break;
@@ -181,7 +197,7 @@ app.addEventListener('click', (ev) => {
       const title = document.getElementById('new-title')?.value;
       if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
       const c = newCase(S.state, id, title, today());
-      if (!c) { errText('new-error', `Max ${LIM.cases} ärenden.`); return; }
+      if (!c) { errText('new-error', `Max ${LIM.open} öppna ärenden (${LIM.cases} totalt). Arkivera eller ta bort något först.`); return; }
       if (S.draft?.t === id && S.draft.skip?.length && c.s) { c.s = c.s.filter((_, i) => !S.draft.skip.includes(i)); if (!c.s.length) delete c.s; }
       if (S.draft?.t === id && S.draft.f) { const ty = S.state.types.find((x) => x.id === id), f = {}; for (const [k, v] of Object.entries(S.draft.f)) if (ty?.fields.some((x) => x.id === k)) f[k] = v; if (Object.keys(f).length) c.f = f; }
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
@@ -216,7 +232,7 @@ app.addEventListener('click', (ev) => {
       return;
     }
     case 'trest': {
-      const c = restoreCase(S.state, id); if (!c) { snackbar(`Max ${LIM.cases} ärenden – ta bort något först`, null, null, 3000); return; }
+      const c = restoreCase(S.state, id); if (!c) { snackbar(`Max ${LIM.open} öppna ärenden – arkivera något först`, null, null, 3000); return; }
       persist(); render(); snackbar(`${c.title} är återställt` + (c.x ? ' till Arkiv' : ''), null, null, 2500); return;
     }
     case 'tpurge': {
@@ -304,7 +320,7 @@ app.addEventListener('click', (ev) => {
       }
       const fc = S.teditFor && S.state.cases.find((x) => x.id === S.teditFor);
       if (fc && fc.t !== clean.id) changeType(S.state, fc, clean.id, today());
-      S.tedit = null; S.teditFor = null; persist(); snackbar(fc ? `${clean.name} sparad – ärendet använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
+      S.tedit = null; S.teditFor = null; persist(true); snackbar(fc ? `${clean.name} sparad – ärendet använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
     }
     case 'tdel': {
       const d = S.tedit; if ([...S.state.cases, ...S.state.trash].some((c) => c.t === d.id)) return;
@@ -336,7 +352,7 @@ app.addEventListener('click', (ev) => {
 app.addEventListener('input', (ev) => {
   const t = ev.target, d = S.tedit;
   if (t.id === 'new-title') { S.newTitle = t.value; return; }
-  if (t.id === 'arch-q') { S.q = t.value; document.getElementById('arch-list')?.replaceChildren(archiveList()); return; }
+  if (t.id === 'arch-q') { S.q = t.value; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return; }
   if (!d) return;
   if (t.dataset.act === 'tset' && ['name', 'icon'].includes(t.dataset.id)) d[t.dataset.id] = t.value;
   if (t.dataset.act === 'fname') { const f = d.fields[Number(t.dataset.i)]; if (f) f.name = t.value; }
@@ -456,10 +472,14 @@ document.addEventListener('visibilitychange', () => {
   setTimeout(maybeAskBackup, 300);
 });
 
-if (purgeTrash(S.state, today())) persist();   // Papperskorg: cases past their time are deleted at start
-go(location.hash.slice(1), false);
-initData({ persist, render, status, snackbar, view: () => view });
-setTimeout(maybeAskBackup, 800);
+// Start: the packed archive is read first (async, a few ms), so nothing can be saved before all data is loaded.
+loadFull(S.state).catch(() => S.state).then((full) => {
+  S.state = full; updateOnline();
+  if (purgeTrash(S.state, today())) persist();   // Papperskorg: cases past their time are deleted at start
+  go(location.hash.slice(1), false);
+  initData({ persist, render, status, snackbar, view: () => view });
+  setTimeout(maybeAskBackup, 800);
+});
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   const hadController = !!navigator.serviceWorker.controller;

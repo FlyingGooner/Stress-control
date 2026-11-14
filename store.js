@@ -3,7 +3,7 @@
 const KEY = 'sk.data';
 export const EXPORT_APP = 'stress-kontroll', EXPORT_FORMAT = 1;
 export const MAX_IMPORT_CHARS = 2000000;
-export const LIM = { cases: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 200, typeSteps: 10 };
+export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 200, typeSteps: 10 };
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
 export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock' };
@@ -63,6 +63,8 @@ export const DEFAULT_TYPES = [
   { id: 'talk', name: 'Samtal att ta', icon: '💬', cat: 'r', on: 0,
     fields: [F('wo', 'Med vem'), F('ab', 'Om vad', 'note'), F('dn', 'Tagit samtalet', 'check'), F('hw', 'Hur gick det', 'note')] },
 ];
+// Room for one more open case: max LIM.open open, LIM.cases in all.
+export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
   return { version: 2, cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
@@ -141,12 +143,17 @@ export function validate(raw) {
   const types = new Map(s.types.map((t) => [t.id, t]));
   if (Array.isArray(raw.cases)) {
     const seen = new Set();
-    s.cases = raw.cases.map((c) => cleanCase(c, types)).filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(0, LIM.cases);
+    s.cases = raw.cases.map((c) => cleanCase(c, types)).filter((c) => c && !seen.has(c.id) && seen.add(c.id));
+    if (s.cases.length > LIM.cases) {   // over the limit: all open cases stay, the most recently closed fill the rest
+      const keep = new Set(s.cases.filter((c) => !c.x).slice(0, LIM.open).map((c) => c.id));
+      s.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : -1)).slice(0, LIM.cases - keep.size).forEach((c) => keep.add(c.id));
+      s.cases = s.cases.filter((c) => keep.has(c.id));
+    }
   }
   if (Array.isArray(raw.trash)) {   // Papperskorg: removed cases with d = removed date; ids never clash with cases
     const seen = new Set(s.cases.map((c) => c.id));
     s.trash = raw.trash.filter((c) => isObj(c) && validDate(c.d)).map((c) => { const x = cleanCase(c, types); if (x) x.d = c.d; return x; })
-      .filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(-LIM.cases);
+      .filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(-LIM.trash);
   }
   if (TRASH_DAYS.includes(raw.trashDays)) s.trashDays = raw.trashDays;
   if (ALERT_DAYS.includes(raw.alertDays)) s.alertDays = raw.alertDays;
@@ -157,29 +164,90 @@ export function validate(raw) {
   }
   return s;
 }
-// Unreadable saved data is never overwritten silently: the raw text is kept under BROKEN_KEY and loadFailed() says so.
+// Storage: sk.data holds settings and open cases as plain JSON (fast to write on every change). Closed cases and the
+// Papperskorg are packed (deflate-raw, 15 bits per character) into sk.arch, rewritten only when that part changes.
+// sk.data without "arch" is a complete state: written first whenever the archive changes, so closing the app while the
+// archive is being packed loses nothing. Unreadable data is never overwritten silently: kept under *.broken, loadFailed() says so.
 export const BROKEN_KEY = KEY + '.broken';
-let failed = false;
+const ARCH_KEY = 'sk.arch', ARCH_BROKEN = ARCH_KEY + '.broken';
+let failed = false, rawRest = null, lastArch = '[[],[]]', lastRef = null, lastSig = '', seq = 0, onSaveError = () => {};
 export const loadFailed = () => failed;
+export const setSaveErrorHandler = (fn) => { onSaveError = fn; };
+// Sync, without the archive: enough to show the app; loadFull() adds the archive.
 export function load() {
   let t;
   try { t = localStorage.getItem(KEY); } catch { return defaults(); }
   if (!t) return defaults();
-  try { return validate(JSON.parse(t)); } catch {
+  try { const raw = JSON.parse(t); rawRest = isObj(raw) && raw.arch ? raw : null; return validate(raw); } catch {
     failed = true;
     try { localStorage.setItem(BROKEN_KEY, t); } catch { /* no room: the next save still overwrites, but the user is warned */ }
     return defaults();
   }
 }
+export async function loadFull(state) {
+  if (!rawRest) { lastArch = archText(state); lastRef = state; lastSig = archSig(state); return state; }
+  let t = null;
+  try { t = localStorage.getItem(ARCH_KEY); } catch { /* blocked */ }
+  try {
+    const a = t ? JSON.parse(await unpack(t)) : [[], []];
+    const full = validate({ ...rawRest, cases: [...(rawRest.cases || []), ...(Array.isArray(a[0]) ? a[0] : [])], trash: Array.isArray(a[1]) ? a[1] : [] });
+    lastArch = archText(full); lastRef = full; lastSig = archSig(full); return full;
+  } catch {
+    failed = true;
+    try { localStorage.setItem(ARCH_BROKEN, t); } catch { /* no room */ }
+    return state;
+  }
+}
+const archText = (state) => JSON.stringify([state.cases.filter((c) => c.x), state.trash]);
+const trySet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch { return false; } };
+// Returns false if nothing could be written now; a later failure of the packed archive goes to setSaveErrorHandler().
+// The archive is only compared (a big JSON) when it may have changed: another state object (import, Ångra), other
+// counts in it, or archTouched (the caller edited a closed or removed case in place, or changed types).
+const archSig = (state) => { let n = 0, first = ''; for (const c of state.cases) if (c.x) { n++; first ||= c.id; } return `${n}|${first}|${state.trash.length}|${state.trash.at(-1)?.id}`; };
+export function save(state, archTouched = false) {
+  const sig = archSig(state), rest = JSON.stringify({ ...state, cases: state.cases.filter((c) => !c.x), trash: [], arch: 1 });
+  if (!archTouched && state === lastRef && sig === lastSig) return trySet(KEY, rest);
+  lastRef = state; lastSig = sig;
+  const arch = archText(state);
+  if (arch === lastArch) return trySet(KEY, rest);
+  const my = ++seq, full = trySet(KEY, JSON.stringify(state));
+  pack(arch).then((p) => {
+    if (my !== seq) return;   // a newer save is on its way
+    if (trySet(ARCH_KEY, p) && trySet(KEY, rest)) lastArch = arch;
+    else if (!full) onSaveError();
+  }, () => { if (!full && my === seq) onSaveError(); });
+  return true;
+}
+// deflate-raw bytes → string, 15 bits per character (0x20–0x801F: no surrogates). "J" = not packed (old browser).
+const BITS = 15, OFF = 0x20;
+export async function pack(text) {
+  if (typeof CompressionStream !== 'function') return 'J' + text;
+  const bytes = new Uint8Array(await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+  let out = 'Z' + bytes.length + ':', acc = 0, bits = 0; const parts = [];
+  for (const b of bytes) { acc = (acc << 8) | b; bits += 8; if (bits >= BITS) { bits -= BITS; parts.push(String.fromCharCode(((acc >> bits) & 0x7fff) + OFF)); acc &= (1 << bits) - 1; } }
+  if (bits) parts.push(String.fromCharCode(((acc << (BITS - bits)) & 0x7fff) + OFF));
+  for (let i = 0; i < parts.length; i += 8192) out += parts.slice(i, i + 8192).join('');
+  return out;
+}
+export async function unpack(t) {
+  if (t[0] === 'J') return t.slice(1);
+  const m = /^Z(\d+):/.exec(t); if (!m) throw new Error('format');
+  const n = Number(m[1]), bytes = new Uint8Array(n); let acc = 0, bits = 0, j = 0;
+  for (let i = m[0].length; i < t.length && j < n; i++) { acc = (acc << BITS) | (t.charCodeAt(i) - OFF); bits += BITS; while (bits >= 8 && j < n) { bits -= 8; bytes[j++] = (acc >> bits) & 0xff; } acc &= (1 << bits) - 1; }
+  return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+}
 // Storage used by the app, in characters (browsers count localStorage in UTF-16 units; about 5 million per site).
 export const STORAGE_QUOTA = 5000000;
 export function storageUsed() {
   let n = 0;
-  try { for (const k of [KEY, BROKEN_KEY]) { const v = localStorage.getItem(k); if (v) n += k.length + v.length; } } catch { /* blocked */ }
+  try { for (const k of [KEY, BROKEN_KEY, ARCH_KEY, ARCH_BROKEN]) { const v = localStorage.getItem(k); if (v) n += k.length + v.length; } } catch { /* blocked */ }
   return n;
 }
-export function save(state) {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch { return false; }
+// Rensa arkivet: closed cases archived before the date go to the Papperskorg. Returns how many.
+export function trashArchivedBefore(state, date, today) {
+  const old = state.cases.filter((c) => c.x && c.x < date);
+  for (const c of old) trashCase(state, c, today);
+  return old.length;
 }
 
 /* ---------- Cases ---------- */
@@ -189,7 +257,7 @@ export const catOf = (state, t) => state.cats.find((c) => c.id === t?.cat) || { 
 export function newCase(state, typeId, title, today) {
   const t = state.types.find((x) => x.id === typeId);
   const name = cleanText(title, 80);
-  if (!t || !name || state.cases.length >= LIM.cases) return null;
+  if (!t || !name || !roomFor(state)) return null;
   const c = { id: uid(), t: t.id, title: name, c: today, u: today };
   if (t.steps?.length) c.s = t.steps.map((x) => [x, 0]);
   state.cases.unshift(c);
@@ -261,7 +329,7 @@ export function addMonths(k, n) {
   t.setDate(Math.min(d, last)); return dateKey(t);
 }
 export function nextCase(state, c, today) {
-  if (!REPEAT[c.r] || state.cases.length >= LIM.cases) return null;
+  if (!REPEAT[c.r] || !roomFor(state)) return null;
   const n = c.r === 'y' ? 12 : 1, mv = (v) => { const d = addMonths(v.slice(0, 10), n); return validDate(d) ? d + v.slice(10) : v; };
   const t = typeOf(state, c), dated = new Set((t?.fields || []).filter((f) => f.kind === 'date' || f.kind === 'dt').map((f) => f.id));
   const nc = { id: uid(), t: c.t, title: c.title, c: today, u: today, r: c.r };
@@ -285,11 +353,11 @@ export const TRASH_DAYS = [7, 30, 90, 365, 0];
 export function trashCase(state, c, today) {
   const i = state.cases.indexOf(c); if (i < 0) return false;
   state.cases.splice(i, 1); state.trash.push({ ...c, d: today });
-  if (state.trash.length > LIM.cases) state.trash.shift();
+  if (state.trash.length > LIM.trash) state.trash.shift();
   return true;
 }
 export function restoreCase(state, id) {
-  const i = state.trash.findIndex((c) => c.id === id); if (i < 0 || state.cases.length >= LIM.cases) return null;
+  const i = state.trash.findIndex((c) => c.id === id); if (i < 0 || state.cases.length >= LIM.cases || (!state.trash[i].x && !roomFor(state))) return null;
   const [c] = state.trash.splice(i, 1); delete c.d; state.cases.unshift(c); return c;
 }
 export const purgeDate = (state, c) => (state.trashDays ? addDays(c.d, state.trashDays) : '');
@@ -354,8 +422,8 @@ export const EXPORT_SCHEMA = {
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, datum?]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
-  trash: `papperskorg: borttagna ärenden, samma form som cases plus d: borttagen datum, max ${LIM.cases}`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, datum?]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  trash: `papperskorg: borttagna ärenden, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan ärendet raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };

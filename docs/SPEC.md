@@ -55,7 +55,7 @@ Ett enkelt ärendesystem för livet: logga det som oroar dig eller måste göras
             l?: [[datum, text ≤ 500]] }],      // logg
   backup: { remind, last?, asked? } }
 ```
-Komprimerat: korta nycklar, tomma fält utelämnas, delmål och logg som par. Gränser: 2 000 ärenden, 30 typer, 12 kategorier, 50 delmål och 200 loggrader per ärende. Fältvärden: text ≤ 200, lång text ≤ 2 000, datum `ÅÅÅÅ-MM-DD`, datum och tid `ÅÅÅÅ-MM-DDTHH:MM`, tal ±1e9, bock `1` (annars utelämnad).
+Komprimerat: korta nycklar, tomma fält utelämnas, delmål och logg som par. Gränser: 10 000 ärenden (högst 500 öppna), 2 000 i papperskorgen, 30 typer, 12 kategorier, 50 delmål och 200 loggrader per ärende. Fältvärden: text ≤ 200, lång text ≤ 2 000, datum `ÅÅÅÅ-MM-DD`, datum och tid `ÅÅÅÅ-MM-DDTHH:MM`, tal ±1e9, bock `1` (annars utelämnad).
 
 ### Fasta typer (påslagna från start)
 | Typ | Kategori | Fält |

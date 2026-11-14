@@ -118,7 +118,9 @@ T.test('ta bort ärende: till papperskorgen, ångra, återställ från Arkiv', a
   q('[data-act="trashopen"]').click(); await T.wait();
   q('[data-act="cexp"][data-id="c2"]').click(); await T.wait();
   q('[data-act="trest"][data-id="c2"]').click(); await T.wait();
-  T.eq([stored().cases.length, stored().trash.length], [n, 0]);
+  T.ok(q('.add-title').textContent.includes('(0)'), 'papperskorgen tom');   // sk.data holds open cases only once the archive is packed
+  T.ok(stored().cases.some((c) => c.id === 'c2'), 'återställd');
+  q('[data-act="trashclose"]').click(); await T.wait();
   await tab('cases');
 });
 T.test('Inställningar: Data och Hjälp', async () => {

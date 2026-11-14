@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -156,4 +156,24 @@ T.test('papperskorg: ta bort, återställ, radera efter vald tid, validering', (
   T.eq(purgeTrash(s, '2030-01-01'), 0);
   T.eq(validate({ trash: [{ id: 'q', t: 'sym', title: 'x', c: '2026-01-01' }], trashDays: 5 }).trash.length, 0, 'utan datum hoppas över');
   T.eq(validate({ cases: [{ id: 'q', t: 'sym', title: 'a', c: '2026-01-01' }], trash: [{ id: 'q', t: 'sym', title: 'b', c: '2026-01-01', d: '2026-01-02' }] }).trash.length, 0, 'samma id som ärende');
+});
+T.test('lagring: arkivet packas och läses tillbaka, öppna ärenden okomprimerade', async () => {
+  const mem = new Map();
+  globalThis.localStorage = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => { mem.set(k, String(v)); }, removeItem: (k) => mem.delete(k) };
+  const txt = 'Åäö ✅ 🩺 ' + 'ringde vården fick tid '.repeat(20);
+  T.eq(await unpack(await pack(txt)), txt);
+  const s = defaults();
+  for (let i = 0; i < 300; i++) s.cases.push({ id: 'c' + i, t: 'sym', title: 'Ärende ' + i, c: '2026-01-01', u: '2026-01-01', ...(i % 3 ? { x: '2026-02-01' } : {}), l: [['2026-01-01', txt]] });
+  trashCase(s, s.cases[1], '2026-11-01');
+  save(s);
+  T.ok(!JSON.parse(mem.get('sk.data')).arch, 'först hela datan okomprimerad');
+  await new Promise((r) => setTimeout(r, 50));
+  const rest = JSON.parse(mem.get('sk.data'));
+  T.eq([rest.arch, rest.cases.length, rest.trash.length], [1, 100, 0]);
+  T.ok(mem.get('sk.arch').length * 5 < JSON.stringify(s).length, 'arkivet minst 5 gånger mindre');
+  const back = await loadFull(load());
+  T.eq([back.cases.length, back.trash.length], [299, 1]);
+  T.eq(back.cases.find((c) => c.id === 'c2'), validate(s).cases.find((c) => c.id === 'c2'));
+  T.eq(trashArchivedBefore(back, '2026-03-01', '2026-11-14'), 199);
+  delete globalThis.localStorage;
 });
