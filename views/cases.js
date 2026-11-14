@@ -82,7 +82,7 @@ export function caseEditor() {
         fieldInput({ f: v == null ? {} : { ['o' + i]: v } }, { id: 'o' + i, name: fr ? `${n} (från ${fr})` : n, kind: k }, 'ov'),
         el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' }))),
       el('div', { class: 'pick-row extra-add' },
-        el('input', { type: 'text', id: 'o-name', maxlength: 40, placeholder: 'Nytt fält, t.ex. Pris', 'aria-label': 'Namn på nytt fält', autocomplete: 'off' }),
+        el('input', { type: 'text', id: 'o-name', maxlength: 40, placeholder: 'Fältnamn', 'aria-label': 'Namn på nytt fält', autocomplete: 'off' }),
         el('select', { id: 'o-kind', 'aria-label': 'Sort' }, Object.entries(KINDS).map(([kk, l]) => el('option', { value: kk, text: l }))),
         el('button', { class: 'weigh-save', 'data-act': 'oadd', text: 'Lägg till' })),
       c.o?.length ? el('div', { class: 'old-actions' },

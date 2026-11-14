@@ -197,7 +197,12 @@ app.addEventListener('click', (ev) => {
       });
       break;
     }
-    case 'creopen': { const c = cs(); if (!c) return; delete c.x; touch(c); persist(); snackbar(`${c.title} är öppet igen`, null, null, 2500); break; }
+    case 'creopen': {   // a repeating case: the untouched copy made when it was archived goes away, so no double
+      const c = cs(); if (!c) return;
+      const nc = c.r && S.state.cases.find((x) => x !== c && !x.x && x.t === c.t && x.title === c.title && x.r === c.r && x.c >= c.x && x.u === x.c && !x.l && !(x.s || []).some((y) => y[1]));
+      if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc);
+      delete c.x; touch(c); persist(); snackbar(`${c.title} är öppet igen` + (nc ? ' – nästa upprepning togs bort' : ''), null, null, 3000); break;
+    }
     case 'cdel': {   // confirm first; Ångra stays as a second net
       const c = cs(); if (!c) return;
       const nl = (c.l || []).length, ns = (c.s || []).length;
@@ -220,7 +225,7 @@ app.addEventListener('click', (ev) => {
     }
     case 'odel': { const c = cs(); if (!c?.o) return; const n = c.o[Number(t.dataset.i)]?.[0]; withUndo(`${n} togs bort`, () => { c.o.splice(Number(t.dataset.i), 1); if (!c.o.length) delete c.o; touch(c); }); return; }
     case 'oclear': { const c = cs(); if (!c?.o) return; withUndo('Extra fält borttagna', () => { delete c.o; touch(c); }); return; }
-    case 'sdel': { const c = cs(); if (!c?.s) return; c.s.splice(Number(t.dataset.i), 1); if (!c.s.length) delete c.s; touch(c); persist(); break; }
+    case 'sdel': { const c = cs(), i = Number(t.dataset.i); if (!c?.s?.[i]) return; withUndo(`${c.s[i][0]} togs bort`, () => { c.s.splice(i, 1); if (!c.s.length) delete c.s; touch(c); }); return; }
     case 'ladd': {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
       if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
@@ -253,7 +258,8 @@ app.addEventListener('click', (ev) => {
     case 'tclose': S.tedit = null; S.teditFor = null; break;
     case 'fadd': {
       const d = S.tedit; if (d.fields.length >= LIM.fields) return;
-      let n = d.fields.length + 1; while (d.fields.some((f) => f.id === 'f' + n)) n++;
+      const used = new Set([...d.fields, ...(JSON.parse(S.teditOrig || '{}').fields || [])].map((f) => f.id));   // never reuse a removed field's id: its old values would land in the new field
+      let n = d.fields.length + 1; while (used.has('f' + n)) n++;
       d.fields.push({ id: 'f' + n, name: '', kind: 'text' }); render(); app.querySelector('.field-edit:last-child input')?.focus(); return;
     }
     case 'fup': { const f = S.tedit.fields, i = Number(t.dataset.i); if (i > 0) [f[i - 1], f[i]] = [f[i], f[i - 1]]; break; }
