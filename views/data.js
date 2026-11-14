@@ -35,7 +35,18 @@ export async function rememberPassword() {
   try { localStorage.setItem(PWD_KEY, a.pwd); } catch { snackbar('Kunde inte spara lösenordet', null, null, 3000); return; }
   render(); snackbar('Lösenordet sparas på den här enheten. Ha det kvar i din lösenordshanterare också.', null, null, 6000);
 }
-export function forgetPassword() { try { localStorage.removeItem(PWD_KEY); } catch { /* blocked */ } render(); snackbar('Lösenordet är borttaget från enheten', null, null, 3000); }
+// On by default: the password typed in the backup dialog (save or read) is kept, so the question never comes again.
+// Off (sk.pwdoff = 1): forgets it and asks every time, as before.
+const OFF_KEY = 'sk.pwdoff';
+export function rememberOn() { try { return localStorage.getItem(OFF_KEY) !== '1'; } catch { return false; } }
+export function setRemember(on) {
+  try { if (on) localStorage.removeItem(OFF_KEY); else { localStorage.setItem(OFF_KEY, '1'); localStorage.removeItem(PWD_KEY); } } catch { /* blocked */ }
+  render();
+}
+function keep(pwd) {
+  if (!rememberOn() || Backup.checkPassword(pwd)) return;
+  try { localStorage.setItem(PWD_KEY, pwd); } catch { /* no room: asks next time */ }
+}
 let busy = false;
 export async function saveBackup() {
   const pwd = savedPassword();
@@ -46,7 +57,16 @@ export async function saveBackup() {
       snackbar('Krypterar backup…', null, null, 2000);
       r = await Backup.save({ slug: SLUG, today: today(), text: await Backup.encrypt(exportText(S.state, today()), pwd, SLUG) });
     } catch { r = 'error'; } finally { busy = false; }
-  } else r = await Backup.saveWithPassword({ slug: SLUG, today: today(), text: exportText(S.state, today()) });
+  } else if (!rememberOn()) r = await Backup.saveWithPassword({ slug: SLUG, today: today(), text: exportText(S.state, today()) });
+  else {   // first time: the usual dialog, then the password is kept
+    if (busy) return; busy = true;
+    try {
+      const a = await Backup.askPassword('export', async (p) => ({ env: await Backup.encrypt(exportText(S.state, today()), p, SLUG) }));
+      if (!a) r = 'cancelled';
+      else { keep(a.pwd); r = await Backup.save({ slug: SLUG, today: today(), text: a.value.env }); if (r === 'saved' || r === 'fallback') snackbar('Backup sparad. Lösenordet är sparat på enheten – nästa gång räcker ett tryck.', null, null, 5000); }
+    } catch { r = 'error'; } finally { busy = false; }
+    if (r === 'saved' || r === 'fallback') { S.state.backup.last = today(); S.state.backup.asked = null; persist(); if (currentView() === 'settings') render(); return; }
+  }
   if (r === 'saved' || r === 'fallback') {
     S.state.backup.last = today(); S.state.backup.asked = null; persist();
     if (currentView() === 'settings') render();
@@ -96,6 +116,12 @@ export async function openImport(text) {
     let t; try { t = await Backup.decrypt(text, pwd, SLUG, MAX_IMPORT_CHARS); } catch { t = null; }
     if (t && typeof t.text === 'string') { startImport(t.text); return; }
   }
+  if (rememberOn() && Backup.isEncrypted(text)) {   // ask, and keep the password that opened the file
+    const a = await Backup.askPassword('import', (p) => Backup.decrypt(text, p, SLUG, MAX_IMPORT_CHARS));
+    if (!a) return;
+    if (a.value?.error) { importError(a.value.error); return; }
+    keep(a.pwd); startImport(a.value.text); return;
+  }
   const r = await Backup.openText(text, SLUG, MAX_IMPORT_CHARS);
   if (r.cancelled) return;
   if (r.error) { importError(r.error); return; }
@@ -117,7 +143,7 @@ export function initData(ctx) {
     snackbar('Data importerad', 'Ångra', () => { S.state = before; persist(); render(); });
   });
   $('cd-ok').addEventListener('click', () => {
-    S.state = defaults(); S.open = null; S.pick = false; S.tedit = null; try { localStorage.removeItem(PWD_KEY); } catch { /* blocked */ } persist(); render();
+    S.state = defaults(); S.open = null; S.pick = false; S.tedit = null; try { localStorage.removeItem(PWD_KEY); localStorage.removeItem(OFF_KEY); } catch { /* blocked */ } persist(); render();
     snackbar('All data är raderad', null, null, 3000);
   });
 }

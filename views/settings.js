@@ -1,7 +1,7 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
 import { addDays, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
-import { hasData, savedPassword } from './data.js';
+import { hasData, savedPassword, rememberOn } from './data.js';
 
 // In-app manual: static <template id="help-tpl"> in index.html (built from docs/MANUAL.md), cloned – never parsed as HTML text.
 function helpCard() {
@@ -122,18 +122,17 @@ export function viewSettings() {
 
 export const trashLabel = (d) => (d ? `Efter ${d === 365 ? '1 år' : d + ' dagar'}` : 'Aldrig');
 
-// Remembered backup password: off by default. On: one tap saves, Visa shows it (to write down), Byt, Glöm.
+// Remembered backup password: on by default – the password typed at the first backup is kept. Visa, Byt; unticking forgets it.
 function pwdBox() {
-  const p = savedPassword();
-  if (!p) return el('div', { class: 'pwd-box' },
-    el('button', { class: 'link', 'data-act': 'pwdset', text: 'Kom ihåg lösenordet på den här enheten…' }),
-    el('p', { class: 'muted small', text: 'Då sparas backup med ett tryck, utan att du skriver lösenordet. Filen är lika skyddad som förut.' }));
+  const p = savedPassword(), on = rememberOn();
   return el('div', { class: 'pwd-box' },
-    el('p', { class: 'small', text: '🔑 Lösenordet sparas på den här enheten – backup sparas med ett tryck.' }),
-    S.showPwd ? el('p', { class: 'pwd-show', text: p }) : null,
-    el('div', { class: 'row-actions' },
-      el('button', { class: 'link', 'data-act': 'pwdshow', text: S.showPwd ? 'Dölj' : 'Visa' }),
-      el('button', { class: 'link', 'data-act': 'pwdset', text: 'Byt' }),
-      el('button', { class: 'link danger', 'data-act': 'pwdforget', text: 'Glöm' })),
-    el('p', { class: 'muted small', text: 'Ha lösenordet kvar i din lösenordshanterare: utan det går backupen inte att öppna på en ny telefon.' }));
+    el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: on, 'data-act': 'pwdremember' }), el('span', { text: 'Kom ihåg backup-lösenordet på den här enheten' })),
+    !on ? el('p', { class: 'muted small', text: 'Appen frågar efter lösenordet varje gång.' })
+      : !p ? el('p', { class: 'muted small', text: 'Lösenordet du skriver vid nästa backup sparas – sedan räcker ett tryck. Filen är lika skyddad som förut.' })
+      : [el('p', { class: 'small', text: '🔑 Sparat – backup sparas med ett tryck.' }),
+        S.showPwd ? el('p', { class: 'pwd-show', text: p }) : null,
+        el('div', { class: 'row-actions' },
+          el('button', { class: 'link', 'data-act': 'pwdshow', text: S.showPwd ? 'Dölj' : 'Visa' }),
+          el('button', { class: 'link', 'data-act': 'pwdset', text: 'Byt' })),
+        el('p', { class: 'muted small', text: 'Ha lösenordet kvar i din lösenordshanterare: utan det går backupen inte att öppna på en ny telefon.' })]);
 }
