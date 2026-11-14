@@ -5,12 +5,25 @@ import { today, S, el, shortDate, longDate } from '../ui.js';
 const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' : d === 1 ? 'igår' : `${d} dagar`; };
 // A case row: coloured edge = category (CSS class from a fixed list, never a colour from data).
 export function caseRow(c) {
-  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
-  return el('li', {}, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'copen', 'data-id': c.id },
+  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c), open = S.exp === c.id;
+  return el('li', {}, el('button', { class: `case-row c-${cat.color}`, 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open) },
     el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
       el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängt ' + shortDate(c.x) : 'ändrat ' + ago(c.u)}` })),
-    all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null));
+    all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
+    el('span', { class: 'case-chev', 'aria-hidden': 'true', text: open ? '▴' : '▾' })),
+    open ? caseSummary(c, t, cat) : null);
+}
+// Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna ärendet.
+const showVal = (fd, v) => fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
+function caseSummary(c, t, cat) {
+  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined);
+  const log = (c.l || []).slice(-3).reverse();
+  return el('div', { class: `case-sum c-${cat.color}` },
+    fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+    c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x }))) : null,
+    log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
+    el('button', { class: 'primary', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna ärendet' }));
 }
 
 // Nytt ärende in one step: rubrik, typ, and the chosen type's own fields right below (draft S.draft, saved on Skapa).

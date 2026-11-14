@@ -176,7 +176,8 @@ app.addEventListener('click', (ev) => {
       S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
       snackbar(`${c.title} är sparat`, null, null, 2500); return;
     }
-    case 'copen': S.open = id; render(); scrollTo(0, 0); return;
+    case 'cexp': S.exp = S.exp === id ? null : id; break;
+    case 'copen': S.exp = null; S.open = id; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
     case 'cdone': {
       const c = cs(); if (!c) return;
