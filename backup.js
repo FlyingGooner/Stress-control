@@ -187,7 +187,7 @@
     err.textContent = '';
     p1.autocomplete = exp ? 'new-password' : 'current-password';
     p2.autocomplete = 'new-password';
-    // Optional elements, so apps without them still work): password-manager username, generator, copy, colour preview.
+    // v0.12.0 (optional elements, so apps without them still work): password-manager username, generator, copy, colour preview.
     const form = dlg.querySelector('form'), user = $('pw-user'), gen = $('pw-gen'), copy = $('pw-copy'), prev = $('pw-preview'), note = $('pw-note');
     if (user && !user.value) user.value = (document.title.split(/[–|-]/)[0].trim() || 'App') + ' backup';
     if (gen) gen.hidden = !exp;
