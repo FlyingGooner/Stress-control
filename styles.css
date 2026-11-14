@@ -52,6 +52,8 @@ button { cursor: pointer; }
 /* Filter chips */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chip { min-height: 32px; padding: 0 16px; border-radius: var(--r-sm); border: 1px solid var(--outline-variant); background: none; font-size: .875rem; font-weight: 500; color: var(--on-surface-variant); }
+.chip.sort-chip { margin-left: auto; }
+.sort-cols { margin-top: 6px; }
 .chip.on { background: var(--primary-container); border-color: transparent; color: var(--on-primary-container); }
 select.chip.person-sel { flex: none; width: auto; min-height: 32px; padding: 0 6px 0 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: none; font-size: .875rem; max-width: 45%; margin-right: 6px; color: var(--on-surface); text-overflow: ellipsis; }
 select.chip.person-sel.on { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }

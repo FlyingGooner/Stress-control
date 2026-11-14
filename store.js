@@ -207,6 +207,7 @@ export function validate(raw) {
   }
   if (TRASH_DAYS.includes(raw.trashDays)) s.trashDays = raw.trashDays;
   if (ALERT_DAYS.includes(raw.alertDays)) s.alertDays = raw.alertDays;
+  if (isObj(raw.sort)) for (const k of Object.keys(SORTS)) if (validSort(k, raw.sort[k])) (s.sort ||= {})[k] = raw.sort[k];
   if (isObj(raw.backup)) {
     if (['week', 'month', 'off'].includes(raw.backup.remind)) s.backup.remind = raw.backup.remind;
     if (validDate(raw.backup.last)) s.backup.last = raw.backup.last;
@@ -489,6 +490,26 @@ export function setStepRepeat(c, i, rep, today) {
 export const progress = (c) => [(c.s || []).filter((x) => x[1]).length, (c.s || []).length];
 export const openCases = (state) => state.cases.filter((c) => !c.x).sort((a, b) => (a.u < b.u ? 1 : a.u > b.u ? -1 : 0));
 export const closedCases = (state) => state.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : a.x > b.x ? -1 : 0));
+// Sortering (Trådar och Arkiv): sort = { cases?: "u-", arch?: "x+" } – kolumn + riktning (+ stigande, - fallande).
+// A new column starts in its natural direction (SORT_ASC: A–Ö and nearest date first); the same column again flips it.
+export const SORTS = { cases: { u: 'Ändrad', c: 'Skapad', d: 'Datum', t: 'Rubrik' }, arch: { x: 'Stängd', c: 'Skapad', t: 'Rubrik' } };
+export const SORT_ASC = ['d', 't'];
+const SORT_DEFAULT = { cases: 'u-', arch: 'x-' };
+const validSort = (list, v) => typeof v === 'string' && v.length === 2 && Object.hasOwn(SORTS[list], v[0]) && '+-'.includes(v[1]);
+export const sortOf = (state, list) => (validSort(list, state.sort?.[list]) ? state.sort[list] : SORT_DEFAULT[list]);
+// Next sort after a tap on column k.
+export function nextSort(state, list, k) {
+  const cur = sortOf(state, list);
+  return k + (cur[0] === k ? (cur[1] === '+' ? '-' : '+') : SORT_ASC.includes(k) ? '+' : '-');
+}
+// A sorted copy. Cases without the value (no date) come last in both directions; ties keep the order given.
+export function sortCases(state, list, spec) {
+  const k = spec[0], dir = spec[1] === '+' ? 1 : -1;
+  const val = (c) => (k === 'd' ? firstDate(state, c) : k === 't' ? c.title : c[k] || '');
+  const rows = list.map((c) => [c, val(c)]);
+  rows.sort(([, a], [, b]) => (!a ? (b ? 1 : 0) : !b ? -1 : dir * (k === 't' ? a.localeCompare(b, 'sv') : a < b ? -1 : a > b ? 1 : 0)));
+  return rows.map(([c]) => c);
+}
 // Aktuellt: dates in open cases within alertDays (incl. today), plus passed deadlines (fields with due). Sorted by date.
 export const ALERT_DAYS = [1, 3, 7, 14, 30];
 export function alerts(state, today, days = state.alertDays ?? 7) {
@@ -541,6 +562,7 @@ export const EXPORT_SCHEMA = {
   people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}), v?: { egenskaps-id: värde efter egenskapens kind } }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
   pfields: `personers egenskaper, samma form som types[].fields men kind: ${PERSON_KINDS.join(' | ')}, ≤ ${LIM.pfields} (saknas = standard: Relation, Född, Telefon, E-post, Arbetsgivare eller skola, Anteckning)`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
+  sort: `sortering, valfri: { cases?: Trådar, arch?: Arkiv } – kolumn + riktning (+ stigande, - fallande). cases: ${Object.keys(SORTS.cases).join(' | ')}, arch: ${Object.keys(SORTS.arch).join(' | ')} (u ändrad, c skapad, x stängd, d första datum, t rubrik). Standard u- och x-`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
   cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1, barn? person-id]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,

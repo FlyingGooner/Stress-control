@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, sortCases, sortOf, nextSort } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -211,4 +211,17 @@ T.test('delmål som upprepas: avbockning ger nästa tur, ångrad avbockning tar 
   T.eq(c.s, [['Byt däck', 0, '2026-11-01', 0, 'y']]);
   const m = { s: [['Tanka', 0, 0, 0, 'm']] }; setStepDone(m, 0, 1, '2026-01-31');
   T.eq(m.s[1], ['Tanka', 0, '2026-02-28', 0, 'm']);
+});
+
+T.test('sortering: kolumn, riktning, tomma sist, validering', () => {
+  const st = validate({ sort: { cases: 't+', arch: 'q-' } });
+  T.eq(st.sort, { cases: 't+' });
+  T.eq(sortOf(st, 'arch'), 'x-');
+  const cs = [{ id: 'a', title: 'Öl', c: '2026-01-02', u: '2026-03-01' }, { id: 'b', title: 'apa', c: '2026-01-03', u: '2026-02-01' }, { id: 'c', title: 'Bil', c: '2026-01-01', u: '2026-04-01' }];
+  T.eq(sortCases(st, cs, 't+').map((c) => c.id), ['b', 'c', 'a']);
+  T.eq(sortCases(st, cs, 't-').map((c) => c.id), ['a', 'c', 'b']);
+  T.eq(sortCases(st, cs, 'u-').map((c) => c.id), ['c', 'a', 'b']);
+  T.eq(sortCases(st, cs, 'c+').map((c) => c.id), ['c', 'a', 'b']);
+  T.eq(sortCases(st, [{ id: 'n', title: 'x' }, { id: 'a', title: 'y', x: '2026-05-01' }], 'x+').map((c) => c.id), ['a', 'n'], 'utan värde sist');
+  T.eq(nextSort(st, 'cases', 't'), 't-'); T.eq(nextSort(st, 'cases', 'u'), 'u-'); T.eq(nextSort(st, 'cases', 'd'), 'd+');
 });

@@ -1,5 +1,5 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, typeOf, catOf, personOf, childrenOf, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT } from '../store.js';
+import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
@@ -39,6 +39,16 @@ export function catFilter(all, key, act) {
   const chips = el('div', { class: 'chips cat-chips', role: 'group', 'aria-label': 'Kategori' }, chip('all', `Alla ${all.length}`),
     S.state.cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color)));
   return [chips, S[key] === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S[key])];
+}
+// Sortera: a chip in the filter row (↕ Ändrad ↓) unfolds the columns; a tap picks a column, the same one again flips
+// the direction. which = 'cases' | 'arch'. Returns [chip, column row or null].
+export function sortBar(which) {
+  const cur = sortOf(S.state, which), cols = SORTS[which], arrow = cur[1] === '+' ? '↑' : '↓', dir = cur[1] === '+' ? 'stigande' : 'fallande';
+  const chip = el('button', { class: 'chip sort-chip' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${cols[cur[0]]}, ${dir}. Tryck för att välja`, text: `↕ ${cols[cur[0]]} ${arrow}` });
+  const row = S.sortOpen ? el('div', { class: 'chips sort-cols', role: 'group', 'aria-label': 'Sortera på' },
+    Object.entries(cols).map(([k, l]) => el('button', { class: 'chip' + (k === cur[0] ? ' on' : ''), 'data-act': 'sortcol', 'data-id': `${which}:${k}`, 'aria-pressed': String(k === cur[0]),
+      'aria-label': k === cur[0] ? `${l}, ${dir} – tryck för att vända` : `Sortera på ${l}`, text: k === cur[0] ? `${l} ${arrow}` : l }))) : null;
+  return [chip, row];
 }
 // Person filter: one compact chip-styled select (👤 Alla ▾) placed first in the category row. Only shown when some case in
 // the list has a person. key = the S property, act = its data-act (a change event). Returns [select or null, filtered list].
@@ -256,12 +266,16 @@ export function viewCases() {
   if (S.pick) return picker();
   if (S.tedit) return typeEditor();
   if (S.open) return caseView();
-  const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter'), [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
+  const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter');
+  let [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
   chips.prepend(...[pchips].filter(Boolean));
+  const [schip, srow] = sortBar('cases'); chips.append(schip);
+  list = sortCases(S.state, list, sortOf(S.state, 'cases'));
   if (S.sel) S.sel = S.sel.filter((id) => all.some((c) => c.id === id));
   const bar = selBar(list, el('button', { class: 'text-btn', 'data-act': 'selarch', disabled: !S.sel?.length, text: 'Arkivera' }));
   return [
     bar || chips,
+    bar ? null : srow,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
       : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar med det här filtret.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
     S.sel ? null : el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Ny tråd' }),

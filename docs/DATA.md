@@ -9,6 +9,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 |---|---|---|
 | `version` | tal | `6`. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. Före version 4 byts dess ikon 👶 mot 🛟. Före version 5 blir dess textfält Vad (`wh`) ett val i lista med Försäkringskassans ersättningar. |
 | `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
+| `sort` | objekt, valfri | Sortering: `{ cases?: "u-", arch?: "x-" }` = kolumn + riktning (`+` stigande, `-` fallande). Trådar: `u` ändrad, `c` skapad, `d` första datum i tråden, `t` rubrik. Arkiv: `x` stängd, `c` skapad, `t` rubrik. Saknas = `u-` och `x-`. Ogiltigt värde hoppas över. |
 | `pfields` | lista, ≤ 20 | Personers egenskaper, gemensamma för alla: `{ id, name ≤ 40, kind, opts? }`, `kind` = `text note date num check choice`. Saknas = standard (Relation, Född, Telefon, E-post, Arbetsgivare eller skola, Anteckning). |
 | `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30, h? }`. `h` = arbetstimmar per vecka 1–80 (saknas = 40); en normal arbetsdag är `h / 5`. `v?` = `{ egenskaps-id: värde }` efter egenskapens sort. Före version 6 låg uppgifterna direkt på personen (`rel`, `born`, `tel`, `mail`, `work`, `note`); de flyttas till `v` vid inläsning. |
 | `cats` | lista, 1–12 | Kategorier. |
