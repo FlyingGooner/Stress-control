@@ -15,7 +15,7 @@ function helpCard() {
 
 // Typredigeraren (lager, Bakåt stänger; osparat → "Släng ändringarna?"): namn, ikon, kategori, fält i ordning, förslag på delmål.
 export function typeEditor() {
-  const d = S.tedit, used = S.state.cases.some((c) => c.t === d.id);
+  const d = S.tedit, used = [...S.state.cases, ...S.state.trash].some((c) => c.t === d.id);
   return el('section', { class: 'card' },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'tclose', 'aria-label': 'Stäng', text: '✕' }),

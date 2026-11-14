@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -140,4 +140,20 @@ T.test('upprepa: arkiverat ärende ger ett nytt med datum flyttade, bockar och d
   T.eq(addMonths('2028-02-29', 12), '2029-02-28');
   T.eq(validate({ cases: [{ id: 'a', t: 'eco', title: 'x', c: '2026-01-10', r: 'w' }] }).cases[0].r, undefined);
   T.eq(nextCase(s, { ...s.cases[0], r: undefined }, '2026-02-01'), null);
+});
+T.test('papperskorg: ta bort, återställ, radera efter vald tid, validering', () => {
+  const s = base(), c = s.cases[0];
+  T.ok(trashCase(s, c, '2026-11-01'));
+  T.eq([s.cases.length, s.trash.length, s.trash[0].d], [0, 1, '2026-11-01']);
+  const v = validate(JSON.parse(JSON.stringify(s)));
+  T.eq([v.trash.length, v.trash[0].d, v.trashDays], [1, '2026-11-01', 30]);
+  T.eq(purgeTrash(s, '2026-11-30'), 0);
+  T.eq(restoreCase(s, 'c1').id, 'c1'); T.eq([s.cases.length, s.trash.length, s.cases[0].d], [1, 0, undefined]);
+  trashCase(s, s.cases[0], '2026-11-01');
+  T.eq(purgeTrash(s, '2026-12-01'), 1);
+  s.trashDays = 0; trashCase(s, validate({ cases: [{ id: 'z', t: 'sym', title: 'x', c: '2020-01-01' }] }).cases[0], '2020-01-01');
+  s.cases.unshift(s.trash[0]); s.trash.pop(); trashCase(s, s.cases[0], '2020-01-01');
+  T.eq(purgeTrash(s, '2030-01-01'), 0);
+  T.eq(validate({ trash: [{ id: 'q', t: 'sym', title: 'x', c: '2026-01-01' }], trashDays: 5 }).trash.length, 0, 'utan datum hoppas över');
+  T.eq(validate({ cases: [{ id: 'q', t: 'sym', title: 'a', c: '2026-01-01' }], trash: [{ id: 'q', t: 'sym', title: 'b', c: '2026-01-01', d: '2026-01-02' }] }).trash.length, 0, 'samma id som ärende');
 });

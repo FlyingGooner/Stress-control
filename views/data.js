@@ -37,7 +37,7 @@ export async function saveBackup() {
 // Förfallen när det gått en vecka/månad sedan senaste backup (eller sedan första posten). "Inte nu" frågar igen om 3 dagar.
 // Visas högst en gång per session, aldrig utan data och aldrig när ett lager eller en dialog är öppen.
 let backupAsked = false;
-export const hasData = () => S.state.cases.length > 0;
+export const hasData = () => S.state.cases.length + S.state.trash.length > 0;
 function backupDue() {
   const b = S.state.backup, days = b.remind === 'week' ? 7 : b.remind === 'month' ? 30 : 0;
   if (!days || !hasData()) return false;

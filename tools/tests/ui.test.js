@@ -104,14 +104,20 @@ T.test('typ på/av i inställningar styr typväljaren', async () => {
   q('[data-act="pickclose"]').click();
   await T.wait(50);
 });
-T.test('ta bort ärende med ångra', async () => {
+T.test('ta bort ärende: till papperskorgen, ångra, återställ från Arkiv', async () => {
   const n = stored().cases.length;
   q('.case-row[data-id="c2"]').click();
   q('[data-act="cdel"]').click();
-  T.eq(stored().cases.length, n - 1);
+  T.eq([stored().cases.length, stored().trash.length], [n - 1, 1]);
   q('#snack-action').click();
-  T.eq(stored().cases.length, n);
+  T.eq([stored().cases.length, stored().trash.length], [n, 0]);
   await T.wait(50);
+  q('.case-row[data-id="c2"]').click();
+  q('[data-act="cdel"]').click(); await T.wait();
+  await tab('archive');
+  q('[data-act="trest"][data-id="c2"]').click(); await T.wait();
+  T.eq([stored().cases.length, stored().trash.length], [n, 0]);
+  await tab('cases');
 });
 T.test('Inställningar: Data och Hjälp', async () => {
   await tab('settings');

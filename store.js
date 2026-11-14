@@ -65,7 +65,7 @@ export const DEFAULT_TYPES = [
 ];
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 2, cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], alertDays: 7, backup: { remind: 'month' } };
+  return { version: 2, cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -143,6 +143,12 @@ export function validate(raw) {
     const seen = new Set();
     s.cases = raw.cases.map((c) => cleanCase(c, types)).filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(0, LIM.cases);
   }
+  if (Array.isArray(raw.trash)) {   // Papperskorg: removed cases with d = removed date; ids never clash with cases
+    const seen = new Set(s.cases.map((c) => c.id));
+    s.trash = raw.trash.filter((c) => isObj(c) && validDate(c.d)).map((c) => { const x = cleanCase(c, types); if (x) x.d = c.d; return x; })
+      .filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(-LIM.cases);
+  }
+  if (TRASH_DAYS.includes(raw.trashDays)) s.trashDays = raw.trashDays;
   if (ALERT_DAYS.includes(raw.alertDays)) s.alertDays = raw.alertDays;
   if (isObj(raw.backup)) {
     if (['week', 'month', 'off'].includes(raw.backup.remind)) s.backup.remind = raw.backup.remind;
@@ -274,6 +280,25 @@ export function firstDate(state, c) {
   for (const [, , d] of c.s || []) if (d) ds.push(d);
   return ds.sort()[0] || '';
 }
+// Papperskorg: Ta bort moves a case here; it is deleted for good after trashDays (0 = never).
+export const TRASH_DAYS = [7, 30, 90, 365, 0];
+export function trashCase(state, c, today) {
+  const i = state.cases.indexOf(c); if (i < 0) return false;
+  state.cases.splice(i, 1); state.trash.push({ ...c, d: today });
+  if (state.trash.length > LIM.cases) state.trash.shift();
+  return true;
+}
+export function restoreCase(state, id) {
+  const i = state.trash.findIndex((c) => c.id === id); if (i < 0 || state.cases.length >= LIM.cases) return null;
+  const [c] = state.trash.splice(i, 1); delete c.d; state.cases.unshift(c); return c;
+}
+export const purgeDate = (state, c) => (state.trashDays ? addDays(c.d, state.trashDays) : '');
+// Removes cases whose time in the trash has run out. Returns how many.
+export function purgeTrash(state, today) {
+  const n = state.trash.length;
+  if (state.trashDays) state.trash = state.trash.filter((c) => purgeDate(state, c) > today);
+  return n - state.trash.length;
+}
 export const progress = (c) => [(c.s || []).filter((x) => x[1]).length, (c.s || []).length];
 export const openCases = (state) => state.cases.filter((c) => !c.x).sort((a, b) => (a.u < b.u ? 1 : a.u > b.u ? -1 : 0));
 export const closedCases = (state) => state.cases.filter((c) => c.x).sort((a, b) => (a.x < b.x ? 1 : a.x > b.x ? -1 : 0));
@@ -330,6 +355,8 @@ export const EXPORT_SCHEMA = {
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
   cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1) }, s?: [[delmål ≤ 80, 0 | 1, datum?]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log}), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases}`,
+  trash: `papperskorg: borttagna ärenden, samma form som cases plus d: borttagen datum, max ${LIM.cases}`,
+  trashDays: `dagar i papperskorgen innan ärendet raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {

@@ -12,6 +12,8 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `cats` | lista, 1–12 | Kategorier. |
 | `types` | lista, 1–30 | Ärendetyper. |
 | `cases` | lista, ≤ 2 000 | Ärenden. |
+| `trash` | lista, ≤ 2 000 | Papperskorg: borttagna ärenden, samma form som ärenden plus `d` (borttagen datum). Id får inte finnas bland `cases`. |
+| `trashDays` | 7 \| 30 \| 90 \| 365 \| 0 | Dagar i papperskorgen innan ärendet raderas vid start (0 = aldrig, standard 30). |
 | `backup` | objekt | `{ remind: "week" \| "month" \| "off", last?: datum, asked?: datum }`. |
 
 ## Kategori (`cats[]`)

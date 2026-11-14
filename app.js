@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -203,12 +203,27 @@ app.addEventListener('click', (ev) => {
       if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc);
       delete c.x; touch(c); persist(); snackbar(`${c.title} är öppet igen` + (nc ? ' – nästa upprepning togs bort' : ''), null, null, 3000); break;
     }
-    case 'cdel': {   // confirm first; Ångra stays as a second net
+    case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
       const c = cs(); if (!c) return;
-      const nl = (c.l || []).length, ns = (c.s || []).length;
-      confirmDelete(`Ta bort ${c.title}?`, `${nl} ${nl === 1 ? 'loggrad' : 'loggrader'} och ${ns} delmål tas bort. Senast ändrat ${longDate(c.u)}.`, () => {
-        S.open = null;
-        withUndo(`${c.title} togs bort`, () => { S.state.cases = S.state.cases.filter((x) => x.id !== c.id); });
+      S.open = null;
+      withUndo(`${c.title} ligger i papperskorgen`, () => { trashCase(S.state, c, today()); });
+      return;
+    }
+    case 'trest': {
+      const c = restoreCase(S.state, id); if (!c) { snackbar(`Max ${LIM.cases} ärenden – ta bort något först`, null, null, 3000); return; }
+      persist(); render(); snackbar(`${c.title} är återställt` + (c.x ? ' till Arkiv' : ''), null, null, 2500); return;
+    }
+    case 'tpurge': {
+      const c = S.state.trash.find((x) => x.id === id); if (!c) return;
+      confirmDelete(`Radera ${c.title} för gott?`, 'Ärendet tas bort helt och kan inte återställas.', () => {
+        S.state.trash = S.state.trash.filter((x) => x !== c); persist(); render();
+      });
+      return;
+    }
+    case 'tempty': {
+      const n = S.state.trash.length; if (!n) return;
+      confirmDelete('Töm papperskorgen?', `${n} ${n === 1 ? 'ärende raderas' : 'ärenden raderas'} för gott och kan inte återställas.`, () => {
+        S.state.trash = []; persist(); render();
       });
       return;
     }
@@ -272,7 +287,7 @@ app.addEventListener('click', (ev) => {
       if (i >= 0) S.state.types[i] = clean; else S.state.types.push(clean);
       // Values of removed fields (or fields whose kind changed) are kept as extra fields in each case – never dropped silently.
       const old = i >= 0 ? JSON.parse(S.teditOrig) : null;
-      for (const c of S.state.cases) if (c.t === clean.id && c.f) {
+      for (const c of [...S.state.cases, ...S.state.trash]) if (c.t === clean.id && c.f) {
         for (const k of Object.keys(c.f)) {
           const nf = clean.fields.find((f) => f.id === k), of = old?.fields.find((f) => f.id === k);
           if (nf && nf.kind === of?.kind) continue;
@@ -286,7 +301,7 @@ app.addEventListener('click', (ev) => {
       S.tedit = null; S.teditFor = null; persist(); snackbar(fc ? `${clean.name} sparad – ärendet använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
     }
     case 'tdel': {
-      const d = S.tedit; if (S.state.cases.some((c) => c.t === d.id)) return;
+      const d = S.tedit; if ([...S.state.cases, ...S.state.trash].some((c) => c.t === d.id)) return;
       S.tedit = null;
       withUndo(`${d.name || 'Typen'} togs bort`, () => { S.state.types = S.state.types.filter((x) => x.id !== d.id); });
       return;
@@ -409,6 +424,7 @@ app.addEventListener('change', (ev) => {
     case 'tset': if (S.tedit && t.dataset.id === 'cat') S.tedit.cat = t.value; return;
     case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) { f.kind = t.value; if (f.kind !== 'date' && f.kind !== 'dt') delete f.due; render(); } return; }
     case 'fdue': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f) { if (t.checked) f.due = 1; else delete f.due; } return; }
+    case 'trashdays': { const v = Number(t.value); if (TRASH_DAYS.includes(v)) { S.state.trashDays = v; purgeTrash(S.state, today()); persist(); render(); } return; }
     case 'alertdays': { const v = Number(t.value); if (ALERT_DAYS.includes(v)) { S.state.alertDays = v; persist(); render(); } return; }
     case 'kname': {
       const k = S.state.cats.find((c) => c.id === t.dataset.id), v = cleanText(t.value, 30);
@@ -433,6 +449,7 @@ document.addEventListener('visibilitychange', () => {
   setTimeout(maybeAskBackup, 300);
 });
 
+if (purgeTrash(S.state, today())) persist();   // Papperskorg: cases past their time are deleted at start
 go(location.hash.slice(1), false);
 initData({ persist, render, status, snackbar, view: () => view });
 setTimeout(maybeAskBackup, 800);
