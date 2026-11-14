@@ -474,6 +474,8 @@ window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.in
 // replace the input and lose the chosen file).
 let filePick = false;
 app.addEventListener('click', (ev) => { if (ev.target.id === 'import-file') filePick = true; }, true);
+// 📅 on a sub-goal without a date: the invisible date input on top opens its picker (showPicker where the tap alone does not).
+app.addEventListener('click', (ev) => { const i = ev.target.closest?.('.date-pick input'); if (i) try { i.showPicker?.(); } catch { /* not allowed: the tap opens it */ } });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   if (filePick) { filePick = false; return; }

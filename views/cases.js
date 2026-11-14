@@ -107,7 +107,9 @@ export function caseEditor() {
     el('ul', { class: 'steps' }, (c.s || []).map(([x, d, dd], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
       el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }), el('span', { text: x })),
       d ? el('input', { type: 'date', class: 'step-date done-date', value: c.s[i][3] || '', max: today(), 'data-act': 'sdate', 'data-i': i, 'aria-label': `Klart datum för ${x}` })
-        : el('input', { type: 'date', class: 'step-date' + (dd ? '' : ' empty'), value: dd || '', 'data-act': 'sdate', 'data-i': i, 'aria-label': `Datum för ${x}` }),
+        : dd ? el('input', { type: 'date', class: 'step-date', value: dd, 'data-act': 'sdate', 'data-i': i, 'aria-label': `Datum för ${x}` })
+        : el('label', { class: 'date-pick', title: 'Lägg till datum' }, el('span', { 'aria-hidden': 'true', text: '📅' }),   // no date yet: a calendar button, the picker on top of it
+          el('input', { type: 'date', value: '', 'data-act': 'sdate', 'data-i': i, 'aria-label': `Lägg till datum för ${x}` })),
       d ? null : el('button', { class: 'icon sm rep' + (c.s[i][4] ? ' on' : ''), 'data-act': 'srep', 'data-i': i, 'aria-label': `Upprepa ${x}: ${c.s[i][4] ? REPEAT[c.s[i][4]] : 'nej'} – tryck för att byta`, text: c.s[i][4] === 'y' ? '↻ år' : c.s[i][4] === 'm' ? '↻ mån' : '↻' }),
       el('button', { class: 'icon sm', 'data-act': 'sdel', 'data-i': i, 'aria-label': `Ta bort ${x}`, text: '✕' })))),
     el('div', { class: 'pick-row' },
