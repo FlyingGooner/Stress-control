@@ -1,6 +1,6 @@
 // Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, addDay, setDay, delDay, parseHours } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -151,7 +151,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false; S.own = null; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -160,7 +160,7 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false;
+  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.showPwd = false; S.own = null;
   go(t.dataset.view);
 });
 
@@ -189,7 +189,7 @@ app.addEventListener('click', (ev) => {
     case 'tfilter': S.tfilter = id; break;
     case 'trashopen': S.trash = true; S.exp = null; render(); scrollTo(0, 0); return;
     case 'trashclose': S.trash = false; break;
-    case 'pickopen': S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); return;
+    case 'pickopen': S.own = null; S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); return;
     case 'pickclose': S.pick = false; S.draft = null; break;
     case 'ptype': {   // choose type: its form opens below; values already typed in fields with the same id are kept
       if (S.draft?.t === id) return;
@@ -215,7 +215,7 @@ app.addEventListener('click', (ev) => {
     case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
     case 'stepsclose': S.steps = false; break;
     case 'cexp': S.exp = S.exp === id ? null : id; break;
-    case 'copen': S.exp = null; S.open = id; S.edit = false; render(); scrollTo(0, 0); return;
+    case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
     case 'cedit': S.edit = true; render(); scrollTo(0, 0); return;
     case 'cedclose': S.edit = false; break;
@@ -356,6 +356,7 @@ app.addEventListener('click', (ev) => {
       if (!addDay(c, id, d, w, today())) { errText('dy-e-' + id, c.f?.[id]?.some((x) => x[0] === d) ? 'Den dagen finns redan.' : 'Välj ett datum.'); return; }
       if (!S.pick) persist(); render(); return;
     }
+    case 'owncancel': S.own = null; break;
     case 'pnew': {
       if (S.state.people.length >= LIM.people) return;
       S.state.people.push({ id: 'p' + uid(), name: 'Ny person' }); persist(); render();
@@ -399,6 +400,7 @@ app.addEventListener('input', (ev) => {
   if (t.dataset.act === 'tset' && ['name', 'icon'].includes(t.dataset.id)) d[t.dataset.id] = t.value;
   if (t.dataset.act === 'fname') { const f = d.fields[Number(t.dataset.i)]; if (f) f.name = t.value; }
   if (t.dataset.act === 'tsteps') d.steps = t.value.split('\n').map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
+  if (t.dataset.act === 'fopts') { const f = d.fields[Number(t.dataset.i)]; if (f) f.opts = [...new Set(t.value.split('\n').map((x) => cleanText(x, 60)).filter(Boolean))].slice(0, OPTS_MAX); }
 });
 /* ---------- Swipe sideways between the category filters in Trådar (no layer open; not from the screen edges = system Back) ---------- */
 let swipe = null;
@@ -434,6 +436,7 @@ app.addEventListener('change', (ev) => {
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
     case 'dstep': { const d = S.draft; if (!d) return; const i = Number(t.dataset.i); d.skip = (d.skip || []).filter((x) => x !== i); if (!t.checked) d.skip.push(i); return; }
     case 'dv': {   // a field in Ny tråd: kept in the draft until Skapa
+      if (t.value === '\u0000own') { S.own = t.dataset.id; render(); document.getElementById('f-' + t.dataset.id)?.focus(); return; }
       const d = S.draft; if (!d) return;
       const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
       errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
@@ -485,7 +488,14 @@ app.addEventListener('change', (ev) => {
       errText('c-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.'); if (ok) persist();
       return;
     }
+    case 'fvown': case 'dvown': {   // Eget val: saved in the case (or draft) and added to the type's list
+      const c = t.dataset.act === 'dvown' ? S.draft : S.state.cases.find((x) => x.id === S.open); if (!c) return;
+      if (!t.value.trim()) return;
+      if (addOption(S.state, c, t.dataset.id, t.value, today())) { S.own = null; persist(true); render(); }
+      return;
+    }
     case 'fv': {   // a case field: saved directly; invalid input gives a message and is not saved
+      if (t.value === '\u0000own') { S.own = t.dataset.id; render(); document.getElementById('f-' + t.dataset.id)?.focus(); return; }
       const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
       const ok = setField(S.state, c, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
       errText('c-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
@@ -510,7 +520,7 @@ app.addEventListener('change', (ev) => {
     }
     case 'ton': { const ty = S.state.types.find((x) => x.id === t.dataset.id); if (ty) { ty.on = t.checked ? 1 : 0; persist(); } return; }
     case 'tset': if (S.tedit && t.dataset.id === 'cat') S.tedit.cat = t.value; return;
-    case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) { f.kind = t.value; if (f.kind !== 'date' && f.kind !== 'dt') delete f.due; render(); } return; }
+    case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) { f.kind = t.value; if (f.kind !== 'date' && f.kind !== 'dt') delete f.due; if (f.kind === 'choice') f.opts ||= []; else delete f.opts; render(); } return; }
     case 'fdue': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f) { if (t.checked) f.due = 1; else delete f.due; } return; }
     case 'trashdays': { const v = Number(t.value); if (TRASH_DAYS.includes(v)) { S.state.trashDays = v; purgeTrash(S.state, today()); persist(); render(); } return; }
     case 'alertdays': { const v = Number(t.value); if (ALERT_DAYS.includes(v)) { S.state.alertDays = v; persist(); render(); } return; }

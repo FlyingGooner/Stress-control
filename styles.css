@@ -405,3 +405,5 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
 input.day-w { flex: none; width: 4.6em; min-height: 36px; padding: 2px 8px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; }
 .p-hours { display: flex; align-items: center; gap: 4px; flex: none; font-size: .8rem; color: var(--muted); }
 .edit-list .p-hours input { flex: none; width: 3.2em; min-height: 40px; padding: 0 6px; text-align: right; }
+.own-row { margin-top: 0; } .own-row input { flex: 1; min-width: 0; }
+textarea.opts-edit { flex-basis: 100%; min-height: 72px; font-size: .9rem; }

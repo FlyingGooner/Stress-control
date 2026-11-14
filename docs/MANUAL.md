@@ -38,12 +38,13 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Typer och kategorier
 - Inställningar → Trådar → Typer: bocka i fler typer, t.ex. Bostadsköp, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.
-- + Egen typ: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal och bock – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
+- + Egen typ: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal, bock, val i lista och dagar – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
 - Förslag på delmål (ett per rad, längst ner i typen) läggs in i varje ny tråd av typen. I Ny tråd syns förslagen under fälten, och du kan bocka ur dem du inte behöver. Listan över typer visar hur många delmål varje typ har.
 - Tar du bort ett fält (eller byter dess sort) flyttas ifyllda värden till Extra fält i trådarna av typen – inget försvinner.
 - Kategorier: byt namn och färg, eller lägg till nya.
 
 ## Försäkringskassan (VAB, föräldrapenning)
+- Vad väljer du i en lista: VAB (tillfällig föräldrapenning), föräldrapenning, sjukpenning, sjukersättning, aktivitetsersättning, rehabiliteringspenning, graviditetspenning, närståendepenning med flera. Saknas det du söker: välj + Eget val… längst ner och skriv det. Det läggs då till i listan. Listan ändras också under Inställningar → Typer → Försäkringskassan.
 - Typen Försäkringskassan har fältet Dagar. Lägg till varje dag du vabbat eller varit föräldraledig: välj datum, skriv hur många timmar du hann jobba (t.ex. 2, 2,5 eller 1:30, tomt = inget) och tryck +.
 - Appen räknar ut hur många timmar du var borta: normal arbetsdag minus det du jobbade. Normal arbetsdag = personens arbetstid per vecka delat med 5 (40 tim/vecka = 8 tim/dag, 30 tim/vecka = 6 tim/dag). Ställ in tim/v per person under Inställningar → Trådar → Personer, och välj Vem utför i tråden. Utan person räknas 40 tim/vecka.
 - Bocka av varje dag när du har ansökt. Listan visar t.ex. 1/2 ansökta, så du ser vad som är kvar. Arbetade timmar och ta bort en dag gör du under Redigera.

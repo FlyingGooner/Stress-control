@@ -120,6 +120,15 @@ function fieldInput(c, fd, act = 'fv') {
   switch (fd.kind) {
     case 'check': return label(el('input', { ...common, type: 'checkbox', checked: v === 1 }), el('span', { text: fd.name }));
     case 'note': return label(el('span', { text: fd.name }), el('textarea', { ...common, rows: 2, maxlength: 2000, text: v ?? '' }));
+    case 'choice': {   // a list from the type, plus Eget val… (typed here, then added to the list)
+      if (S.own === fd.id) return label(el('span', { text: fd.name }), el('div', { class: 'pick-row own-row' },
+        el('input', { id, type: 'text', maxlength: 60, value: '', placeholder: 'Eget val, t.ex. Bostadstillägg', 'data-act': act + 'own', 'data-id': fd.id, autocomplete: 'off' }),
+        el('button', { class: 'link', 'data-act': 'owncancel', text: 'Avbryt' })));
+      const opts = [...(fd.opts || [])]; if (v && !opts.includes(v)) opts.unshift(v);
+      return label(el('span', { text: fd.name }), el('select', { ...common },
+        el('option', { value: '', selected: !v, text: 'Välj…' }), opts.map((o) => el('option', { value: o, selected: o === v, text: o })),
+        el('option', { value: '\u0000own', text: '+ Eget val…' })));
+    }
     case 'date': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'date', value: v ?? '' }));
     case 'dt': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'datetime-local', value: v ?? '' }));
     case 'num': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'text', inputmode: 'decimal', value: v != null ? String(v).replace('.', ',') : '' }));
@@ -181,7 +190,7 @@ export function caseEditor() {
         el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' }))),
       el('div', { class: 'pick-row extra-add' },
         el('input', { type: 'text', id: 'o-name', maxlength: 40, placeholder: 'Fältnamn', 'aria-label': 'Namn på nytt fält', autocomplete: 'off' }),
-        el('select', { id: 'o-kind', 'aria-label': 'Sort' }, Object.entries(KINDS).filter(([kk]) => kk !== 'days').map(([kk, l]) => el('option', { value: kk, text: l }))),
+        el('select', { id: 'o-kind', 'aria-label': 'Sort' }, Object.entries(KINDS).filter(([kk]) => kk !== 'days' && kk !== 'choice').map(([kk, l]) => el('option', { value: kk, text: l }))),
         el('button', { class: 'weigh-save', 'data-act': 'oadd', text: 'Lägg till' })),
       c.o?.length ? el('div', { class: 'old-actions' },
         el('button', { class: 'link', 'data-act': 'tfromcase', text: '+ Spara som ny typ' }),

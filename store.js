@@ -6,9 +6,14 @@ export const MAX_IMPORT_CHARS = 2000000;
 export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 50, log: 50, logKeep: 200, typeSteps: 10, people: 20 };   // log: new notes per case; logKeep: older data with more is kept, never cut
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
-export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', days: 'Dagar (VAB m.m.)' };
+export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', choice: 'Val i lista', days: 'Dagar (VAB m.m.)' };
 // Dagar: [[datum, arbetade timmar 0–24, ansökt 0|1]] – a list of days (VAB, föräldrapenning) ticked off one by one.
-export const DAYS_MAX = 60, WEEK_HOURS = 40;
+export const DAYS_MAX = 60, WEEK_HOURS = 40, OPTS_MAX = 30;
+// Försäkringskassan's benefits for private persons (forsakringskassan.se), the most common first. Own choices are added to the type.
+export const FK_OPTS = ['VAB (tillfällig föräldrapenning)', 'Föräldrapenning', 'Sjukpenning', 'Sjukersättning', 'Aktivitetsersättning', 'Rehabiliteringspenning',
+  'Graviditetspenning', 'Närståendepenning', 'Smittbärarpenning', 'Bostadsbidrag', 'Underhållsstöd', 'Barnbidrag', 'Omvårdnadsbidrag', 'Merkostnadsersättning',
+  'Assistansersättning', 'Aktivitetsstöd', 'Bilstöd', 'Arbetsskadeersättning'];
+const cleanOpts = (v) => [...new Set((Array.isArray(v) ? v : []).map((x) => cleanText(x, 60)).filter(Boolean))].slice(0, OPTS_MAX);
 const ID_RE = /^[A-Za-z0-9_-]{1,40}$/, DATE_RE = /^\d{4}-\d{2}-\d{2}$/, DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
 const BAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const okId = (v) => typeof v === 'string' && ID_RE.test(v) && !BAD_KEYS.has(v);
@@ -56,7 +61,7 @@ export const DEFAULT_TYPES = [
   { id: 'worry', name: 'Oro eller tanke', icon: '🧠', cat: 'h', on: 0,
     fields: [F('wh', 'Vad oroar', 'note'), F('ws', 'Värsta utfall', 'note'), F('lk', 'Troligaste utfall', 'note'), F('can', 'Vad kan jag göra', 'note'), F('rl', 'Släppt', 'check')] },
   { id: 'fk', name: 'Försäkringskassan', icon: '🛟', cat: 'e', on: 1,
-    fields: [F('wh', 'Vad'), F('dy', 'Dagar', 'days'), F('cm', 'Kommentar', 'note')] },
+    fields: [{ id: 'wh', name: 'Vad', kind: 'choice', opts: FK_OPTS }, F('dy', 'Dagar', 'days'), F('cm', 'Kommentar', 'note')] },
   { id: 'gov', name: 'Myndighet', icon: '🏛️', cat: 'o', on: 0,
     fields: [F('ag', 'Myndighet'), F('no', 'Ärendenummer'), F('se', 'Skickat', 'date'), F('du', 'Svar senast', 'date', 1), F('an', 'Svar', 'note')] },
   { id: 'ins', name: 'Försäkring', icon: '🛡️', cat: 'e', on: 0,
@@ -71,7 +76,7 @@ export const DEFAULT_TYPES = [
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 4, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 5, people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -86,7 +91,7 @@ export function cleanType(t, catIds) {
   if (!name) return null;
   const seen = new Set();
   const fields = (Array.isArray(t.fields) ? t.fields : []).filter((f) => isObj(f) && okId(f.id) && !seen.has(f.id) && seen.add(f.id) && KINDS[f.kind] && cleanText(f.name, 40))
-    .slice(0, LIM.fields).map((f) => ({ id: f.id, name: cleanText(f.name, 40), kind: f.kind, ...(f.due && (f.kind === 'date' || f.kind === 'dt') ? { due: 1 } : {}) }));
+    .slice(0, LIM.fields).map((f) => ({ id: f.id, name: cleanText(f.name, 40), kind: f.kind, ...(f.due && (f.kind === 'date' || f.kind === 'dt') ? { due: 1 } : {}), ...(f.kind === 'choice' ? { opts: cleanOpts(f.opts) } : {}) }));
   const out = { id: t.id, name, icon: cleanText(t.icon, 8) || '📌', cat: catIds.has(t.cat) ? t.cat : [...catIds][0], on: t.on ? 1 : 0, fields };
   const steps = (Array.isArray(t.steps) ? t.steps : []).map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
   if (steps.length) out.steps = steps;
@@ -96,6 +101,7 @@ export function cleanType(t, catIds) {
 export function cleanValue(kind, v) {
   switch (kind) {
     case 'text': return cleanText(v, 200) || undefined;
+    case 'choice': return cleanText(v, 60) || undefined;
     case 'note': return cleanText(v, 2000, true) || undefined;
     case 'date': return validDate(v) ? v : undefined;
     case 'dt': { const m = typeof v === 'string' && DT_RE.exec(v); return m && validDate(m[1]) ? v : undefined; }
@@ -148,6 +154,10 @@ export function validate(raw) {
     const types = raw.types.map((t) => cleanType(t, catIds)).filter((t) => t && !seen.has(t.id) && seen.add(t.id)).slice(0, LIM.types);
     if (types.length) s.types = types;
     if (!(raw.version >= 3) && !s.types.some((t) => t.id === 'fk') && s.types.length < LIM.types) s.types.push(cleanType(clone(DEFAULT_TYPES.find((t) => t.id === 'fk')), catIds));   // new default type in version 3
+    if (!(raw.version >= 5)) for (const t of s.types) {   // version 5: Försäkringskassan's Vad became a list of benefits
+      const f = t.id === 'fk' && t.fields.find((x) => x.id === 'wh' && x.kind === 'text');
+      if (f) { f.kind = 'choice'; f.opts = [...FK_OPTS]; }
+    }
     if (!(raw.version >= 4)) for (const t of s.types) if (t.id === 'fk' && t.icon === '👶') t.icon = '🛟';   // 0.2.47 had a baby icon – not only about children
     if (!(raw.version >= 2)) for (const t of s.types) {   // version 1 had no deadlines: mark the default ones
       const d = DEFAULT_TYPES.find((x) => x.id === t.id);
@@ -298,7 +308,7 @@ function parseInput(kind, input) {
 // Extra fields only in this case (c.o: [name, kind, value|null, from-type?]) – added by hand or left from an earlier type.
 export function addExtra(c, name, kind, today) {
   const n = cleanText(name, 40);
-  if (!n || !Object.hasOwn(KINDS, kind) || kind === 'days' || (c.o || []).length >= LIM.fields || (c.o || []).some((x) => x[0] === n)) return false;
+  if (!n || !Object.hasOwn(KINDS, kind) || kind === 'days' || kind === 'choice' || (c.o || []).length >= LIM.fields || (c.o || []).some((x) => x[0] === n)) return false;
   (c.o ||= []).push([n, kind, null, '']); c.u = today; return true;
 }
 export function setExtra(c, i, input, today) {
@@ -334,6 +344,13 @@ export function delDay(c, fieldId, i, today) {
   const list = c.f?.[fieldId]; if (!list?.[i]) return false;
   list.splice(i, 1); if (!list.length) { delete c.f[fieldId]; if (!Object.keys(c.f).length) delete c.f; }
   c.u = today; return true;
+}
+// Eget val: the value is saved in the case and added to the field's list in the type (so it can be chosen next time).
+export function addOption(state, c, fieldId, input, today) {
+  const fd = typeOf(state, c)?.fields.find((f) => f.id === fieldId && f.kind === 'choice'), v = cleanText(input, 60);
+  if (!fd || !v) return false;
+  if (!fd.opts.includes(v) && fd.opts.length < OPTS_MAX) fd.opts.push(v);
+  return setField(state, c, fieldId, v, today);
 }
 export function setField(state, c, fieldId, input, today) {
   const fd = typeOf(state, c)?.fields.find((f) => f.id === fieldId);
@@ -497,18 +514,18 @@ export function importText(text) {
 // Same rules as validate() above – change validate(), change here and in docs/DATA.md.
 export const EXPORT_README = 'Backup från Stress kontroll. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
-  version: 'tal, 4 (äldre: typen Försäkringskassan läggs till vid import)',
+  version: 'tal, 5 (äldre: typen Försäkringskassan läggs till vid import)',
   people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}) }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,
   alertDays: `påminn så många dagar innan: ${ALERT_DAYS.join(' | ')} (standard 7)`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
-  types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna trådar, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan tråden raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
-  version: 4,
+  version: 5,
   people: [{ id: 'p1', name: 'Anna', h: 30 }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],
   types: [{ id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1, fields: [{ id: 's1', name: 'Symptom', kind: 'text' }, { id: 's3', name: 'Kontaktat vården', kind: 'check' }] }],
