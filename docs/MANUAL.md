@@ -4,7 +4,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Kom igång
 - Det som snurrar i huvudet tar energi. Skriv ner det som en tråd med nästa steg – då kan du släppa tanken, appen håller reda på den.
-- Tryck på en tråd i listan för att öppna den. Pilen ▾ till höger fäller ut en sammanfattning (ifyllda fält, delmål, senaste anteckningar) utan att öppna tråden.
+- Tryck på en tråd i listan för att visa den. Där kan du bocka av delmål och skriva en anteckning direkt. Allt annat (rubrik, typ, fält, datum, ta bort, arkivera) ändrar du efter att ha tryckt ✎ Redigera. Pilen ▾ till höger fäller ut en sammanfattning (ifyllda fält, delmål, senaste anteckningar) utan att öppna tråden.
 - Tryck + Ny tråd, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa tråd. Tråden sparas som öppen i listan. Resten kan du fylla i senare.
 
 ## Trådar
@@ -18,7 +18,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Färgen visar kategorin: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb, lila Relationer, grå Övrigt. Filtrera med knapparna överst.
 
 ## Stänga och arkivera
-- Spara tar dig tillbaka till listan, tråden ligger kvar som öppen. När tråden är löst: tryck Löst – arkivera. Den flyttas till Arkiv och finns kvar där. I Arkiv kan du filtrera per kategori och söka i rubriken. Arkivet visar 100 trådar åt gången – Visa fler längst ner. Ångra finns direkt efteråt.
+- Spara i redigeringen tar dig tillbaka till visningen av tråden, och ✕ där till listan. När tråden är löst: tryck Löst – arkivera. Den flyttas till Arkiv och finns kvar där. I Arkiv kan du filtrera per kategori och söka i rubriken. Arkivet visar 100 trådar åt gången – Visa fler längst ner. Ångra finns direkt efteråt.
 - Återkommer något, som bilskatt eller service varje år? Välj Upprepa: Varje månad eller Varje år i tråden. När du arkiverar den skapas en ny öppen tråd med samma fält och delmål, där alla datum flyttats fram en månad eller ett år. Bockar och delmål nollställs, loggen följer inte med. Ångra tar bort den nya också, och det gör även Öppna igen så länge du inte börjat använda den nya.
 - I Arkiv kan du söka och öppna en tråd igen.
 - Vill du spara en tråd: arkivera den. Vill du bli av med den: Ta bort. Då hamnar den i Papperskorgen (Ångra finns också direkt efteråt).
@@ -44,7 +44,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Kategorier: byt namn och färg, eller lägg till nya.
 
 ## Bakåt
-- Bakåt stänger det som är öppet (en tråd, typväljaren, en typ, delmålslistan eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
+- Bakåt stänger det som är öppet (redigeringen, en tråd, typväljaren, en typ, delmålslistan eller en dialog) och går sedan tillbaka genom flikarna du besökt. Appen stängs först där du började.
 - Svep åt vänster eller höger i Trådar för att byta filter (Alla, Hälsa, Hem …). Inte när en tråd eller ett formulär är öppet.
 
 ## Backup och flytt

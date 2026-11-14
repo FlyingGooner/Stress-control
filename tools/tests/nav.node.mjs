@@ -52,3 +52,11 @@ test('bakåt: papperskorgen är ett lager', () => {
   assert.equal(topLayer(S), 'trash'); assert.equal(layerDepth(S), 1);
   assert.equal(closeTop(S), true); assert.equal(S.trash, false); assert.equal(closeTop(S), false);
 });
+
+test('bakåt: redigering ligger över visningen av ett ärende', () => {
+  const S = { open: 'c1', edit: true };
+  assert.equal(topLayer(S), 'edit'); assert.equal(layerDepth(S), 2);
+  closeTop(S); assert.equal(S.edit, false); assert.equal(topLayer(S), 'open');
+  closeTop(S); assert.equal(S.open, null); assert.equal(closeTop(S), false);
+  assert.equal(layerDepth({ open: null, edit: true }), 0, 'kvarglömd edit utan ärende räknas inte');
+});

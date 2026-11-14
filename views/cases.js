@@ -77,13 +77,44 @@ function fieldInput(c, fd, act = 'fv') {
   }
 }
 
+// View mode (tapping a case): read-only, plus the quick actions tick a sub-goal and add a note. Redigera opens caseEditor().
+export function caseView() {
+  const c = S.state.cases.find((x) => x.id === S.open);
+  if (!c) return null;
+  if (S.edit) return caseEditor();
+  const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
+  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined), extra = (c.o || []).filter((x) => x[2] != null);
+  return el('section', { class: `card case c-${cat.color}` },
+    el('div', { class: 'add-top' },
+      el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
+      el('span', { class: 'cat-chip', text: `${t?.icon || '📌'} ${t?.name ?? 'Okänd typ'} · ${cat.name}` })),
+    el('h1', { class: 'case-h case-h-view', text: c.title }),
+    el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)} · ändrad ${longDate(c.u)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') + (c.r ? ` · upprepas ${REPEAT[c.r].toLowerCase()}` : '') }),
+    fields.length || extra.length ? el('dl', { class: 'view-fields' },
+      fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })]),
+      extra.map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+    el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
+    c.s?.length ? [el('h2', { class: 'sub-h', text: `Delmål ${done}/${all}` }),
+      el('ul', { class: 'steps' }, c.s.map(([x, d, dd, dn], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
+        el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }),
+          el('span', { text: x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') + (!d && c.s[i][4] ? ' ↻' : '') })))))] : null,
+    el('h2', { class: 'sub-h', text: 'Logg' }),
+    c.l?.length ? el('ul', { class: 'log' }, [...c.l].reverse().map(([d, x]) => el('li', {},
+      el('span', { class: 'log-d', text: shortDate(d) }), el('span', { class: 'log-x', text: x })))) : null,
+    el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
+    el('div', { class: 'save-row log-add' },
+      el('input', { type: 'date', id: 'l-date', class: 'step-date', value: today(), max: today(), 'aria-label': 'Datum för anteckningen' }),
+      el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
+    el('button', { class: 'primary save-case', 'data-act': 'cedit', text: '✎ Redigera' }));
+}
+
 export function caseEditor() {
   const c = S.state.cases.find((x) => x.id === S.open);
   if (!c) return null;
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
   return el('section', { class: `card case c-${cat.color}` },
     el('div', { class: 'add-top' },
-      el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
+      el('button', { class: 'icon', 'data-act': 'cedclose', 'aria-label': 'Klar med redigering', text: '✕' }),
       el('select', { class: 'cat-chip', 'data-act': 'ctype', 'aria-label': 'Typ' },
         S.state.types.filter((x) => x.on || x.id === c.t).map((x) => el('option', { value: x.id, selected: x.id === c.t, text: `${x.icon} ${x.name} · ${catOf(S.state, x).name}` })))),
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
@@ -131,14 +162,14 @@ export function caseEditor() {
       el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
       c.x ? el('button', { class: 'link', 'data-act': 'creopen', text: 'Öppna igen' })
         : el('button', { class: 'link', 'data-act': 'cdone', text: 'Löst – arkivera' })),
-    el('button', { class: 'primary save-case', 'data-act': 'cclose', text: 'Spara' }),
-    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara stänger tråden.' }));
+    el('button', { class: 'primary save-case', 'data-act': 'cedclose', text: 'Spara' }),
+    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara går tillbaka till visningen.' }));
 }
 
 export function viewCases() {
   if (S.pick) return picker();
   if (S.tedit) return typeEditor();
-  if (S.open) return caseEditor();
+  if (S.open) return caseView();
   const all = openCases(S.state), [chips, list] = catFilter(all, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
   return [
     chips,

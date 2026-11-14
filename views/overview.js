@@ -1,12 +1,12 @@
 // Vy: Överblick – Aktuellt (inom påminnelsetiden + passerade deadlines), siffror, per kategori, Kommande (vecka/månad).
 import { overview, alerts, daysBetween, typeOf } from '../store.js';
 import { today, S, el, longDate } from '../ui.js';
-import { caseEditor } from './cases.js';
+import { caseView } from './cases.js';
 import { typeEditor } from './settings.js';
 
 export function viewOverview() {
   if (S.tedit) return typeEditor();
-  if (S.open) return caseEditor();
+  if (S.open) return caseView();
   if (S.steps) return stepsView();
   const o = overview(S.state, today()), max = Math.max(1, ...o.per.map((x) => x.n));
   const stat = (n, label, act, aria) => el('button', { class: 'stat stat-btn', 'data-act': act, 'aria-label': aria }, el('span', { class: 'stat-n', text: String(n) }), el('span', { text: label + ' ›' }));

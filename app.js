@@ -211,8 +211,10 @@ app.addEventListener('click', (ev) => {
     case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
     case 'stepsclose': S.steps = false; break;
     case 'cexp': S.exp = S.exp === id ? null : id; break;
-    case 'copen': S.exp = null; S.open = id; render(); scrollTo(0, 0); return;
+    case 'copen': S.exp = null; S.open = id; S.edit = false; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
+    case 'cedit': S.edit = true; render(); scrollTo(0, 0); return;
+    case 'cedclose': S.edit = false; break;
     case 'cdone': {
       const c = cs(); if (!c) return;
       const u0 = c.u;

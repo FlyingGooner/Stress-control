@@ -50,7 +50,9 @@ T.test('stäng → Arkiv; öppna igen', async () => {
   T.ok(q(`.case-row[data-id="${id}"]`), 'i arkivet');
   q('#arch-q').value = 'yrsel'; q('#arch-q').dispatchEvent(new Event('input', { bubbles: true }));
   T.eq(qa('#arch-list .case-row').length, 1);
-  q(`.case-row[data-id="${id}"]`).click();
+  q(`.case-row[data-id="${id}"]`).click(); await T.wait();
+  T.ok(!q('#c-title') && q('.case-h-view'), 'visningsläge först');
+  q('[data-act="cedit"]').click(); await T.wait();
   q('[data-act="creopen"]').click();
   T.ok(!('x' in stored().cases[0]), 'öppet igen');
   q('[data-act="cclose"]').click();
@@ -58,8 +60,11 @@ T.test('stäng → Arkiv; öppna igen', async () => {
 });
 T.test('bakåt stänger ärendet och går till föregående flik', async () => {
   await tab('cases');
-  q('.case-row[data-id="c1"]').click();
-  T.ok(q('#c-title'), 'ärendet öppet');
+  q('.case-row[data-id="c1"]').click(); await T.wait();
+  q('[data-act="cedit"]').click(); await T.wait();
+  T.ok(q('#c-title'), 'redigering öppen');
+  history.back();
+  await T.until(() => !q('#c-title') && q('.case-h-view'), 'bakåt till visningen');
   history.back();
   await T.until(() => !q('#c-title') && q('.case-row'), 'bakåt stänger ärendet');
   await tab('overview');
@@ -106,13 +111,13 @@ T.test('typ på/av i inställningar styr typväljaren', async () => {
 });
 T.test('ta bort ärende: till papperskorgen, ångra, återställ från Arkiv', async () => {
   const n = stored().cases.length;
-  q('.case-row[data-id="c2"]').click();
+  q('.case-row[data-id="c2"]').click(); q('[data-act="cedit"]').click();
   q('[data-act="cdel"]').click();
   T.eq([stored().cases.length, stored().trash.length], [n - 1, 1]);
   q('#snack-action').click();
   T.eq([stored().cases.length, stored().trash.length], [n, 0]);
   await T.wait(50);
-  q('.case-row[data-id="c2"]').click();
+  q('.case-row[data-id="c2"]').click(); q('[data-act="cedit"]').click();
   q('[data-act="cdel"]').click(); await T.wait();
   await tab('settings');
   q('[data-act="trashopen"]').click(); await T.wait();

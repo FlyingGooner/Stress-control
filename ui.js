@@ -5,6 +5,7 @@ export const today = () => dateKey(new Date());
 // Mutable UI state shared by all views (one object, so modules see changes).
 export const S = {
   state: load(),
+  edit: false,         // the open case is in edit mode (a layer above its view)
   open: null,          // Ärenden/Arkiv: id of the open case (a layer, see nav.js)
   pick: false,         // Ärenden: type picker for a new case is open (a layer)
   newTitle: '',        // Nytt ärende: rubrik, kept across re-renders
