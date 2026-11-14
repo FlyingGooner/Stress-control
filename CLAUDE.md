@@ -4,6 +4,7 @@ Mobil-först PWA. Spec: `docs/SPEC.md` (läs bara berört avsnitt). Arbetsflöde
 
 ## Projektets regler
 - Publicering: GitHub Pages byggs från `main`. Ändringar gjorda härifrån (Claude Code) committas och pushas direkt till `main`, med höjd version, så att de syns i appen.
+- Svar till användaren efter en ändring: skriv alltid den nya versionen sist (t.ex. "Version: 0.2.18"), så att hen vet när den syns via GitHub Pages.
 - Helt lokalt: inga nätverksanrop, ingen extern data, inga nycklar (`connect-src 'none'`). Data bara i `localStorage`, nyckel `sk.data`; cache-prefix `sk-`.
 - Inga beroenden, inget byggsteg; ES-moduler: `app.js` (router, Bakåt, klickhanterare, start), `ui.js` (delat tillstånd `S`, `el()`), `store.js` (datamodell, `validate()`, export/import), `nav.js` (ren Bakåt-logik: lager), `views/` (en fil per vy; export/import/backup i `views/data.js`, som får app.js-hjälpare via `initData()` – aldrig cirkulära importer). `backup.js` och `version.js` är vanliga skript. `build-single.ps1` paketerar allt. `CONFIG` överst i `app.js`. Rendering med `textContent`/`el()`, aldrig HTML. Aldrig blank skärm vid fel.
 - Bakåt: flikbyte = `pushState`, varje lager (något som öppnas ovanpå en vy) = ett steg; knappar som stänger ett lager går tillbaka med `history.go()`. Nytt lager → `nav.js` (`topLayer`, `layerDepth`, `closeTop`) och test i `tools/tests/nav.node.mjs`.
