@@ -39,18 +39,18 @@ export function catFilter(all, key, act) {
     S.state.cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color)));
   return [chips, S[key] === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S[key])];
 }
-// Person chips (only when there are people): Alla, each person with cases, Ingen. key/act as catFilter. Returns [chips, filtered list].
+// Person filter: one compact chip-styled select (👤 Alla ▾) placed first in the category row. Only shown when some case in
+// the list has a person. key = the S property, act = its data-act (a change event). Returns [select or null, filtered list].
 export function personFilter(all, key, act) {
-  const people = S.state.people || [];
-  if (!people.length) { S[key] = 'all'; return [null, all]; }
   const counts = new Map();
   for (const c of all) { const k = personOf(S.state, c)?.id || '-'; counts.set(k, (counts.get(k) || 0) + 1); }
   if (S[key] !== 'all' && !counts.get(S[key])) S[key] = 'all';
-  const chip = (id, label) => el('button', { class: 'chip' + (S[key] === id ? ' on' : ''), 'data-act': act, 'data-id': id, 'aria-pressed': String(S[key] === id), text: label });
-  const chips = el('div', { class: 'chips person-chips', role: 'group', 'aria-label': 'Vem' }, chip('all', `👤 Alla`),
-    people.filter((x) => counts.get(x.id)).map((x) => chip(x.id, `${x.name} ${counts.get(x.id)}`)),
-    counts.get('-') ? chip('-', `Ingen ${counts.get('-')}`) : null);
-  return [chips, S[key] === 'all' ? all : all.filter((c) => (personOf(S.state, c)?.id || '-') === S[key])];
+  if (counts.size < 2 && !(S.state.people || []).some((x) => counts.get(x.id))) return [null, all];   // nobody assigned: nothing to filter
+  const opt = (id, label) => el('option', { value: id, selected: S[key] === id, text: label });
+  const sel = el('select', { class: 'chip person-sel' + (S[key] !== 'all' ? ' on' : ''), 'data-act': act, 'aria-label': 'Vem utför' }, opt('all', '👤 Alla'),
+    S.state.people.filter((x) => counts.get(x.id)).map((x) => opt(x.id, `👤 ${x.name} ${counts.get(x.id)}`)),
+    counts.get('-') ? opt('-', `👤 Ingen ${counts.get('-')}`) : null);
+  return [sel, S[key] === 'all' ? all : all.filter((c) => (personOf(S.state, c)?.id || '-') === S[key])];
 }
 // "Vem" select (Ny tråd, Redigera); nothing when no people are added.
 export function personSelect(cur, act) {
@@ -195,8 +195,8 @@ export function viewCases() {
   if (S.tedit) return typeEditor();
   if (S.open) return caseView();
   const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter'), [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
+  chips.prepend(...[pchips].filter(Boolean));
   return [
-    pchips,
     chips,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
       : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar med det här filtret.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),

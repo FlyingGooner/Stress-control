@@ -176,8 +176,6 @@ app.addEventListener('click', (ev) => {
     // Trådar
     case 'filter': S.filter = id; break;
     case 'afilter': S.afilter = id; S.alimit = 100; break;
-    case 'pfilter': S.pfilter = id; break;
-    case 'apfilter': S.apfilter = id; S.alimit = 100; break;
     case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
     case 'aclean': {   // Rensa arkivet: old archived cases go to the Papperskorg (can be restored there)
       const years = Number(document.getElementById('aclean-age')?.value) || 2, before = addDays(today(), -365 * years);
@@ -433,6 +431,8 @@ app.addEventListener('change', (ev) => {
       errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
       return;
     }
+    case 'pfilter': S.pfilter = t.value; render(); return;
+    case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; } return;
     case 'cperson': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (S.state.people.some((x) => x.id === t.value)) c.p = t.value; else delete c.p; c.u = today(); persist(); return; }
     case 'pname': {

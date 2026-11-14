@@ -19,7 +19,7 @@ export function viewArchive() {
   const all = closedCases(S.state), [pchips, mine] = personFilter(all, 'apfilter', 'apfilter'), [chips] = catFilter(mine, 'afilter', 'afilter');
   return [
     el('h1', { class: 'view-title', text: 'Arkiv' }),
-    all.length ? [pchips, chips] : null,
+    all.length ? (pchips && chips.prepend(pchips), chips) : null,
     el('input', { type: 'search', id: 'arch-q', class: 'search', value: S.q, placeholder: 'Sök i stängda trådar', 'aria-label': 'Sök', autocomplete: 'off' }),
     el('div', { id: 'arch-list' }, archiveList()),
   ];
