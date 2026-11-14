@@ -1,9 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#6750a4"/>
-  <g transform="rotate(35 256 256)">
-    <path d="M256 112 C 366 180 380 300 256 400 C 132 300 146 180 256 112 Z" fill="#fff"/>
-    <path d="M256 160 V 430" stroke="#6750a4" stroke-width="16" stroke-linecap="round" fill="none"/>
-    <path d="M256 250 L 306 210 M256 310 L 316 262 M256 250 L 206 210 M256 310 L 196 262" stroke="#6750a4" stroke-width="12" stroke-linecap="round" fill="none"/>
-    <path d="M256 395 V 430" stroke="#fff" stroke-width="16" stroke-linecap="round"/>
+  <rect width="512" height="512" fill="#eaddff"/>
+  <circle cx="256" cy="264" r="170" fill="#000" opacity=".12"/>
+  <circle cx="256" cy="256" r="170" fill="#6750a4"/>
+  <g transform="translate(256 256) scale(.74) translate(-256 -256)">
+    <g transform="rotate(35 256 256)">
+      <path d="M256 112 C 366 180 380 300 256 400 C 132 300 146 180 256 112 Z" fill="#81c995"/>
+      <path d="M256 112 C 366 180 380 300 256 400 Z" fill="#5bb974"/>
+      <path d="M256 160 V 430 M256 250 L 306 210 M256 310 L 316 262 M256 250 L 206 210 M256 310 L 196 262" stroke="#1e6b34" stroke-width="13" stroke-linecap="round" fill="none"/>
+    </g>
   </g>
+  <circle cx="374" cy="374" r="34" fill="#ffca28" stroke="#eaddff" stroke-width="12"/>
 </svg>
