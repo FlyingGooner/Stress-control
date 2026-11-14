@@ -1,6 +1,6 @@
 // Vy: Ärenden (öppna ärenden, filter per kategori), typväljaren och ärendet (lager – Bakåt stänger). Ärendet används också från Arkiv.
 import { openCases, typeOf, catOf, progress, daysBetween, KINDS, REPEAT } from '../store.js';
-import { today, S, el, shortDate, longDate } from '../ui.js';
+import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
 const ago = (k) => { const d = daysBetween(k, today()); return d <= 0 ? 'idag' : d === 1 ? 'igår' : `${d} dagar`; };
@@ -69,7 +69,7 @@ function fieldInput(c, fd, act = 'fv') {
   const label = (...kids) => el('label', { class: 'cfield' + (fd.kind === 'check' ? ' cfield-check' : '') }, kids);
   switch (fd.kind) {
     case 'check': return label(el('input', { ...common, type: 'checkbox', checked: v === 1 }), el('span', { text: fd.name }));
-    case 'note': return label(el('span', { text: fd.name }), el('textarea', { ...common, rows: 3, maxlength: 2000, text: v ?? '' }));
+    case 'note': return label(el('span', { text: fd.name }), el('textarea', { ...common, rows: 2, maxlength: 2000, text: v ?? '' }));
     case 'date': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'date', value: v ?? '' }));
     case 'dt': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'datetime-local', value: v ?? '' }));
     case 'num': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'text', inputmode: 'decimal', value: v != null ? String(v).replace('.', ',') : '' }));
@@ -89,9 +89,9 @@ export function caseEditor() {
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
     el('p', { class: 'muted small', text: `Skapat ${longDate(c.c)}` + (c.x ? ` · stängt ${longDate(c.x)}` : '') }),
     (t?.fields || []).map((fd) => fieldInput(c, fd)),
-    el('section', { class: 'old-fields' + (c.o?.length ? '' : ' empty') },
-      el('h2', { class: 'sub-h', text: 'Extra fält' }),
-      el('p', { class: 'muted small', text: c.o?.length ? 'Bara i det här ärendet. Typen ändras inte.' : 'Behöver du något typen saknar? Lägg till ett fält bara i det här ärendet.' }),
+    el('details', { class: 'old-fields' + (c.o?.length ? '' : ' empty'), 'data-sec': 'extra', open: !!c.o?.length || setOpen.has('extra') },   // folded until used
+      el('summary', { class: 'sub-h', text: c.o?.length ? `Extra fält (${c.o.length})` : '+ Extra fält' }),
+      el('p', { class: 'muted small', text: 'Fält bara i det här ärendet – typen ändras inte.' }),
       (c.o || []).map(([n, k, v, fr], i) => el('div', { class: 'extra' },
         fieldInput({ f: v == null ? {} : { ['o' + i]: v } }, { id: 'o' + i, name: fr ? `${n} (från ${fr})` : n, kind: k }, 'ov'),
         el('button', { class: 'icon sm', 'data-act': 'odel', 'data-i': i, 'aria-label': `Ta bort ${n}`, text: '✕' }))),
@@ -111,16 +111,16 @@ export function caseEditor() {
     el('div', { class: 'pick-row' },
       el('input', { type: 'text', id: 's-new', maxlength: 80, placeholder: 'Nytt delmål', 'aria-label': 'Nytt delmål', autocomplete: 'off' }),
       el('input', { type: 'date', id: 's-date', class: 'step-date', 'aria-label': 'Datum för nytt delmål (valfritt)' }),
-      el('button', { class: 'weigh-save', 'data-act': 'sadd', text: 'Lägg till' })),
+      el('button', { class: 'weigh-save add-btn', 'data-act': 'sadd', 'aria-label': 'Lägg till delmål', text: '+' })),
     el('h2', { class: 'sub-h', text: 'Logg' }),
     el('ul', { class: 'log' }, [...(c.l || [])].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => el('li', {},
       el('span', { class: 'log-d', text: shortDate(d) }), el('span', { class: 'log-x', text: x }),
       el('button', { class: 'icon sm', 'data-act': 'ldel', 'data-i': i, 'aria-label': 'Ta bort anteckningen', text: '✕' })))),
-    el('textarea', { id: 'l-new', rows: 2, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
+    el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
     el('div', { class: 'save-row log-add' },
       el('input', { type: 'date', id: 'l-date', class: 'step-date', value: today(), max: today(), 'aria-label': 'Datum för anteckningen' }),
       el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
-    el('label', { class: 'cfield' }, el('span', { text: 'Upprepa' }),
+    el('label', { class: 'goal-row' }, el('span', { text: 'Upprepa' }),
       el('select', { 'data-act': 'crep', id: 'c-rep' }, [['', 'Nej'], ...Object.entries(REPEAT)].map(([k, l]) => el('option', { value: k, selected: (c.r || '') === k, text: l })))),
     c.r && !c.x ? el('p', { class: 'muted small', text: 'När du arkiverar ärendet skapas ett nytt, med alla datum flyttade ' + (c.r === 'y' ? 'ett år' : 'en månad') + ' framåt.' }) : null,
     el('div', { class: 'row-actions case-actions' },
@@ -128,7 +128,7 @@ export function caseEditor() {
       c.x ? el('button', { class: 'link', 'data-act': 'creopen', text: 'Öppna igen' })
         : el('button', { class: 'link', 'data-act': 'cdone', text: 'Löst – arkivera' })),
     el('button', { class: 'primary save-case', 'data-act': 'cclose', text: 'Spara' }),
-    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara stänger ärendet och tar dig tillbaka till listan – det ligger kvar som öppet.' }));
+    el('p', { class: 'muted small center', text: 'Allt sparas direkt. Spara stänger ärendet.' }));
 }
 
 export function viewCases() {
