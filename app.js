@@ -157,7 +157,7 @@ app.addEventListener('click', (ev) => {
   switch (act) {
     // Ärenden
     case 'filter': S.filter = id; break;
-    case 'pickopen': S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); document.getElementById('new-title')?.focus(); return;
+    case 'pickopen': S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); return;
     case 'pickclose': S.pick = false; S.draft = null; break;
     case 'ptype': {   // choose type: its form opens below; values already typed in fields with the same id are kept
       if (S.draft?.t === id) return;
