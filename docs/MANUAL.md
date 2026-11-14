@@ -24,7 +24,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Överblick
 - Antal öppna ärenden per kategori, delmål som är kvar och hur många du stängt de senaste 30 dagarna.
-- Aktuellt (överst, röd siffra även på fliken): datum i öppna ärenden inom påminnelsetiden (standard 7 dagar, ändras i Inställningar → Påminnelser) och deadlines som passerat. Tryck på en rad för att öppna ärendet.
+- Aktuellt (överst, röd siffra även på fliken): datum i öppna ärenden inom påminnelsetiden (standard 7 dagar, ändras i Inställningar → Påminnelser) och deadlines som passerat. Det som är försenat, idag eller imorgon står först under Akut, i rött; resten under Snart. Tryck på en rad för att öppna ärendet.
 - Kommande: datum längre fram, uppdelat på Nästa vecka och Inom en månad.
 - Tryck på "delmål kvar" för att se alla delmål som är kvar, med ärendet de hör till. Delmål med datum står först. Bocka av direkt i listan (med Ångra), eller tryck på ett delmål för att öppna ärendet.
 - Deadline: i Inställningar → Ärendetyper kan varje datumfält bockas som deadline (t.ex. Klart senast, Förfaller). Då syns det i Aktuellt även när datumet passerat, tills ärendet stängs.

@@ -332,6 +332,7 @@ select.cat-chip { border: 0; min-height: 36px; max-width: 100%; font: inherit; f
 .alert-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: 0; border-radius: var(--r-md); background: var(--surface); text-align: left; color: inherit; }
 .alert-when { flex: none; font-size: .85rem; font-weight: 600; color: var(--primary); }
 .alert-row.late .alert-when { color: var(--error, #b3261e); }
+.acute-h { color: var(--error, #b3261e); }
 .due-check { flex-basis: 100%; display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); }
 .up-h { margin: 12px 0 0; font-size: .8rem; font-weight: 600; color: var(--muted); }
 .upcoming .alert-when { color: var(--muted); font-weight: 500; }

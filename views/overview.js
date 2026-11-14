@@ -11,9 +11,10 @@ export function viewOverview() {
   const o = overview(S.state, today()), max = Math.max(1, ...o.per.map((x) => x.n));
   const stat = (n, label) => el('div', { class: 'stat' }, el('span', { class: 'stat-n', text: String(n) }), el('span', { text: label }));
   const al = alerts(S.state, today()), n = S.state.alertDays ?? 7;
+  const acute = al.filter((a) => a.late || a.days <= 1), soon = al.filter((a) => !(a.late || a.days <= 1));   // Akut: passed, today, tomorrow
   const when = (a) => a.late ? (a.days === -1 ? 'igår' : `${-a.days} dagar sen`) : a.days === 0 ? 'idag' : a.days === 1 ? 'imorgon' : `om ${a.days} dagar`;
   const row = (a) => el('li', {},
-    el('button', { class: 'alert-row' + (a.late ? ' late' : ''), 'data-act': 'copen', 'data-id': a.c.id },
+    el('button', { class: 'alert-row' + (a.late || a.days <= 1 ? ' late' : ''), 'data-act': 'copen', 'data-id': a.c.id },
       el('span', { class: 'case-icon', 'aria-hidden': 'true', text: typeOf(S.state, a.c)?.icon || '📌' }),
       el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: a.c.title }),
         el('small', { text: `${a.name}: ${longDate(a.v.slice(0, 10))}${a.kind === 'dt' ? ' ' + a.v.slice(11) : ''}` })),
@@ -25,7 +26,9 @@ export function viewOverview() {
     el('h1', { class: 'view-title', text: 'Överblick' }),
     el('section', { class: 'card alerts' + (al.length ? ' has' : '') },
       el('h2', {}, el('span', { text: 'Aktuellt' }), al.length ? el('span', { class: 'badge', text: String(al.length) }) : null),
-      al.length ? el('ul', { class: 'alert-list' }, al.map(row))
+      al.length ? [
+        acute.length ? [el('h3', { class: 'up-h acute-h', text: 'Akut – försenat, idag eller imorgon' }), el('ul', { class: 'alert-list' }, acute.map(row))] : null,
+        soon.length ? [acute.length ? el('h3', { class: 'up-h', text: `Snart – inom ${n} dagar` }) : null, el('ul', { class: 'alert-list' }, soon.map(row))] : null]
         : el('p', { class: 'muted small', text: `Inget som närmar sig de närmaste ${n} dagarna.` })),
     el('section', { class: 'card stats3' }, stat(o.open, 'öppna ärenden'), el('button', { class: 'stat stat-btn', 'data-act': 'stepsopen', 'aria-label': `${o.steps} delmål kvar – visa alla` }, el('span', { class: 'stat-n', text: String(o.steps) }), el('span', { text: 'delmål kvar ›' })), stat(o.closed30, 'stängda, 30 dagar')),
     el('section', { class: 'card' }, el('h2', { text: 'Per kategori' }),
