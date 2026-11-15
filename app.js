@@ -379,7 +379,7 @@ app.addEventListener('click', (ev) => {
       if (act === 'daydel') { if (delDay(c, id, Number(t.dataset.i), today())) { if (!S.pick) persist(); render(); } return; }
       const d = document.getElementById('dy-d-' + id)?.value, w = parseHours(document.getElementById('dy-w-' + id)?.value);
       if (w === false) { errText('dy-e-' + id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
-      if (!addDay(c, id, d, w, today(), document.getElementById('dy-k-' + id)?.value || '')) { errText('dy-e-' + id, c.f?.[id]?.some((x) => x[0] === d) ? 'Den dagen finns redan.' : 'Välj ett datum.'); return; }
+      if (!addDay(c, id, d, w, today(), document.getElementById('dy-k-' + id)?.value || '', document.getElementById('dy-p-' + id)?.value || '')) { errText('dy-e-' + id, c.f?.[id]?.some((x) => x[0] === d && (x[4] || '') === (document.getElementById('dy-p-' + id)?.value || '')) ? 'Den dagen finns redan.' : 'Välj ett datum.'); return; }
       if (!S.pick) persist(); render(); return;
     }
     case 'owncancel': S.own = null; break;
@@ -503,9 +503,9 @@ app.addEventListener('change', (ev) => {
     case 'pfilter': S.pfilter = t.value; render(); return;
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; render(); } return;
-    case 'dayapp': case 'dayw': case 'dayk': {
+    case 'dayapp': case 'dayw': case 'dayk': case 'dayp': {
       const c = S.pick ? S.draft : S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      const ok = setDay(c, t.dataset.id, Number(t.dataset.i), t.dataset.act === 'dayapp' ? { a: t.checked } : t.dataset.act === 'dayk' ? { k: t.value } : { w: parseHours(t.value) }, today());
+      const ok = setDay(c, t.dataset.id, Number(t.dataset.i), t.dataset.act === 'dayapp' ? { a: t.checked } : t.dataset.act === 'dayk' ? { k: t.value } : t.dataset.act === 'dayp' ? { p: t.value } : { w: parseHours(t.value) }, today());
       if (!ok) { errText('dy-e-' + t.dataset.id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
       if (!S.pick) persist(); render(); return;
     }

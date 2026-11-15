@@ -7,7 +7,7 @@ export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, 
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
 export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', choice: 'Val i lista', days: 'Dagar (VAB m.m.)' };
-// Dagar: [[datum, arbetade timmar 0–24, ansökt 0|1]] – a list of days (VAB, föräldrapenning) ticked off one by one.
+// Dagar: [[datum, arbetade timmar 0–24, ansökt 0|1, barn?, vem?]] – a list of days (VAB, föräldrapenning) ticked off one by one.
 export const DAYS_MAX = 60, WEEK_HOURS = 40, OPTS_MAX = 30;
 // Personer: egenskaper (pfields) are shared by all people, like a type's fields; each person keeps its values in p.v.
 // The user renames, reorders, adds and removes them. Kinds: all but days and dt.
@@ -121,9 +121,9 @@ export function cleanValue(kind, v) {
     case 'check': return v === 1 || v === true ? 1 : undefined;
     case 'days': {   // sorted by date, one row per date
       if (!Array.isArray(v)) return undefined;
-      const seen = new Set();
-      const out = v.filter((x) => Array.isArray(x) && validDate(x[0]) && !seen.has(x[0]) && seen.add(x[0])).slice(0, DAYS_MAX)
-        .map(([d, w, a, k]) => { const r = [d, typeof w === 'number' && w > 0 && w <= 24 ? Math.round(w * 100) / 100 : 0, a ? 1 : 0]; if (okId(k)) r.push(k); return r; }).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+      const seen = new Set(), key = (x) => x[0] + '|' + (okId(x[4]) ? x[4] : '');   // one row per date and person
+      const out = v.filter((x) => Array.isArray(x) && validDate(x[0]) && !seen.has(key(x)) && seen.add(key(x))).slice(0, DAYS_MAX)
+        .map(([d, w, a, k, p]) => { const r = [d, typeof w === 'number' && w > 0 && w <= 24 ? Math.round(w * 100) / 100 : 0, a ? 1 : 0]; if (okId(k) || okId(p)) r.push(okId(k) ? k : 0); if (okId(p)) r.push(p); return r; }).sort((a, b) => (a[0] < b[0] ? -1 : 1));
       return out.length ? out : undefined;
     }
     default: return undefined;
@@ -341,9 +341,12 @@ export function setExtra(c, i, input, today) {
 }
 // Sets one field from input text (by the field's kind). Returns false if the input is invalid (nothing changed).
 // Dagar: normal hours per day from the case's person (h = hours per week, default 40, 5 days a week).
-export const weekHours = (state, c) => personOf(state, c)?.h ?? WEEK_HOURS;
-export const dayHours = (state, c) => Math.round(weekHours(state, c) / 5 * 100) / 100;
-export const absentHours = (state, c, worked) => Math.max(0, Math.round((dayHours(state, c) - (worked || 0)) * 100) / 100);
+// A day row may name its own person (x[4], who stayed home); p = that person's id, else the case's person.
+export const dayPerson = (state, c, p) => (p && state.people.find((x) => x.id === p)) || personOf(state, c);
+export const adultsOf = (state) => state.people.filter((x) => x.v?.rel !== REL_CHILD);
+export const weekHours = (state, c, p) => dayPerson(state, c, p)?.h ?? WEEK_HOURS;
+export const dayHours = (state, c, p) => Math.round(weekHours(state, c, p) / 5 * 100) / 100;
+export const absentHours = (state, c, worked, p) => Math.max(0, Math.round((dayHours(state, c, p) - (worked || 0)) * 100) / 100);
 // Hours as typed: "2", "2,5", "1:30" → number 0–24; '' → 0; false = not valid.
 export function parseHours(input) {
   const t = String(input ?? '').trim().replace(',', '.');
@@ -352,16 +355,18 @@ export function parseHours(input) {
   return Number.isFinite(v) && v >= 0 && v <= 24 ? Math.round(v * 100) / 100 : false;
 }
 // c = a case or the Ny tråd draft (both keep values in c.f). Returns false when nothing changed.
-export function addDay(c, fieldId, date, worked, today, kid) {
+export function addDay(c, fieldId, date, worked, today, kid, who) {
   const list = Array.isArray(c.f?.[fieldId]) ? c.f[fieldId] : [];
-  if (!validDate(date) || list.length >= DAYS_MAX || list.some((x) => x[0] === date) || worked === false) return false;
-  c.f = { ...(c.f || {}), [fieldId]: cleanValue('days', [...list, kid ? [date, worked, 0, kid] : [date, worked, 0]]) }; c.u = today; return true;
+  if (!validDate(date) || list.length >= DAYS_MAX || list.some((x) => x[0] === date && (x[4] || '') === (who || '')) || worked === false) return false;
+  c.f = { ...(c.f || {}), [fieldId]: cleanValue('days', [...list, [date, worked, 0, kid || 0, who || 0]]) }; c.u = today; return true;
 }
 export function setDay(c, fieldId, i, patch, today) {
   const x = c.f?.[fieldId]?.[i]; if (!x) return false;
   if ('w' in patch) { if (patch.w === false) return false; x[1] = patch.w; }
   if ('a' in patch) x[2] = patch.a ? 1 : 0;
-  if ('k' in patch) { if (patch.k && okId(patch.k)) { x[2] ??= 0; x[3] = patch.k; } else x.length = 3; }
+  if ('k' in patch) x[3] = patch.k && okId(patch.k) ? patch.k : 0;
+  if ('p' in patch) x[4] = patch.p && okId(patch.p) ? patch.p : 0;
+  if ('k' in patch || 'p' in patch) { const r = cleanValue('days', [x])[0]; x.length = 0; x.push(...r); }
   c.u = today; return true;
 }
 export function delDay(c, fieldId, i, today) {
@@ -565,7 +570,7 @@ export const EXPORT_SCHEMA = {
   sort: `sortering, valfri: { cases?: Trådar, arch?: Arkiv } – kolumn + riktning (+ stigande, - fallande). cases: ${Object.keys(SORTS.cases).join(' | ')}, arch: ${Object.keys(SORTS.arch).join(' | ')} (u ändrad, c skapad, x stängd, d första datum, t rubrik). Standard u- och x-`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice) }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}) }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1, barn? person-id]] ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1, barn? person-id eller 0, vem? person-id (vem som var hemma, annars trådens person)]] (en rad per datum och person) ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ 500]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna trådar, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan tråden raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',

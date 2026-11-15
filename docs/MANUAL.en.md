@@ -58,6 +58,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - The type has the field Days. Add each day you were home with a sick child or on parental leave: choose the date, write how many hours you managed to work (e.g. 2, 2.5 or 1:30, empty = none) and tap +.
 - The app calculates how many hours you were away: a normal working day minus what you worked. Normal working day = the person's working hours per week divided by 5 (40 h/week = 8 h/day, 30 h/week = 6 h/day). Set h/week per person under Settings → Threads → People, and choose Who does it in the thread. Without a person 40 h/week is used.
 - Children: if you have added children under People (Relation Child) you choose which child the day is for when you add it. The app suggests the same child as the previous day, or the only child. Change the child under Edit.
+- Who stayed home: if you have added more than one adult under People (e.g. you and your partner) you choose who the day is for. Then all care of sick child can be in the same thread. Empty = the thread's person. Hours are counted from that person's working hours, and the same date can appear once per person. Change the person under Edit.
 - Tick off each day when you have applied. The list shows e.g. 1/2 applied for, so you see what is left. Worked hours and removing a day you do under Edit.
 
 ## People
