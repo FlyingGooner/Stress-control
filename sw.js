@@ -2,7 +2,7 @@
 // Deletes only its own 'sk-' caches: the apps share an origin on GitHub Pages.
 importScripts('version.js');
 const CACHE_VERSION = 'sk-' + self.APP_VERSION;
-const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'store.js', 'ui.js', 'nav.js', 'views/cases.js', 'views/overview.js', 'views/archive.js', 'views/settings.js', 'views/data.js', 'views/trash.js', 'version.js', 'i18n.js', 'i18n-en.js', 'backup.js', 'manifest.webmanifest',
+const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'store.js', 'ui.js', 'nav.js', 'views/cases.js', 'views/overview.js', 'views/archive.js', 'views/settings.js', 'views/data.js', 'views/trash.js', 'version.js', 'i18n.js', 'i18n-en.js', 'backup.js', 'csv.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {

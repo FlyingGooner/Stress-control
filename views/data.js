@@ -263,3 +263,21 @@ export function initData(ctx) {
   oneFieldWhenShown();
   welcomeCheck();
 }
+
+/* ---------- CSV (2026-11-15): en rad per tråd, öppna och arkiverade. Inte krypterad. ---------- */
+export function exportCsv() {
+  const st = S.state, tr = Csv.tr;
+  const typ = new Map(st.types.map((t) => [t.id, t])), cat = new Map(st.cats.map((c) => [c.id, c.name])), ppl = new Map(st.people.map((p) => [p.id, p.name]));
+  const val = (kind, v) => (v == null ? '' : kind === 'check' ? tr('Ja') : kind === 'days' && Array.isArray(v) ? `${v.length} ${tr('dagar')}` : String(v));
+  const rows = st.cases.map((c) => {
+    const t = typ.get(c.t) || { name: '', fields: [] };
+    const f = [...(t.fields || []).filter((x) => c.f && c.f[x.id] != null).map((x) => `${x.name}: ${val(x.kind, c.f[x.id])}`),
+      ...(c.o || []).filter((o) => o[2] != null).map((o) => `${o[0]}: ${val(o[1], o[2])}`)].join(' | ');
+    const steps = c.s || [];
+    return [c.title, t.name, cat.get(t.cat) || '', c.p ? ppl.get(c.p) || '' : '', c.c, c.u, c.x || '',
+      c.r === 'm' ? tr('Varje månad') : c.r === 'y' ? tr('Varje år') : '', steps.filter((x) => x[1]).length, steps.length, f,
+      (c.l || []).map((l) => `${l[0]} ${l[1]}`).join(' | ')];
+  });
+  const text = Csv.build(['Rubrik', 'Typ', 'Kategori', 'Person', 'Skapad', 'Ändrad', 'Stängd', 'Upprepa', 'Delmål klara', 'Delmål totalt', 'Fält', 'Logg'], rows);
+  snackbar(Csv.download(`${SLUG}-${today()}.csv`, text) ? 'CSV-filen laddas ner' : 'Kunde inte skapa filen', null, null, 3000);
+}
