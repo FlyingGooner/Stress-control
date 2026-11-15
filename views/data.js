@@ -1,4 +1,4 @@
-// Stress kontroll – export/import, backup-fil och backup-påminnelse (U5). ES-modul, samma mönster som simple-nutrition/views/data.js.
+// Stress control – export/import, backup-fil och backup-påminnelse (U5). ES-modul, samma mönster som simple-nutrition/views/data.js.
 // app.js anropar initData() med sina hjälpfunktioner så att modulen aldrig importerar app.js (bygget stöder inte cirkulära importer).
 import { defaults, save, addDays, exportText, importText, MAX_IMPORT_CHARS } from '../store.js';
 import { today, S, shortDate, el } from '../ui.js';

@@ -1,8 +1,8 @@
-// Engelska texter för Stress kontroll (2026-11-15). Nyckel = svensk källtext, exakt som den visas (utan kantblanksteg).
+// Engelska texter för Stress control (2026-11-15). Nyckel = svensk källtext, exakt som den visas (utan kantblanksteg).
 // Mönster (regex) för texter med tal eller namn i; $1… översätts i sin tur. Saknas en text visas den svenska.
 I18N.setKey('sk.lang');
 I18N.add({
-  'Stress kontroll': 'Stress control',
+  'Stress control': 'Stress control',
   'Trådar': 'Threads', 'Överblick': 'Overview', 'Inst.': 'Settings', 'Arkiv': 'Archive', 'Aktuellt': 'Coming up', 'Kommande': 'Upcoming',
   'All data tas bort från den här enheten. Det går inte att ångra – spara en backup-fil först om du vill kunna få tillbaka den.': 'All data is removed from this device. This cannot be undone – save a backup file first if you want to be able to get it back.',
   'Behåll som extra fält': 'Keep as extra fields',
@@ -43,7 +43,7 @@ I18N.add({
   'Ont i knät': 'Sore knee', 'Värk vid trappor': 'Pain on stairs', 'Anna': 'Anna',
   'Klistra in en exporterad text först.': 'Paste an exported text first.', 'Texten är för lång (max 2 MB).': 'The text is too long (max 2 MB).',
   'Texten är inte en giltig export (trasig JSON). Kopiera hela texten igen.': 'The text is not a valid export (broken JSON). Copy the whole text again.',
-  'Texten kommer inte från Stress kontroll.': 'The text does not come from Stress control.', 'Okänt exportformat – uppdatera appen och försök igen.': 'Unknown export format – update the app and try again.',
+  'Texten kommer inte från Stress control.': 'The text does not come from Stress control.', 'Okänt exportformat – uppdatera appen och försök igen.': 'Unknown export format – update the app and try again.',
   'Exporten saknar data.': 'The export has no data.',
   'Läser in arkivet…': 'Loading the archive…', 'Ingen träff.': 'No match.', 'Inga stängda trådar än. Det du stänger sparas här.': 'No closed threads yet. What you close is kept here.',
   'Öppna igen': 'Reopen', 'Sök i stängda trådar': 'Search closed threads', 'Sök': 'Search', 'igår': 'yesterday', 'idag': 'today', 'imorgon': 'tomorrow', 'Okänd typ': 'Unknown type',

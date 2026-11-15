@@ -1,4 +1,4 @@
-// Stress kontroll – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
+// Stress control – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
 import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';

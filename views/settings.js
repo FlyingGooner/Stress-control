@@ -126,7 +126,7 @@ export function viewSettings() {
         el('button', { class: 'link danger', 'data-act': 'wipe', text: 'Radera all data' })),
       S.installPrompt ? el('section', { class: 'card' }, el('button', { class: 'primary', 'data-act': 'install', text: 'Installera appen' })) : null,
       helpCard()),
-    el('p', { class: 'muted small center', text: `Stress kontroll v${self.APP_VERSION} · inga externa anrop` }),
+    el('p', { class: 'muted small center', text: `Stress control v${self.APP_VERSION} · inga externa anrop` }),
   ];
 }
 

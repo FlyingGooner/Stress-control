@@ -1,4 +1,4 @@
-# Datamodell – Stress kontroll
+# Datamodell – Stress control
 
 All data ligger i `localStorage`. `sk.data` innehåller inställningar och öppna ärenden som JSON. Stängda ärenden och papperskorgen ligger komprimerade i `sk.arch` (se Lagring nedan); modellen nedan är den hopslagna datan, samma som i exportfilen. Den valideras med `validate()` i `store.js` vid varje inläsning och import: ogiltiga delar hoppas över, inget kraschar. Ändras modellen ska `validate()`, `EXPORT_SCHEMA`/`EXPORT_EXAMPLE` (i `store.js`) och den här filen ändras tillsammans.
 

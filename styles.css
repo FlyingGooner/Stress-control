@@ -209,7 +209,7 @@ html, body { overflow-x: clip; }
 .pw-digit { color: var(--primary); font-weight: 700; }
 .pw-special { color: var(--dev); font-weight: 700; }
 
-/* ---------- Stress kontroll: kategorifärger (klara färger som i football-not-soccer) ----------
+/* ---------- Stress control: kategorifärger (klara färger som i football-not-soccer) ----------
    Fast lista – färgen kommer alltid från en klass (.c-<namn>), aldrig från data. --cc = kant/accent, --cc-c/--cc-on = chip. */
 .c-pink   { --cc: #d81b60; --cc-c: #ffd9e2; --cc-on: #3e001d; }
 .c-green  { --cc: #2e9d4f; --cc-c: #c8f5cf; --cc-on: #002110; }

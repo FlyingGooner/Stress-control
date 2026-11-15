@@ -1,4 +1,4 @@
-# Stress kontroll – specifikation
+# Stress control – specifikation
 
 ## Idé
 > Namn i appen: det som här kallas **ärende** heter **tråd** för användaren (Ärendetyp = Typ). I koden heter det `case`.
@@ -27,7 +27,7 @@ Ett enkelt ärendesystem för livet: logga det som oroar dig eller måste göras
 ## Skärmar (bara mobil, 390 px)
 ```
 ┌──────────────────────────┐
-│ Stress kontroll   v0.1.0 │
+│ Stress control   v0.1.0 │
 │ [Alla][Hälsa][Ekonomi]…  │  filter per kategori (chips i kategorifärg)
 │ ▌🩺 Ont i knät      2/4  │  färgad kant = kategori, delmål klara/alla
 │ ▌   Symptom · 3 dagar    │
