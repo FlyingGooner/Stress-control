@@ -1,7 +1,7 @@
 // Vy: Arkiv – stängda trådar, senast stängda först, filter per kategori och sök i rubrik. En tråd öppnas i samma lager som från Trådar.
 import { closedCases, archReady, sortCases, sortOf } from '../store.js';
 import { S, el } from '../ui.js';
-import { caseRow, caseView, catFilter, personFilter, selBar, sortBar } from './cases.js';
+import { caseRow, caseView, catFilter, filterRow, personFilter, selBar, sortBar } from './cases.js';
 import { typeEditor } from './settings.js';
 
 export function archiveList() {
@@ -22,7 +22,7 @@ export function viewArchive() {
   const [schip, srow] = sortBar('arch');
   return [
     el('h1', { class: 'view-title', text: 'Arkiv' }),
-    bar || (all.length ? (pchips && chips.prepend(pchips), chips.append(schip), chips) : null),
+    bar || (all.length ? filterRow(pchips, chips, schip) : null),
     bar || !all.length ? null : srow,
     el('input', { type: 'search', id: 'arch-q', class: 'search', value: S.q, placeholder: 'Sök i stängda trådar', 'aria-label': 'Sök', autocomplete: 'off' }),
     el('div', { id: 'arch-list' }, archiveList()),

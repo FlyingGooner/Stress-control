@@ -50,6 +50,10 @@ export function sortBar(which) {
       'aria-label': k === cur[0] ? `${l}, ${dir} – tryck för att vända` : `Sortera på ${l}`, text: k === cur[0] ? `${l} ${arrow}` : l }))) : null;
   return [chip, row];
 }
+// One row: person select, category chips (scroll sideways when they don't fit), sort chip at the end.
+export function filterRow(pchips, chips, schip) {
+  return el('div', { class: 'filter-row' }, pchips, chips, schip);
+}
 // Person filter: one compact chip-styled select (👤 Alla ▾) placed first in the category row. Only shown when some case in
 // the list has a person. key = the S property, act = its data-act (a change event). Returns [select or null, filtered list].
 export function personFilter(all, key, act) {
@@ -273,13 +277,12 @@ export function viewCases() {
   if (S.open) return caseView();
   const all = openCases(S.state), [pchips, mine] = personFilter(all, 'pfilter', 'pfilter');
   let [chips, list] = catFilter(mine, 'filter', 'filter');   // category emptied (closed, moved): back to Alla
-  chips.prepend(...[pchips].filter(Boolean));
-  const [schip, srow] = sortBar('cases'); chips.append(schip);
+  const [schip, srow] = sortBar('cases');
   list = sortCases(S.state, list, sortOf(S.state, 'cases'));
   if (S.sel) S.sel = S.sel.filter((id) => all.some((c) => c.id === id));
   const bar = selBar(list, el('button', { class: 'text-btn', 'data-act': 'selarch', disabled: !S.sel?.length, text: 'Arkivera' }));
   return [
-    bar || chips,
+    bar || filterRow(pchips, chips, schip),
     bar ? null : srow,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
       : el('section', { class: 'card empty-card' }, el('p', { class: 'muted', text: all.length ? 'Inga öppna trådar med det här filtret.' : 'Inga öppna trådar. Skriv ner det som snurrar i huvudet – då kan du släppa det.' })),
