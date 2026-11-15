@@ -2,10 +2,19 @@
 // Mönster (regex) för texter med tal eller namn i; $1… översätts i sin tur. Saknas en text visas den svenska.
 I18N.setKey('sk.lang');
 I18N.add({
+  '🔑 Din kod': '🔑 Your code',
+  'Kopiera': 'Copy',
+  'Ny kod': 'New code',
+  'Alla backup-filer låses med den här koden. Spara den i din lösenordshanterare – du behöver den för att öppna en backup på en ny telefon.': 'All backup files are locked with this code. Save it in your password manager – you need it to open a backup on a new phone.',
+  'Koden från filen används nu för nya backuper.': 'The code from the file is now used for new backups.',
+  'Kunde inte spara koden': 'Could not save the code',
+  'Ny kod skapad. Gamla backup-filer öppnas bara med den gamla koden.': 'New code created. Old backup files open only with the old code.',
+  'Kunde inte kopiera – tryck Visa och skriv av koden': 'Could not copy – tap Show and copy the code by hand',
+  'Koden är kopierad': 'The code is copied',
   'Är du ny räcker det att välja språk.': 'If you are new, just choose a language.',
   'Din personliga kod (lösenordet till dina backup-filer) har skapats åt dig och finns under Inställningar → Allmänt → Data. Spara den på en säker plats, t.ex. i en lösenordshanterare – utan den går en backup inte att öppna på en ny enhet.': 'Your personal code (the password for your backup files) has been created for you and is under Settings → General → Data. Keep it somewhere safe, e.g. in a password manager – without it a backup cannot be opened on a new device.',
   'Har du använt appen förut, på den här eller en annan enhet? Läs in din backup-fil för att få tillbaka din data.': 'Have you used the app before, on this or another device? Restore your backup file to get your data back.',
-  'Backup-filen innehåller all din data och krypteras alltid med ett lösenord. Appen har skapat ett åt dig – se eller byt det nedan. Utan lösenordet går filen inte att öppna. Läs in filen på en annan enhet för att flytta din data.': 'The backup file contains all your data and is always encrypted with a password. The app has created one for you – view or change it below. Without the password the file cannot be opened. Restore the file on another device to move your data.',
+  'Backup-filen innehåller all din data och låses alltid med din kod nedan. Läs in filen på en annan enhet för att flytta din data.': 'The backup file contains all your data and is always locked with your code below. Restore the file on another device to move your data.',
   'Stress control': 'Stress control',
   'Trådar': 'Threads', 'Överblick': 'Overview', 'Inst.': 'Settings', 'Arkiv': 'Archive', 'Aktuellt': 'Coming up', 'Kommande': 'Upcoming',
   'All data tas bort från den här enheten. Det går inte att ångra – spara en backup-fil först om du vill kunna få tillbaka den.': 'All data is removed from this device. This cannot be undone – save a backup file first if you want to be able to get it back.',

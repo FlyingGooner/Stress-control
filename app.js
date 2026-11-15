@@ -8,7 +8,7 @@ import { viewOverview } from './views/overview.js';
 import { viewArchive, archiveList } from './views/archive.js';
 import { viewTrash } from './views/trash.js';
 import { viewSettings, personHint } from './views/settings.js';
-import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, setRemember } from './views/data.js';
+import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, copyPassword } from './views/data.js';
 
 const CONFIG = { startView: 'cases', longPressMs: 450 };
 document.getElementById('version').textContent = 'v' + self.APP_VERSION;
@@ -425,6 +425,7 @@ app.addEventListener('click', (ev) => {
     case 'import': openImport(document.getElementById('import-text').value); return;
     case 'backupsave': saveBackup(); return;
     case 'pwdset': rememberPassword(); return;
+    case 'pwdcopy': copyPassword(); return;
     case 'pwdshow': S.showPwd = !S.showPwd; break;
     default: return;
   }
@@ -490,7 +491,6 @@ app.addEventListener('toggle', (ev) => {
 app.addEventListener('change', (ev) => {
   const t = ev.target;
   switch (t.dataset.act) {
-    case 'pwdremember': S.showPwd = false; setRemember(t.checked); return;
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
     case 'dstep': { const d = S.draft; if (!d) return; const i = Number(t.dataset.i); d.skip = (d.skip || []).filter((x) => x !== i); if (!t.checked) d.skip.push(i); return; }
     case 'dv': {   // a field in Ny tråd: kept in the draft until Skapa

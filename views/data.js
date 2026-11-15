@@ -30,25 +30,35 @@ const BACKUP_MSG = {
    Kept only on this device under sk.pwd – never in sk.data, so never inside a backup file. The data in localStorage is
    plain anyway; the password protects the file once it leaves the device. Radera all data forgets it too. */
 const PWD_KEY = 'sk.pwd', SLUG = 'stress-kontroll';
-export function savedPassword() { try { const p = localStorage.getItem(PWD_KEY); return p && !Backup.checkPassword(p) ? p : ''; } catch { return ''; } }
-export async function rememberPassword() {
-  const a = await Backup.askPassword('export'); if (!a) return;
-  try { localStorage.setItem(PWD_KEY, a.pwd); } catch { snackbar('Kunde inte spara lösenordet', null, null, 3000); return; }
-  render(); snackbar('Lösenordet sparas på den här enheten. Ha det kvar i din lösenordshanterare också.', null, null, 6000);
+// 2026-11-15: koden skapas alltid av appen (generatePassword: 16 tecken, kryptografisk slump) och sparas på enheten. Inget eget lösenord.
+export function savedPassword() {
+  try { let p = localStorage.getItem(PWD_KEY); if (!p || Backup.checkPassword(p)) { p = Backup.generatePassword(); localStorage.setItem(PWD_KEY, p); } return p; } catch { return ''; }
+}
+// Skapa ny kod (2026-11-15): ersätter Byt. Ångra ger tillbaka den gamla.
+export function rememberPassword() {
+  const old = savedPassword(), p = Backup.generatePassword();
+  try { localStorage.setItem(PWD_KEY, p); } catch { snackbar('Kunde inte spara koden', null, null, 3000); return; }
+  S.showPwd = true; render();
+  snackbar('Ny kod skapad. Gamla backup-filer öppnas bara med den gamla koden.', 'Ångra', () => { try { localStorage.setItem(PWD_KEY, old); } catch { /* blocked */ } render(); });
+}
+export function copyPassword() {
+  const p = savedPassword();
+  if (!p || !navigator.clipboard) { snackbar('Kunde inte kopiera – tryck Visa och skriv av koden', null, null, 4000); return; }
+  navigator.clipboard.writeText(p).then(() => snackbar('Koden är kopierad', null, null, 3000), () => snackbar('Kunde inte kopiera – tryck Visa och skriv av koden', null, null, 4000));
 }
 // On by default: the password typed in the backup dialog (save or read) is kept, so the question never comes again.
 // Off (sk.pwdoff = 1): forgets it and asks every time, as before.
 const OFF_KEY = 'sk.pwdoff';
-export function rememberOn() { try { return localStorage.getItem(OFF_KEY) !== '1'; } catch { return false; } }
+export function rememberOn() { return true; }   // koden sparas alltid (2026-11-15)
 export function setRemember(on) {
   try { if (on) localStorage.removeItem(OFF_KEY); else { localStorage.setItem(OFF_KEY, '1'); localStorage.removeItem(PWD_KEY); } } catch { /* blocked */ }
   render();
 }
+// En backup som lästs in med en annan kod: den koden används sedan (en kod att hålla reda på, t.ex. på en ny telefon).
 function keep(pwd) {
-  if (welcomeDlg?.open && !S.state.backup.last && !Backup.checkPassword(pwd)) { try { localStorage.setItem(PWD_KEY, pwd); } catch { /* blocked */ } }   // backup read in the welcome: its password wins over the auto-created one
-  if (!rememberOn() || Backup.checkPassword(pwd) || savedPassword()) return;   // a password from another file never replaces the saved one
-  try { localStorage.setItem(PWD_KEY, pwd); } catch { /* no room: asks next time */ }
-  closeWelcome();
+  if (Backup.checkPassword(pwd) || pwd === savedPassword()) return;
+  try { localStorage.setItem(PWD_KEY, pwd); } catch { return; }
+  render(); snackbar('Koden från filen används nu för nya backuper.', null, null, 4000);
 }
 let busy = false;
 export async function saveBackup() {

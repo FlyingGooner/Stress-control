@@ -1,7 +1,7 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
 import { addDays, WEEK_HOURS, PERSON_KINDS, REL_CHILD, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
-import { hasData, savedPassword, rememberOn } from './data.js';
+import { hasData, savedPassword } from './data.js';
 
 // In-app manual: static <template id="help-tpl"> in index.html (built from docs/MANUAL.md), cloned – never parsed as HTML text.
 function helpCard() {
@@ -105,7 +105,7 @@ export function viewSettings() {
         installed ? null : el('p', { class: 'small bk-warn', text: 'Appen är inte installerad. På iPhone kan Safari rensa datan för sidor du inte besökt på ett tag – lägg appen på hemskärmen (Dela → Lägg till på hemskärmen) och spara backup regelbundet.' }),
         el('p', { class: 'bk-status' + (full ? ' bk-old' : '') }, `Använder ${mb(used)} MB av cirka ${mb(STORAGE_QUOTA)} MB`,
           full ? el('small', { text: 'Lagringen börjar bli full. Spara en backup-fil och ta bort gamla trådar.' }) : null),
-        el('p', { class: 'muted small', text: 'Backup-filen innehåller all din data och krypteras alltid med ett lösenord. Appen har skapat ett åt dig – se eller byt det nedan. Utan lösenordet går filen inte att öppna. Läs in filen på en annan enhet för att flytta din data.' }),
+        el('p', { class: 'muted small', text: 'Backup-filen innehåller all din data och låses alltid med din kod nedan. Läs in filen på en annan enhet för att flytta din data.' }),
         el('p', { class: 'bk-status' + (old && hasData() ? ' bk-old' : '') },
           last ? `Senaste backup: ${shortDate(last)}` : 'Ingen backup sparad än',
           old && hasData() ? el('small', { text: last ? 'Mer än en månad sedan – bra idé att göra en ny.' : 'Bra idé att göra en nu.' }) : null),
@@ -183,17 +183,14 @@ function propsEditor() {
 
 export const trashLabel = (d) => (d ? `Efter ${d === 365 ? '1 år' : d + ' dagar'}` : 'Aldrig');
 
-// Remembered backup password: on by default – the password typed at the first backup is kept. Visa, Byt; unticking forgets it.
+// Din kod (2026-11-15): skapas alltid av appen. Visa, Kopiera, Ny kod.
 function pwdBox() {
-  const p = savedPassword(), on = rememberOn();
-  return el('div', { class: 'pwd-box' },
-    el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: on, 'data-act': 'pwdremember' }), el('span', { text: 'Kom ihåg backup-lösenordet på den här enheten' })),
-    !on ? el('p', { class: 'muted small', text: 'Appen frågar efter lösenordet varje gång.' })
-      : !p ? el('p', { class: 'muted small', text: 'Lösenordet du skriver vid nästa backup sparas – sedan räcker ett tryck. Filen är lika skyddad som förut.' })
-      : el('div', { class: 'pwd-card' },
-        el('div', { class: 'pwd-head' }, el('span', { text: '🔑 Lösenordet är sparat' }),
-          el('button', { class: 'link', 'data-act': 'pwdshow', 'aria-pressed': S.showPwd ? 'true' : 'false', text: S.showPwd ? 'Dölj' : 'Visa' }),
-          el('button', { class: 'link', 'data-act': 'pwdset', text: 'Byt' })),
-        S.showPwd ? el('p', { class: 'pwd-show', text: p }) : null,
-        el('p', { class: 'muted small pwd-note', text: 'Backup sparas med ett tryck. Ha lösenordet kvar i din lösenordshanterare – utan det går backupen inte att öppna på en ny telefon.' })));
+  const p = savedPassword();
+  return el('div', { class: 'pwd-card' },
+    el('div', { class: 'pwd-head' }, el('span', { text: '🔑 Din kod' }),
+      el('button', { class: 'link', 'data-act': 'pwdshow', 'aria-pressed': S.showPwd ? 'true' : 'false', text: S.showPwd ? 'Dölj' : 'Visa' }),
+      el('button', { class: 'link', 'data-act': 'pwdcopy', text: 'Kopiera' }),
+      el('button', { class: 'link', 'data-act': 'pwdset', text: 'Ny kod' })),
+    S.showPwd && p ? el('p', { class: 'pwd-show', text: p }) : null,
+    el('p', { class: 'muted small pwd-note', text: 'Alla backup-filer låses med den här koden. Spara den i din lösenordshanterare – du behöver den för att öppna en backup på en ny telefon.' }));
 }
