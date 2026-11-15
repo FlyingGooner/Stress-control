@@ -7,6 +7,14 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Tap a thread in the list to show it. There you can tick off steps and write a note right away. Everything else (title, type, fields, dates, delete, archive) you change after tapping ✎ Edit. The arrow ▾ on the right opens a summary (filled-in fields, steps, latest notes) without opening the thread.
 - Tap + New thread, write a title (e.g. Sore knee) and choose a type. The type's fields appear right below – fill in what you know and tap Create thread. The thread is saved as open in the list. The rest you can fill in later.
 
+## Why your data is safe here
+- This app holds your children's names, your health, your worries, benefit claims and who in the family does what. That should not end up with a company, an advertiser or a hacker.
+- **No server to hack.** Most big leaks happen when a company's database with millions of users' data is hacked. There is no such database here: your data is only in your phone. Anyone who wants it has to get into your particular phone.
+- **Nothing to sell.** Many free apps – and paid ones too – make money from your data or share it with partners for ads and analytics. This app has no account, no analytics, no ads and no trackers. The browser also technically blocks every request out, so the data cannot be sent anywhere, not even by mistake.
+- **Locked backup.** The backup file is encrypted with AES-256 and your password. If you put it in the cloud, the cloud service only sees unreadable data.
+- **Open code.** All the code is public on GitHub and can be reviewed by anyone.
+- **Honestly: nothing is 100 % safe.** What remains is your own phone – lock it with a code and keep it updated – a weak backup password, and that the app's code on GitHub Pages is not changed by someone unauthorised. But for this kind of data there is no safer practical way than never letting it leave the phone.
+
 ## Threads
 - Each type has fields in a logical order. Symptom: what, when it started, whether you contacted healthcare, when you called, the appointment you got, the outcome and a final comment.
 - Extra fields: tap "+ Extra field" below the fields to add fields that apply only to that thread (e.g. Price), without changing the type. To keep them permanently: tap "+ Save as new type" – a new type opens with the type's fields plus the extra ones, and when you save, the thread moves over to it.

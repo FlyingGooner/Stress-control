@@ -7,6 +7,14 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Tryck på en tråd i listan för att visa den. Där kan du bocka av delmål och skriva en anteckning direkt. Allt annat (rubrik, typ, fält, datum, ta bort, arkivera) ändrar du efter att ha tryckt ✎ Redigera. Pilen ▾ till höger fäller ut en sammanfattning (ifyllda fält, delmål, senaste anteckningar) utan att öppna tråden.
 - Tryck + Ny tråd, skriv en rubrik (t.ex. Ont i knät) och välj typ. Typens fält visas direkt under – fyll i det du vet och tryck Skapa tråd. Tråden sparas som öppen i listan. Resten kan du fylla i senare.
 
+## Varför din data är säker här
+- Här finns barnens namn, din hälsa, din oro, ärenden hos Försäkringskassan och vem i familjen som gör vad. Sådant ska inte hamna hos ett företag, en annonsör eller en hackare.
+- **Ingen server att hacka.** De flesta stora läckor sker när ett företags databas med miljontals användares uppgifter hackas. Här finns ingen sådan databas: din data finns bara i din telefon. Den som vill åt den måste komma åt just din telefon.
+- **Inget att sälja.** Många gratisappar – och även betalappar – tjänar pengar på din data eller delar den med partner för annonser och analys. Den här appen har inget konto, ingen analys, ingen reklam och inga spårare. Webbläsaren spärrar dessutom tekniskt alla anrop ut, så datan kan inte skickas iväg ens av misstag.
+- **Låst backup.** Backup-filen krypteras med AES-256 och ditt lösenord. Lägger du den i molnet ser molntjänsten bara obegriplig data.
+- **Öppen kod.** All kod ligger öppet på GitHub och kan granskas av vem som helst.
+- **Ärligt: inget är 100 % säkert.** Det som återstår är din egen telefon – lås den med kod och håll den uppdaterad – ett svagt backup-lösenord, och att appens kod på GitHub Pages inte ändras av någon obehörig. Men för den här sortens uppgifter finns inget säkrare praktiskt sätt än att de aldrig lämnar telefonen.
+
 ## Trådar
 - Varje typ har fält i en logisk ordning. Symptom: vad, när det började, om du kontaktat vården, när du ringde, tiden du fick, utfallet och en slutkommentar.
 - Extra fält: tryck på "+ Extra fält" under fälten för att lägga till fält som bara gäller den tråden (t.ex. Pris), utan att ändra typen. Vill du ha dem permanent: tryck "+ Spara som ny typ" – en ny typ öppnas med typens fält plus de extra, och när du sparar flyttar tråden över till den.
