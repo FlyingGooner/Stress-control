@@ -1,4 +1,4 @@
-# Stress control – how to use the app
+# Task buddy – how to use the app
 
 Help in the app (Settings → Help and manual) is built from this file with `tools/build-help.ps1` when English is chosen. Edit only here (Swedish: `MANUAL.md`).
 

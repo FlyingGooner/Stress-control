@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="icons/icon-192.png" width="88" alt="Stress control icon">
+<img src="icons/icon-192.png" width="88" alt="Task buddy icon">
 
-# Stress control
+# Task buddy
 
 **Write it down – and let it go.**
 

@@ -564,7 +564,7 @@ export function importText(text) {
   if (text.length > MAX_IMPORT_CHARS) return { error: 'Texten är för lång (max 2 MB).' };
   let env;
   try { env = JSON.parse(text.replace(/^﻿/, '')); } catch { return { error: 'Texten är inte en giltig export (trasig JSON). Kopiera hela texten igen.' }; }
-  if (!isObj(env) || env.app !== EXPORT_APP) return { error: 'Texten kommer inte från Stress control.' };
+  if (!isObj(env) || env.app !== EXPORT_APP) return { error: 'Texten kommer inte från Task buddy.' };
   if (env.format !== EXPORT_FORMAT) return { error: 'Okänt exportformat – uppdatera appen och försök igen.' };
   if (!isObj(env.data)) return { error: 'Exporten saknar data.' };
   const data = validate(env.data);
@@ -574,7 +574,7 @@ export function importText(text) {
 }
 // Every export file describes its own format, so someone else (or an AI) can edit it and import it again.
 // Same rules as validate() above – change validate(), change here and in docs/DATA.md.
-export const EXPORT_README = 'Backup från Stress control. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
+export const EXPORT_README = 'Backup från Task buddy. Ändra bara inom "data". Fältbeskrivningar i "schema", ett minimalt giltigt exempel i "example". Ogiltiga delar hoppas över vid import, inget kraschar. Datum: ÅÅÅÅ-MM-DD, datum och tid: ÅÅÅÅ-MM-DDTHH:MM. id: A–Z a–z 0–9 _ -, högst 40 tecken.';
 export const EXPORT_SCHEMA = {
   version: 'tal, 6 (äldre: typen Försäkringskassan läggs till vid import)',
   people: `lista { id, name ≤ 30, h?: arbetstimmar per vecka 1–80 (standard ${WEEK_HOURS}), v?: { egenskaps-id: värde efter egenskapens kind } }, ≤ ${LIM.people}: personer som kan utföra ett ärende`,

@@ -1,4 +1,4 @@
-# Stress control
+# Task buddy (tidigare Stress control)
 
 Mobil-först PWA. Spec: `docs/SPEC.md` (läs bara berört avsnitt). Arbetsflöde, säkerhet och artifact: `../CLAUDE.md`. Standard: `../STANDARD.md`. Stil: `../STIL.md`. Struktur som simple-nutrition (mallen byggdes från den 2026-11-14).
 

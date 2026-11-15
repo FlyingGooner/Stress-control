@@ -1,4 +1,4 @@
-# Stress control – så använder du appen
+# Task buddy – så använder du appen
 
 Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen med `tools/build-help.ps1`. Ändra bara här.
 
