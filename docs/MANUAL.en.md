@@ -74,7 +74,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Swipe left or right in Threads to change filter (All, Health, Home …). Not when a thread or a form is open.
 
 ## Language
-- The first time, you choose the language (Svenska or English) at the top of the welcome box. Change it later under Settings → General → Language. Your data is the same in both languages; what you write yourself is not translated.
+- The app starts in Swedish. Change the language under Settings → General → Language. Your data is the same in both languages; what you write yourself is not translated.
 
 ## Backup and moving
 - Under Settings → General → Data: tap Save backup file. The file is always encrypted with a password the app creates and stores for you the first time it starts – tap Show to see it or Change to pick your own. If you forget the password the file cannot be opened.
@@ -82,7 +82,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - The app reminds you to back up every month (change under Data).
 - Under Data you see how much storage the app uses. If it gets close to the limit (about 5 MB): save a backup file and delete old threads.
 - The backup password is stored on the device the first time you enter it (when you save or restore a backup). After that a backup takes one tap, without a question. The password is only on this device, never in the backup file, and the file is just as encrypted as before. With Show password ticked you only need to type the password once. Under Settings → Data you can Show and Change the password, or untick Remember the backup password – it is then forgotten and the app asks every time. Use a new password you do not use anywhere else: it is stored unprotected on this device. Tap **Create random password** and save it in your password manager. Keep the password in your password manager – without it the backup cannot be opened on a new phone.
-- The app is locked until you have chosen a language and a password for your backup files – the first time, after Delete all data and as long as no password is saved. If you have a backup file you can restore it instead; the password that opens it is saved. The app collects no data – the password is just a key that protects your backups. If you restore a backup that the saved password unlocks, the summary says so; if it does not fit, the app asks for the password for that file.
+- The backup password is created and saved automatically the first time the app starts (and after Delete all data). View or change it under Settings; keep it in a password manager, for example. The app collects no data – the password is just a key that protects your backups. If you restore a backup that the saved password unlocks, the summary says so; if it does not fit, the app asks for the password for that file.
 
 ## Install and offline
 - Android (Chrome): the ⋮ menu → Install app. iPhone (Safari): Share → Add to Home Screen. The app then works offline.

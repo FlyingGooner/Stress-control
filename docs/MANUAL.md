@@ -74,7 +74,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Svep åt vänster eller höger i Trådar för att byta filter (Alla, Hälsa, Hem …). Inte när en tråd eller ett formulär är öppet.
 
 ## Språk
-- Första gången väljer du språk (Svenska eller English) överst i välkomstrutan. Byt senare under Inställningar → Allmänt → Språk. Din data är densamma på båda språken; det du själv skriver översätts inte.
+- Appen är på svenska från början. Byt språk under Inställningar → Allmänt → Språk. Din data är densamma på båda språken; det du själv skriver översätts inte.
 
 ## Backup och flytt
 - Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som appen skapar och sparar åt dig första gången den startas – tryck Visa för att se det eller Byt för att välja ett eget. Glömmer du lösenordet går filen inte att öppna.
@@ -83,7 +83,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Under Data ser du hur mycket lagring appen använder. Närmar den sig gränsen (cirka 5 MB): spara en backup-fil och ta bort gamla trådar.
 
 - Backup-lösenordet sparas på enheten första gången du skriver det (när du sparar eller läser in en backup). Sedan sparas backup med ett tryck, utan fråga. Lösenordet ligger bara på den här enheten, aldrig i backup-filen, och filen är lika krypterad som förut. Bockar du i Visa lösenord räcker det att skriva lösenordet en gång. Under Inställningar → Data kan du Visa och Byta lösenordet, eller bocka ur Kom ihåg backup-lösenordet – då glöms det och appen frågar varje gång. Använd ett nytt lösenord som du inte har någon annanstans: det sparas oskyddat på den här enheten. Tryck **Skapa slumpmässigt lösenord** och spara det i din lösenordshanterare. Behåll lösenordet i din lösenordshanterare – utan det går backupen inte att öppna på en ny telefon.
-- Appen är låst tills du har valt språk och ett lösenord för dina backup-filer – första gången, efter Radera all data och så länge inget lösenord är sparat. Har du en backup-fil kan du läsa in den i stället; lösenordet som öppnar den sparas. Appen samlar ingen data – lösenordet är bara en nyckel som skyddar dina backuper. Läser du in en backup som det sparade lösenordet låser upp står det i sammanfattningen; passar det inte frågar appen efter lösenordet för den filen.
+- Backup-lösenordet skapas och sparas automatiskt första gången appen startas (och efter Radera all data). Se eller byt det under Inställningar; spara det t.ex. i en lösenordshanterare. Appen samlar ingen data – lösenordet är bara en nyckel som skyddar dina backuper. Läser du in en backup som det sparade lösenordet låser upp står det i sammanfattningen; passar det inte frågar appen efter lösenordet för den filen.
 ## Installera och offline
 - Android (Chrome): menyn ⋮ → Installera app. iPhone (Safari): Dela → Lägg till på hemskärmen. Appen fungerar sedan utan nät.
 - På iPhone: installera appen på hemskärmen. Safari kan annars rensa sparad data för sidor du inte besökt på ett tag. Spara en backup-fil regelbundet ändå.
