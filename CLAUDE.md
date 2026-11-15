@@ -15,3 +15,4 @@ Mobil-först PWA. Spec: `docs/SPEC.md` (läs bara berört avsnitt). Arbetsflöde
 - Kortet Data (STANDARD 5, undantag U5) finns redan: krypterad backup-fil via `backup.js`, påminnelse, import med Ångra, Radera all data sist. Ändras datamodellen: ändra `validate()`, `EXPORT_SCHEMA`/`EXPORT_EXAMPLE` och `docs/DATA.md` tillsammans.
 - Manualen: skriv bara i `docs/MANUAL.md`; Hjälp i `index.html` byggs från den med `tools/build-help.ps1`.
 - Tester (`tools/tests/`): `unit.test.js` (Node, store.js), `*.node.mjs` (Node, `node:test`), `ui.test.js` (Edge, klickar i testbygget; `today.txt` låser "idag", `ui-seed.json` = testdata).
+- HTML-fil (2026-11-15): `Stress-control.html` = hela appen i en fil (länken Ladda ner (HTML) under Inställningar). Byggs av `tools/build-single.mjs` (Node, samma regler som `build-single.ps1`); GitHub Action `single-html.yml` bygger om den vid push. Bygg om den själv i varje commit: `node tools/build-single.mjs --out Stress-control.html`.
