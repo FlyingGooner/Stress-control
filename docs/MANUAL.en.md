@@ -77,7 +77,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - The first time, you choose the language (Svenska or English) at the top of the welcome box. Change it later under Settings → General → Language. Your data is the same in both languages; what you write yourself is not translated.
 
 ## Backup and moving
-- Under Settings → General → Data: tap Save backup file. The file is always encrypted with a password you choose, or that the app creates for you. If you forget the password the file cannot be opened.
+- Under Settings → General → Data: tap Save backup file. The file is always encrypted with a password the app creates and stores for you the first time it starts – tap Show to see it or Change to pick your own. If you forget the password the file cannot be opened.
 - To restore: tap Restore backup file, check the summary and tap Replace. All current data is replaced – Undo is available right afterwards.
 - The app reminds you to back up every month (change under Data).
 - Under Data you see how much storage the app uses. If it gets close to the limit (about 5 MB): save a backup file and delete old threads.

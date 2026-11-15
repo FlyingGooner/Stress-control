@@ -2,6 +2,8 @@
 // Mönster (regex) för texter med tal eller namn i; $1… översätts i sin tur. Saknas en text visas den svenska.
 I18N.setKey('sk.lang');
 I18N.add({
+  'Dina backup-filer krypteras med ett lösenord som har skapats och sparats på enheten. Du kan se eller byta det under Inställningar → Allmänt → Data.': 'Your backup files are encrypted with a password that has been created and stored on the device. You can view or change it under Settings → General → Data.',
+  'Backup-filen innehåller all din data och krypteras alltid med ett lösenord. Appen har skapat ett åt dig – se eller byt det nedan. Utan lösenordet går filen inte att öppna. Läs in filen på en annan enhet för att flytta din data.': 'The backup file contains all your data and is always encrypted with a password. The app has created one for you – view or change it below. Without the password the file cannot be opened. Restore the file on another device to move your data.',
   'Stress control': 'Stress control',
   'Trådar': 'Threads', 'Överblick': 'Overview', 'Inst.': 'Settings', 'Arkiv': 'Archive', 'Aktuellt': 'Coming up', 'Kommande': 'Upcoming',
   'All data tas bort från den här enheten. Det går inte att ångra – spara en backup-fil först om du vill kunna få tillbaka den.': 'All data is removed from this device. This cannot be undone – save a backup file first if you want to be able to get it back.',

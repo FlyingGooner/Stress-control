@@ -77,7 +77,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Första gången väljer du språk (Svenska eller English) överst i välkomstrutan. Byt senare under Inställningar → Allmänt → Språk. Din data är densamma på båda språken; det du själv skriver översätts inte.
 
 ## Backup och flytt
-- Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som du väljer, eller som appen skapar åt dig. Glömmer du lösenordet går filen inte att öppna.
+- Under Inställningar → Allmänt → Data: tryck Spara backup-fil. Filen krypteras alltid med ett lösenord som appen skapar och sparar åt dig första gången den startas – tryck Visa för att se det eller Byt för att välja ett eget. Glömmer du lösenordet går filen inte att öppna.
 - För att läsa tillbaka: tryck Läs in backup-fil, kontrollera sammanfattningen och tryck Ersätt. All nuvarande data ersätts – Ångra finns direkt efteråt.
 - Appen påminner om backup varje månad (ändra under Data).
 - Under Data ser du hur mycket lagring appen använder. Närmar den sig gränsen (cirka 5 MB): spara en backup-fil och ta bort gamla trådar.

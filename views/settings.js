@@ -105,7 +105,7 @@ export function viewSettings() {
         installed ? null : el('p', { class: 'small bk-warn', text: 'Appen är inte installerad. På iPhone kan Safari rensa datan för sidor du inte besökt på ett tag – lägg appen på hemskärmen (Dela → Lägg till på hemskärmen) och spara backup regelbundet.' }),
         el('p', { class: 'bk-status' + (full ? ' bk-old' : '') }, `Använder ${mb(used)} MB av cirka ${mb(STORAGE_QUOTA)} MB`,
           full ? el('small', { text: 'Lagringen börjar bli full. Spara en backup-fil och ta bort gamla trådar.' }) : null),
-        el('p', { class: 'muted small', text: 'Backup-filen innehåller all din data och krypteras alltid med ett lösenord du väljer. Du kan också låta appen skapa ett slumpmässigt lösenord. Glömmer du det går filen inte att öppna. Läs in filen på en annan enhet för att flytta din data.' }),
+        el('p', { class: 'muted small', text: 'Backup-filen innehåller all din data och krypteras alltid med ett lösenord. Appen har skapat ett åt dig – se eller byt det nedan. Utan lösenordet går filen inte att öppna. Läs in filen på en annan enhet för att flytta din data.' }),
         el('p', { class: 'bk-status' + (old && hasData() ? ' bk-old' : '') },
           last ? `Senaste backup: ${shortDate(last)}` : 'Ingen backup sparad än',
           old && hasData() ? el('small', { text: last ? 'Mer än en månad sedan – bra idé att göra en ny.' : 'Bra idé att göra en nu.' }) : null),
