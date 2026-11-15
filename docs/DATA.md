@@ -7,7 +7,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 ## Toppnivå
 | Nyckel | Typ | Beskrivning |
 |---|---|---|
-| `version` | tal | `6`. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. Före version 4 byts dess ikon 👶 mot 🛟. Före version 5 blir dess textfält Vad (`wh`) ett val i lista med Försäkringskassans ersättningar. |
+| `version` | tal | `7`. Före version 7 läggs kategorin Handla (`s`) och typen Inköp (`shop`) till om de saknas. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. Före version 4 byts dess ikon 👶 mot 🛟. Före version 5 blir dess textfält Vad (`wh`) ett val i lista med Försäkringskassans ersättningar. |
 | `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
 | `sort` | objekt, valfri | Sortering: `{ cases?: "u-", arch?: "x-" }` = kolumn + riktning (`+` stigande, `-` fallande). Trådar: `u` ändrad, `c` skapad, `d` första datum i tråden, `t` rubrik. Arkiv: `x` stängd, `c` skapad, `t` rubrik. Saknas = `u-` och `x-`. Ogiltigt värde hoppas över. |
 | `pfields` | lista, ≤ 20 | Personers egenskaper, gemensamma för alla: `{ id, name ≤ 40, kind, opts? }`, `kind` = `text note date num check choice`. Saknas = standard (Relation, Född, Telefon, E-post, Arbetsgivare eller skola, Anteckning). |
@@ -39,10 +39,10 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `c`, `u` | Skapad och senast ändrad (datum, `u ≥ c`). |
 | `x?` | Stängd (arkiverad) datum. |
 | `p?` | Person-id: vem som utför ärendet. Okänd person → tas bort. Tas en person bort rensas `p` i alla ärenden. Följer med till nästa upprepning. |
-| `r?` | Upprepa: `m` = varje månad, `y` = varje år. När ärendet arkiveras skapas ett nytt öppet ärende med samma typ, rubrik och fält; alla datum (fält, extra fält, delmål) flyttas en månad eller ett år (31 jan → 28/29 feb). Bockar och delmål nollställs, loggen följer inte med. |
+| `r?` | Upprepa: `w` = varje vecka, `m` = varje månad, `y` = varje år. När ärendet arkiveras skapas ett nytt öppet ärende med samma typ, rubrik och fält; alla datum (fält, extra fält, delmål) flyttas en vecka, en månad eller ett år (31 jan → 28/29 feb). Bockar och delmål nollställs, loggen följer inte med. |
 | `f?` | `{ fält-id: värde }` efter typens fält. Värden för fält som inte finns i typen tas bort vid validering. |
 | `o?` | Extra fält bara i ärendet, ≤ 20 × `[namn ≤ 40, kind, värde \| null, från-typ ≤ 30 eller ""]`. Tillagda för hand, kvar från en tidigare typ, eller flyttade hit när ett fält togs bort ur typen. |
-| `s?` | Delmål, ≤ 50 × `[text ≤ 80, 0 \| 1, deadline?, klart?, upprepa?]`. `deadline` är ett datum eller `0` (ingen) och syns i Aktuellt tills delmålet bockats av. `klart` = datum när det bockades av (bara när `1`), annars `0`. Femte delen `m` \| `y` = upprepa: avbockning lägger in nästa tur direkt efter. |
+| `s?` | Delmål, ≤ 100 × `[text ≤ 80, 0 \| 1, deadline?, klart?, upprepa?]`. `deadline` är ett datum eller `0` (ingen) och syns i Aktuellt tills delmålet bockats av. `klart` = datum när det bockades av (bara när `1`), annars `0`. Femte delen `w` \| `m` \| `y` = upprepa: avbockning lägger in nästa tur direkt efter. |
 | `l?` | Logg, `[datum, text ≤ 500]`. Nya anteckningar bara upp till 50 per ärende; äldre data med fler (upp till 200) behålls. |
 
 ## Lagring
@@ -55,7 +55,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 
 ## Exempel
 ```json
-{ "version": 6, "alertDays": 7,
+{ "version": 7, "alertDays": 7,
   "people": [{ "id": "p1", "name": "Anna", "h": 30 }],
   "cats": [{ "id": "e", "name": "Ekonomi", "color": "green" }],
   "types": [{ "id": "eco", "name": "Ekonomi", "icon": "💸", "cat": "e", "on": 1,

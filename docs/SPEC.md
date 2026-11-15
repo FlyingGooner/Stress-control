@@ -20,7 +20,7 @@ Ett enkelt ärendesystem för livet: logga det som oroar dig eller måste göras
 ## Begrepp
 - **Ärende:** en sak att hantera. Har typ, rubrik, status (öppen/stängd), fältvärden, delmål och logg.
 - **Ärendetyp:** mall för ärenden – namn, ikon, kategori och fält. Fasta typer finns från start; fler förslag kan slås på i Inställningar, och egna kan skapas.
-- **Kategori:** färg och grupp (Hälsa, Ekonomi, Hem, Jobb, Relationer, Övrigt). Färgen väljs ur en fast palett.
+- **Kategori:** färg och grupp (Hälsa, Ekonomi, Hem, Jobb, Relationer, Handla, Övrigt). Färgen väljs ur en fast palett.
 - **Fält:** en kolumn i en typ. Sorter: text, lång text, datum, datum och tid, tal, bock (ja/nej).
 - **Delmål:** en rad som bockas av. Typen kan ge förslag på delmål när ärendet skapas.
 
@@ -57,7 +57,7 @@ Ett enkelt ärendesystem för livet: logga det som oroar dig eller måste göras
             l?: [[datum, text ≤ 500]] }],      // logg
   backup: { remind, last?, asked? } }
 ```
-Komprimerat: korta nycklar, tomma fält utelämnas, delmål och logg som par. Gränser: 10 000 ärenden (högst 500 öppna), 2 000 i papperskorgen, 30 typer, 12 kategorier, 50 delmål och 50 loggrader per ärende (äldre data upp till 200 behålls). Fältvärden: text ≤ 200, lång text ≤ 2 000, datum `ÅÅÅÅ-MM-DD`, datum och tid `ÅÅÅÅ-MM-DDTHH:MM`, tal ±1e9, bock `1` (annars utelämnad).
+Komprimerat: korta nycklar, tomma fält utelämnas, delmål och logg som par. Gränser: 10 000 ärenden (högst 500 öppna), 2 000 i papperskorgen, 30 typer, 12 kategorier, 100 delmål och 50 loggrader per ärende (äldre data upp till 200 behålls). Fältvärden: text ≤ 200, lång text ≤ 2 000, datum `ÅÅÅÅ-MM-DD`, datum och tid `ÅÅÅÅ-MM-DDTHH:MM`, tal ±1e9, bock `1` (annars utelämnad).
 
 ### Fasta typer (påslagna från start)
 | Typ | Kategori | Fält |
@@ -67,6 +67,7 @@ Komprimerat: korta nycklar, tomma fält utelämnas, delmål och logg som par. Gr
 | 💼 Jobbansökan | Jobb | Företag, Roll, Sökt (datum), Kontaktperson, Status, Intervju (datum och tid), Lön/villkor, Kommentar |
 | 💸 Ekonomi | Ekonomi | Vad, Belopp (tal), Förfaller (datum), Betalt (bock), Kommentar |
 | 🔧 Hemma | Hem | Vad, Vem fixar, Klart senast (datum), Kostnad (tal), Kommentar |
+| 🛒 Inköp | Handla | Butik, Handla senast (datum), Kostnad (tal) – varorna är delmål (flera med komma, avbockade sist); upprepas varje vecka (`r: 'w'` på typen) |
 
 ### Förslag (av från start, slås på i Inställningar)
 🏠 Bostadsköp (Hem: Adress, Pris, Visning, Pratat med banken ✓, Lånelöfte ✓, Bud, Tankar), 🦷 Tandvård (Hälsa), 🧠 Oro/tanke (Hälsa: Vad oroar, Värsta/troligaste utfall, Vad kan jag göra, Släppt ✓), 🏛️ Myndighet (Övrigt: Myndighet, Ärendenummer, Skickat, Svar senast, Svar), 🛡️ Försäkring (Ekonomi: Bolag, Skadenummer, Anmält, Ersättning), 🚗 Bil/verkstad (Hem), 🎓 Studier (Jobb), 💬 Samtal att ta (Relationer: Med vem, Om vad, Tagit samtalet ✓, Hur gick det).

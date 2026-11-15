@@ -53,6 +53,13 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - If you remove a field (or change its kind) filled-in values move to Extra fields in the threads of the type – nothing disappears.
 - Categories: change name and colour, or add new ones.
 
+## Shopping (shopping lists)
+- The type Shopping list (category Shopping) is a shopping list: create e.g. the thread Weekly shop and add the items as steps.
+- Type several items at once, separated by commas: milk, bread, eggs gives three rows.
+- Tick them off in the shop. Ticked items move to the bottom, so what is left stays on top.
+- A shopping list repeats every week. When you archive it, a new one is made with the same items, all unticked, and Buy by moves one week. Change Repeat under Edit if you do not want that.
+- Steps can also repeat every week: tap ↻ until it says ↻ wk.
+
 ## Social Insurance Agency (care of sick child, parental benefit)
 - The type Social Insurance Agency (Försäkringskassan, Sweden) is for benefits from the Swedish social insurance. What you choose in a list: care of sick child (VAB), parental benefit, sickness benefit, sickness compensation, activity compensation and more. If what you are looking for is missing: choose + Own choice… at the bottom and type it. It is then added to the list. The list can also be changed under Settings → Types → Social Insurance Agency.
 - The type has the field Days. Add each day you were home with a sick child or on parental leave: choose the date, write how many hours you managed to work (e.g. 2, 2.5 or 1:30, empty = none) and tap +.

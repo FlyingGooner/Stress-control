@@ -1,11 +1,11 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, sortCases, sortOf, nextSort } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
   const d = defaults();
-  T.eq(d.cats.map((c) => c.name), ['Hälsa', 'Ekonomi', 'Hem', 'Jobb', 'Relationer', 'Övrigt']);
-  T.eq(d.types.filter((t) => t.on).map((t) => t.id), ['sym', 'task', 'job', 'eco', 'home', 'fk']);
+  T.eq(d.cats.map((c) => c.name), ['Hälsa', 'Ekonomi', 'Hem', 'Jobb', 'Relationer', 'Handla', 'Övrigt']);
+  T.eq(d.types.filter((t) => t.on).map((t) => t.id), ['sym', 'task', 'job', 'eco', 'home', 'shop', 'fk']);
   T.ok(d.types.length >= 13, 'fler förslag i inställningarna');
 });
 T.test('symptomtypens fält i rätt ordning', () => {
@@ -21,7 +21,7 @@ T.test('validering: okänd typ, fel datum och dubbletter hoppas över; fält eft
 });
 T.test('validering: färg utanför listan, okänd kategori, fält-id __proto__ avvisas', () => {
   const s = validate(JSON.parse('{"cats":[{"id":"h","name":"Hälsa","color":"url(x)"}],"types":[{"id":"t","name":"T","cat":"saknas","fields":[{"id":"__proto__","name":"x","kind":"text"},{"id":"a","name":"A","kind":"bad"},{"id":"b","name":"B","kind":"num"}]}]}'));
-  T.eq(s.cats, [{ id: 'h', name: 'Hälsa', color: 'gray' }]);
+  T.eq(s.cats, [{ id: 'h', name: 'Hälsa', color: 'gray' }, { id: 's', name: 'Handla', color: 'teal' }], 'gammal data utan version får Handla');
   T.eq(s.types[0].cat, 'h');
   T.eq(s.types[0].fields.map((f) => f.id), ['b']);
 });
@@ -138,7 +138,7 @@ T.test('upprepa: arkiverat ärende ger ett nytt med datum flyttade, bockar och d
   T.eq([n.r, n.l, n.c, s.cases.length], ['m', undefined, '2026-02-01', 2]);
   T.eq(firstDate(s, n), '2026-02-28');
   T.eq(addMonths('2028-02-29', 12), '2029-02-28');
-  T.eq(validate({ cases: [{ id: 'a', t: 'eco', title: 'x', c: '2026-01-10', r: 'w' }] }).cases[0].r, undefined);
+  T.eq(validate({ cases: [{ id: 'a', t: 'eco', title: 'x', c: '2026-01-10', r: 'q' }] }).cases[0].r, undefined);
   T.eq(nextCase(s, { ...s.cases[0], r: undefined }, '2026-02-01'), null);
 });
 T.test('papperskorg: ta bort, återställ, radera efter vald tid, validering', () => {
@@ -224,4 +224,21 @@ T.test('sortering: kolumn, riktning, tomma sist, validering', () => {
   T.eq(sortCases(st, cs, 'c+').map((c) => c.id), ['c', 'a', 'b']);
   T.eq(sortCases(st, [{ id: 'n', title: 'x' }, { id: 'a', title: 'y', x: '2026-05-01' }], 'x+').map((c) => c.id), ['a', 'n'], 'utan värde sist');
   T.eq(nextSort(st, 'cases', 't'), 't-'); T.eq(nextSort(st, 'cases', 'u'), 'u-'); T.eq(nextSort(st, 'cases', 'd'), 'd+');
+});
+T.test('Inköp: veckovis, varor med komma, avbockade sist', () => {
+  const st = defaults(), c = newCase(st, 'shop', 'Veckohandling', '2026-11-15');
+  T.eq(c.r, 'w');
+  T.eq(splitItems(' mjölk, bröd;ägg\n, '), ['mjölk', 'bröd', 'ägg']);
+  c.s = [['mjölk', 1, 0, '2026-11-15'], ['bröd', 0], ['ägg', 0]]; c.f = { d: '2026-11-16' };
+  T.eq(stepOrder(c).map(([x, i]) => x[0] + i), ['bröd1', 'ägg2', 'mjölk0']);
+  c.x = '2026-11-15'; const n = nextCase(st, c, '2026-11-15');
+  T.eq([n.r, n.f.d, n.s.map((x) => x[1])], ['w', '2026-11-23', [0, 0, 0]]);
+  const m = { s: [['Byt lakan', 0, '2026-11-15', 0, 'w']] }; setStepDone(m, 0, 1, '2026-11-15');
+  T.eq(m.s[1], ['Byt lakan', 0, '2026-11-22', 0, 'w']);
+});
+T.test('version 7: Handla och Inköp läggs till i gammal data', () => {
+  const s = validate({ version: 6, cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }, { id: 'o', name: 'Övrigt', color: 'gray' }], types: [{ id: 'task', name: 'Uppgift', cat: 'o', on: 1, fields: [] }] });
+  T.eq(s.cats.map((c) => c.id), ['h', 's', 'o']);
+  T.eq(s.types.map((t) => t.id + t.on + (t.r || '')), ['task1', 'shop1w']);
+  T.eq(validate({ version: 7, types: [{ id: 'task', name: 'Uppgift', cat: 'o', on: 1, fields: [] }] }).types.length, 1, 'borttagen typ kommer inte tillbaka');
 });

@@ -1,6 +1,6 @@
 // Stress control – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -287,10 +287,10 @@ app.addEventListener('click', (ev) => {
       return;
     }
     case 'sadd': {
-      const c = cs(), x = cleanText(document.getElementById('s-new')?.value, 80);
-      if (!c || !x) { document.getElementById('s-new')?.focus(); return; }
-      if ((c.s || []).length >= LIM.steps) { errText('c-error', `Max ${LIM.steps} delmål.`); return; }
-      const sd = document.getElementById('s-date')?.value; (c.s ||= []).push(validDate(sd) ? [x, 0, sd] : [x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
+      const c = cs(), v = document.getElementById('s-new')?.value, xs = isList(c) ? splitItems(v) : [cleanText(v, 80)].filter(Boolean);   // shopping: "mjölk, bröd" = two items
+      if (!c || !xs.length) { document.getElementById('s-new')?.focus(); return; }
+      if ((c.s || []).length + xs.length > LIM.steps) { errText('c-error', `Max ${LIM.steps} delmål.`); return; }
+      const sd = document.getElementById('s-date')?.value; for (const x of xs) (c.s ||= []).push(validDate(sd) ? [x, 0, sd] : [x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
     }
     case 'oadd': {
       const c = cs(), n = document.getElementById('o-name'); if (!c) return;
@@ -299,8 +299,8 @@ app.addEventListener('click', (ev) => {
     }
     case 'odel': { const c = cs(); if (!c?.o) return; const n = c.o[Number(t.dataset.i)]?.[0]; withUndo(`${n} togs bort`, () => { c.o.splice(Number(t.dataset.i), 1); if (!c.o.length) delete c.o; touch(c); }); return; }
     case 'oclear': { const c = cs(); if (!c?.o) return; withUndo('Extra fält borttagna', () => { delete c.o; touch(c); }); return; }
-    case 'srep': { const c = cs(), i = Number(t.dataset.i), row = c?.s?.[i]; if (!row) return;   // repeat: Nej → Varje månad → Varje år
-      setStepRepeat(c, i, !row[4] ? 'm' : row[4] === 'm' ? 'y' : 0, today()); persist(); render(); return; }
+    case 'srep': { const c = cs(), i = Number(t.dataset.i), row = c?.s?.[i]; if (!row) return;   // repeat: Nej → Varje vecka → Varje månad → Varje år
+      setStepRepeat(c, i, ({ '': 'w', w: 'm', m: 'y' })[row[4] || ''] || 0, today()); persist(); render(); return; }
     case 'sdel': { const c = cs(), i = Number(t.dataset.i); if (!c?.s?.[i]) return; withUndo(`${c.s[i][0]} togs bort`, () => { c.s.splice(i, 1); if (!c.s.length) delete c.s; touch(c); }); return; }
     case 'ladd': {
       const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);

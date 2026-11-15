@@ -1,5 +1,5 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, adultsOf, dayPerson, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT } from '../store.js';
+import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, adultsOf, dayPerson, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT, stepOrder, isList } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
@@ -188,7 +188,7 @@ export function caseView() {
     (t?.fields || []).filter((fd) => fd.kind === 'days').map((fd) => daysBlock(c, fd, 'view')),
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     c.s?.length ? [el('h2', { class: 'sub-h', text: `Delmål ${done}/${all}` }),
-      el('ul', { class: 'steps' }, c.s.map(([x, d, dd, dn], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
+      el('ul', { class: 'steps' }, stepOrder(c).map(([[x, d, dd, dn], i]) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
         el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }),
           el('span', { text: x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') + (!d && c.s[i][4] ? ' ↻' : '') })))))] : null,
     el('h2', { class: 'sub-h', text: 'Logg' }),
@@ -229,16 +229,16 @@ export function caseEditor() {
         el('button', { class: 'link', 'data-act': 'oclear', text: 'Ta bort alla' })) : null),
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     el('h2', { class: 'sub-h', text: all ? `Delmål ${done}/${all}` : 'Delmål' }),
-    el('ul', { class: 'steps' }, (c.s || []).map(([x, d, dd], i) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
+    el('ul', { class: 'steps' }, stepOrder(c).map(([[x, d, dd], i]) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
       el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }), el('span', { text: x })),
       d ? el('input', { type: 'date', class: 'step-date done-date', value: c.s[i][3] || '', max: today(), 'data-act': 'sdate', 'data-i': i, 'aria-label': `Klart datum för ${x}` })
         : dd ? el('input', { type: 'date', class: 'step-date', value: dd, 'data-act': 'sdate', 'data-i': i, 'aria-label': `Datum för ${x}` })
         : el('label', { class: 'date-pick', title: 'Lägg till datum' }, el('span', { 'aria-hidden': 'true', text: '📅' }),   // no date yet: a calendar button, the picker on top of it
           el('input', { type: 'date', value: '', 'data-act': 'sdate', 'data-i': i, 'aria-label': `Lägg till datum för ${x}` })),
-      d ? null : el('button', { class: 'icon sm rep' + (c.s[i][4] ? ' on' : ''), 'data-act': 'srep', 'data-i': i, 'aria-label': `Upprepa ${x}: ${c.s[i][4] ? REPEAT[c.s[i][4]] : 'nej'} – tryck för att byta`, text: c.s[i][4] === 'y' ? '↻ år' : c.s[i][4] === 'm' ? '↻ mån' : '↻' }),
+      d ? null : el('button', { class: 'icon sm rep' + (c.s[i][4] ? ' on' : ''), 'data-act': 'srep', 'data-i': i, 'aria-label': `Upprepa ${x}: ${c.s[i][4] ? REPEAT[c.s[i][4]] : 'nej'} – tryck för att byta`, text: ({ w: '↻ v', m: '↻ mån', y: '↻ år' })[c.s[i][4]] || '↻' }),
       el('button', { class: 'icon sm', 'data-act': 'sdel', 'data-i': i, 'aria-label': `Ta bort ${x}`, text: '✕' })))),
     el('div', { class: 'pick-row' },
-      el('input', { type: 'text', id: 's-new', maxlength: 80, placeholder: 'Nytt delmål', 'aria-label': 'Nytt delmål', autocomplete: 'off' }),
+      el('input', { type: 'text', id: 's-new', maxlength: 80, placeholder: isList(c) ? 'Varor, t.ex. mjölk, bröd' : 'Nytt delmål', 'aria-label': isList(c) ? 'Nya varor, skilj med komma' : 'Nytt delmål', autocomplete: 'off' }),
       el('input', { type: 'date', id: 's-date', class: 'step-date', 'aria-label': 'Datum för nytt delmål (valfritt)' }),
       el('button', { class: 'weigh-save add-btn', 'data-act': 'sadd', 'aria-label': 'Lägg till delmål', text: '+' })),
     el('h2', { class: 'sub-h', text: 'Logg' }),
@@ -251,7 +251,7 @@ export function caseEditor() {
       el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
     el('label', { class: 'goal-row' }, el('span', { text: 'Upprepa' }),
       el('select', { 'data-act': 'crep', id: 'c-rep' }, [['', 'Nej'], ...Object.entries(REPEAT)].map(([k, l]) => el('option', { value: k, selected: (c.r || '') === k, text: l })))),
-    c.r && !c.x ? el('p', { class: 'muted small', text: 'När du arkiverar tråden skapas en ny, med alla datum flyttade ' + (c.r === 'y' ? 'ett år' : 'en månad') + ' framåt.' }) : null,
+    c.r && !c.x ? el('p', { class: 'muted small', text: 'När du arkiverar tråden skapas en ny, med alla datum flyttade ' + ({ w: 'en vecka', y: 'ett år' }[c.r] || 'en månad') + ' framåt.' }) : null,
     el('div', { class: 'row-actions case-actions' },
       el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
       c.x ? el('button', { class: 'link', 'data-act': 'creopen', text: 'Öppna igen' })

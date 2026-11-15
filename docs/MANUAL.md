@@ -53,6 +53,13 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Tar du bort ett fält (eller byter dess sort) flyttas ifyllda värden till Extra fält i trådarna av typen – inget försvinner.
 - Kategorier: byt namn och färg, eller lägg till nya.
 
+## Handla (inköpslistor)
+- Typen Inköp (kategorin Handla) är en inköpslista: skapa t.ex. tråden Veckohandling och lägg in varorna som delmål.
+- Skriv flera varor på en gång, skilda med komma: mjölk, bröd, ägg ger tre rader.
+- Bocka av i butiken. Avbockade varor flyttas längst ner, så det som är kvar står överst.
+- En inköpslista upprepas varje vecka. När du arkiverar den skapas en ny med samma varor, alla obockade, och Handla senast flyttas en vecka. Ändra Upprepa under Redigera om du inte vill det.
+- Delmål kan också upprepas varje vecka: tryck ↻ tills det står ↻ v.
+
 ## Försäkringskassan (VAB, föräldrapenning)
 - Vad väljer du i en lista: VAB (tillfällig föräldrapenning), föräldrapenning, sjukpenning, sjukersättning, aktivitetsersättning, rehabiliteringspenning, graviditetspenning, närståendepenning med flera. Saknas det du söker: välj + Eget val… längst ner och skriv det. Det läggs då till i listan. Listan ändras också under Inställningar → Typer → Försäkringskassan.
 - Typen Försäkringskassan har fältet Dagar. Lägg till varje dag du vabbat eller varit föräldraledig: välj datum, skriv hur många timmar du hann jobba (t.ex. 2, 2,5 eller 1:30, tomt = inget) och tryck +.
