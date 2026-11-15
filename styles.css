@@ -483,3 +483,8 @@ select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6p
 .day-add .day-lab > input:focus, .day-add .day-lab > select:focus { border-bottom: 2px solid var(--primary); outline: none; }
 .day-add .add-btn { grid-column: 1 / -1; width: 100%; min-height: 48px; margin: 0; border-radius: var(--r-xl); font-size: 1rem; font-weight: 500; }
 .days > .muted.small { margin: 10px 0 0; }
+
+/* Byta kod (2026-11-15): tre knappar staplade, viktigast överst. */
+#newcode-dialog .actions, #newcode-dialog .dlg-actions { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+#newcode-dialog .actions .spacer { display: none; }
+#newcode-dialog .actions button, #newcode-dialog .dlg-actions button { width: 100%; margin: 0; }
