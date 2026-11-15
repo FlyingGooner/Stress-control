@@ -55,7 +55,10 @@ button { cursor: pointer; }
 .filter-row { display: flex; align-items: center; gap: 6px; margin: 4px 0 12px; }
 .filter-row .cat-chips { flex: 1; min-width: 0; flex-wrap: nowrap; overflow-x: auto; margin: 0; scrollbar-width: none; }
 .filter-row .cat-chips::-webkit-scrollbar { display: none; }
-.filter-row .chip { flex: none; white-space: nowrap; }
+.filter-row .chip { flex: none; white-space: nowrap; padding: 0 12px; }
+.filter-row .cat-chips { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent); padding-right: 20px; }
+.filter-row .chip.sort-chip { padding: 0 10px; }
+.filter-row select.chip.person-sel { padding: 0 4px 0 10px; }
 .filter-row select.chip.person-sel { margin: 0; max-width: 34%; }
 .chip.sort-chip { padding: 0 10px; }
 .sort-cols { margin: -4px 0 12px; }
