@@ -5,7 +5,7 @@ import { hasData, savedPassword, rememberOn } from './data.js';
 
 // In-app manual: static <template id="help-tpl"> in index.html (built from docs/MANUAL.md), cloned – never parsed as HTML text.
 function helpCard() {
-  const frag = document.importNode(document.getElementById('help-tpl').content, true);
+  const frag = document.importNode((document.getElementById(self.I18N.lang() === 'en' ? 'help-tpl-en' : 'help-tpl') || document.getElementById('help-tpl')).content, true);
   const sec = frag.querySelector('.help');
   const wrap = el('details', { class: 'card set-sec help help-wrap', 'data-sec': 'help', open: setOpen.has('help') },
     el('summary', { class: 'help-title' }, el('span', { class: 'set-title', text: 'Hjälp och manual' }), el('span', { class: 'set-hint', text: 'Så funkar appen' })));
@@ -95,7 +95,11 @@ export function viewSettings() {
       el('div', { class: 'pick-row' },
         el('select', { id: 'aclean-age', 'aria-label': 'Stängda för mer än' }, [1, 2, 5, 10].map((y) => el('option', { value: y, selected: y === 2, text: `Stängda för mer än ${y} år sedan` }))),
         el('button', { class: 'weigh-save', 'data-act': 'aclean', text: 'Flytta' }))),
-    group('app', 'Allmänt', 'Data, hjälp',
+    group('app', 'Allmänt', 'Språk, data, hjälp',
+      sec('lang', 'Språk', self.I18N.LANGS[self.I18N.lang()],
+        el('label', { class: 'goal-row' }, el('span', { text: 'Språk' }),
+          el('select', { 'data-act': 'lang', 'aria-label': 'Språk' },
+            Object.entries(self.I18N.LANGS).map(([v, l]) => el('option', { value: v, selected: self.I18N.lang() === v, text: l, 'data-no-tr': '' }))))),
       sec('data', 'Data', 'Backup, import, radera',
         el('p', { class: 'small', text: 'All data sparas bara i den här webbläsaren (localStorage). Rensar du webbplatsdata eller avinstallerar appen försvinner den – spara en backup-fil då och då.' }),
         installed ? null : el('p', { class: 'small bk-warn', text: 'Appen är inte installerad. På iPhone kan Safari rensa datan för sidor du inte besökt på ett tag – lägg appen på hemskärmen (Dela → Lägg till på hemskärmen) och spara backup regelbundet.' }),

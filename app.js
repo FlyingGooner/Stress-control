@@ -605,6 +605,7 @@ app.addEventListener('change', (ev) => {
       return;
     }
     case 'kcolor': { const k = S.state.cats.find((c) => c.id === t.dataset.id); if (k && COLORS.includes(t.value)) { k.color = t.value; persist(); render(); } return; }
+    case 'lang': self.I18N.setLang(t.value); return;
     case 'bkremind': if (['week', 'month', 'off'].includes(t.value)) { S.state.backup.remind = t.value; S.state.backup.asked = null; persist(); } return;
   }
 });

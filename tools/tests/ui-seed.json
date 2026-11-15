@@ -1,4 +1,4 @@
-{ "sk.data": { "version": 1,
+{ "sk.lang": "sv", "sk.data": { "version": 1,
   "cases": [
     { "id": "c1", "t": "sym", "title": "Ont i knät", "c": "2026-11-10", "u": "2026-11-12", "f": { "s1": "Värk i trappor", "s2": "2026-11-08" }, "s": [["Ring vårdcentralen", 1], ["Gå på besöket", 0], ["Följ upp resultatet", 0]], "l": [["2026-11-12", "Ringde, fick tid 18/11"]] },
     { "id": "c2", "t": "job", "title": "Utvecklare, Acme", "c": "2026-11-11", "u": "2026-11-13", "f": { "co": "Acme", "ap": "2026-11-11" }, "s": [["Skicka ansökan", 1], ["Följ upp", 0], ["Intervju", 0]] },
