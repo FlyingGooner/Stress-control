@@ -105,7 +105,7 @@ Plain HTML, CSS and JavaScript – no frameworks, no dependencies, no build step
 | `version.js` | Version number (single source) |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Installation as an app (PWA) and offline |
 | `docs/SPEC.md` | Specification of features and behaviour |
-| `docs/presentation.html` | Stand-alone mobile presentation of the app (English by default, Swedish with the button on the first slide) |
+| `docs/presentation.html` | Stand-alone mobile presentation of the app (Swedish by default, English with the button on the first slide) |
 | `tools/build-single.ps1` | Builds the test file |
 | `tools/test.ps1` | Runs the tests (`tools\test.ps1`, `ui` also builds the test file) |
 | `tools/node-unit.mjs` | Runs `unit.test.js` in Node |
