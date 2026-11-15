@@ -1,79 +1,83 @@
 <div align="center">
 
-<img src="icons/icon-192.png" width="88" alt="Stress kontroll-ikon">
+<img src="icons/icon-192.png" width="88" alt="Stress control icon">
 
-# Stress kontroll
+# Stress control
 
-**Skriv ner det – och släpp det.**
+**Write it down – and let it go.**
 
-### [▶ Öppna appen](https://flyinggooner.github.io/Stress-control/)
+### [▶ Open the app](https://flyinggooner.github.io/Stress-control/)
 
-[📱 Presentation av appen](https://flyinggooner.github.io/Stress-control/docs/presentation.html)
+[📱 Presentation of the app](https://flyinggooner.github.io/Stress-control/docs/presentation.html)
 
 </div>
 
-<!-- Skärmbilder: lägg i docs/ och visa här -->
+<!-- Screenshots: put them in docs/ and show them here -->
 
-## Varför?
+## Why?
 
-Saker som snurrar i huvudet tar energi. När ett symptom, en jobbansökan eller ett husköp finns nedskrivet med nästa steg kan du släppa tanken – appen håller reda på den åt dig.
+Things spinning in your head take energy. When a symptom, a job application or a house purchase is written down with the next step, you can let go of the thought – the app keeps track of it for you.
 
-## Funktioner
+## Features
 
 | | |
 |---|---|
-| 📋 **Ärenden** | Logga det som oroar dig eller måste göras – med fält i en logisk ordning, delmål och en daterad logg. |
-| 🩺 **Färdiga typer** | Symptom, Uppgift, Jobbansökan, Ekonomi och Hemma – och fler att slå på: Bostadsköp, Tandvård, Oro, Myndighet, Försäkring, Bil, Studier, Samtal. |
-| 🧩 **Egna typer** | Skapa egna ärendetyper med egna fält: text, datum, tid, tal och bockar (t.ex. Hus: Pratat med banken ✓, Lånelöfte ✓). |
-| 🎨 **Kategorier** | Klara färger: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb … – filtrera med ett tryck. |
-| 🗄️ **Stäng och arkivera** | Klara ärenden flyttas till Arkiv och kan öppnas igen. |
-| 📊 **Överblick** | Öppna ärenden per kategori, delmål kvar och äldsta öppna. |
-| ↩️ **Bakåt** | Telefonens bakåtknapp stänger det som är öppet och går tillbaka genom flikarna. |
-| 💾 **Backup** | Lösenordskrypterad backup-fil med påminnelse. |
-| 📴 **Offline** | Fungerar utan nät efter första besöket. |
-| 🌗 **Tema** | Ljust och mörkt, följer telefonens inställning. |
+| 📋 **Threads** | Log what worries you or needs doing – with fields in a logical order, steps and a dated log. |
+| 🩺 **Ready-made types** | Symptom, Task, Job application, Finances and Home – and more to switch on: Home purchase, Dental care, Worry, Authority, Insurance, Car, Studies, Calls. |
+| 🧩 **Own types** | Create your own thread types with your own fields: text, date, time, number and checkboxes (e.g. House: Talked to the bank ✓, Mortgage approval ✓). |
+| 🎨 **Categories** | Clear colours: pink Health, green Finances, blue Home, orange Work … – filter with one tap. |
+| 👤 **People** | Who does what in the family, with own properties and working hours. |
+| 🛟 **Social Insurance Agency** | Days at home with a sick child (VAB) or on parental leave, with hours away calculated (Swedish benefits). |
+| 🗄️ **Close and archive** | Finished threads move to Archive and can be reopened. Recurring threads come back every month or year. |
+| 📊 **Overview** | What is coming up, open threads per category and steps left. |
+| 🌍 **Language** | English or Swedish, chosen at the first start and changeable in Settings. |
+| ↩️ **Back** | The phone's back button closes what is open and goes back through the tabs. |
+| 💾 **Backup** | Password-encrypted backup file with reminder. |
+| 📴 **Offline** | Works without network after the first visit. |
+| 🌗 **Theme** | Light and dark, follows the phone's setting. |
 
-## Integritet 🔒
+## Privacy 🔒
 
-- **Inget konto, inga cookies.** Allt sparas bara i din webbläsare (`localStorage`).
-- **Inget utifrån.** Ingen analys, inga annonser, inga typsnitt eller skript utifrån – spärras även tekniskt med en Content Security Policy.
+- **No account, no cookies.** Everything is stored only in your browser (`localStorage`).
+- **Nothing from outside.** No analytics, no ads, no fonts or scripts from outside – also blocked technically with a Content Security Policy.
 
-## Installera på mobilen
+## Install on your phone
 
 **Android (Chrome)**
-1. Öppna [appen](https://flyinggooner.github.io/Stress-control/) i Chrome.
-2. Tryck på menyn **⋮** → **Installera app** (eller *Lägg till på startskärmen*).
+1. Open [the app](https://flyinggooner.github.io/Stress-control/) in Chrome.
+2. Tap the menu **⋮** → **Install app** (or *Add to Home screen*).
 
 **iPhone (Safari)**
-1. Öppna [appen](https://flyinggooner.github.io/Stress-control/) i Safari.
-2. Tryck på **Dela** → **Lägg till på hemskärmen**.
+1. Open [the app](https://flyinggooner.github.io/Stress-control/) in Safari.
+2. Tap **Share** → **Add to Home Screen**.
 
-Versionsnumret syns uppe till höger i appen. Nya versioner hämtas automatiskt.
+The version number is shown at the top right of the app. New versions are fetched automatically.
 
-## För utvecklare
+## For developers
 
-Ren HTML, CSS och JavaScript – inga ramverk, inga beroenden, inget byggsteg för appen.
+Plain HTML, CSS and JavaScript – no frameworks, no dependencies, no build step for the app.
 
-**Köra lokalt:** servera mappen statiskt, t.ex. `python3 -m http.server 8080`, och öppna http://localhost:8080 (service workern kräver `localhost` eller HTTPS).
+**Run locally:** serve the folder statically, e.g. `python3 -m http.server 8080`, and open http://localhost:8080 (the service worker needs `localhost` or HTTPS).
 
-**Testfil:** `tools\build-single.ps1` bakar ihop appen till en enda fil, `dist/stress-kontroll.html`, som går att öppna direkt i webbläsaren eller skicka till någon.
+**Test file:** `tools\build-single.ps1` bakes the app into a single file, `dist/stress-kontroll.html`, which can be opened directly in the browser or sent to someone.
 
-| Fil | Innehåll |
+| File | Contents |
 |---|---|
-| `index.html` | Appens markup |
-| `styles.css`, `app.js`, `ui.js`, `nav.js`, `views/` | Stil, router och klick, delat tillstånd, Bakåt-logik, en fil per vy (ES-moduler) |
-| `backup.js` | Krypterad backup-fil (gemensam) |
-| `docs/MANUAL.md` | Manualen – Hjälp i appen byggs från den (`tools/build-help.ps1`) |
-| `docs/DATA.md` | Datamodellen i `sk.data` och exportfilen |
-| `tools/tests/` | Tester: Node (logik) och Edge (klick i testfilen), körs av `tools/test.ps1` |
-| `store.js` | Lagring i `localStorage` och validering av sparad data |
-| `version.js` | Versionsnummer (enda källan) |
-| `sw.js`, `manifest.webmanifest`, `icons/` | Installation som app (PWA) och offline |
-| `docs/SPEC.md` | Specifikation av funktioner och beteende |
-| `docs/presentation.html` | Fristående mobilpresentation av appen |
-| `tools/build-single.ps1` | Bygger testfilen |
-| `tools/test.ps1` | Kör testerna (`tools\test.ps1`, `ui` bygger även testfilen) |
-| `tools/node-unit.mjs` | Kör `unit.test.js` i Node |
-| `CLAUDE.md` | Regler för utveckling |
+| `index.html` | The app's markup |
+| `styles.css`, `app.js`, `ui.js`, `nav.js`, `views/` | Style, router and clicks, shared state, Back logic, one file per view (ES modules) |
+| `backup.js` | Encrypted backup file (shared) |
+| `i18n.js`, `i18n-en.js` | Language support: the source text is Swedish; `i18n.js` (shared by all apps) translates what is drawn with the dictionary in `i18n-en.js` |
+| `docs/MANUAL.md`, `docs/MANUAL.en.md` | The manual in Swedish and English – Help in the app is built from them (`tools/build-help.ps1`) |
+| `docs/DATA.md` | The data model in `sk.data` and the export file |
+| `tools/tests/` | Tests: Node (logic) and Edge (clicks in the test file), run by `tools/test.ps1` |
+| `store.js` | Storage in `localStorage` and validation of saved data |
+| `version.js` | Version number (single source) |
+| `sw.js`, `manifest.webmanifest`, `icons/` | Installation as an app (PWA) and offline |
+| `docs/SPEC.md` | Specification of features and behaviour |
+| `docs/presentation.html` | Stand-alone mobile presentation of the app (English by default, Swedish with the button on the first slide) |
+| `tools/build-single.ps1` | Builds the test file |
+| `tools/test.ps1` | Runs the tests (`tools\test.ps1`, `ui` also builds the test file) |
+| `tools/node-unit.mjs` | Runs `unit.test.js` in Node |
+| `CLAUDE.md` | Rules for development |
 
-Publiceras till GitHub Pages från `main`.
+Published to GitHub Pages from `main`.
