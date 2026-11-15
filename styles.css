@@ -464,3 +464,8 @@ select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6p
 .case-li.marked .case-line { background: var(--primary-container, #eaddff); }
 .case-li.marked .sel-box { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
 .cases, .sel-bar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Språkknappar i välkomstrutan (som simple-nutrition) */
+.segs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--outline); border-radius: var(--r-md); overflow: hidden; margin-bottom: 8px; }
+.seg { min-height: 40px; border: 0; background: none; font: inherit; font-weight: 500; font-size: .875rem; color: var(--fg, var(--on-surface)); cursor: pointer; }
+.seg + .seg { border-left: 1px solid var(--outline); }
+.seg.on { background: var(--primary-container); color: var(--on-primary-container); }
