@@ -502,3 +502,8 @@ select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6p
 /* CSV-export (2026-11-15) */
 .csv-row { margin: 8px 0; }
 .csv-row p { margin: 2px 0 0; }
+/* Ny tråd: tom felrad tar ingen plats, rutorna lika höga */
+.import-error:empty { display: none; }
+.type-grid li { display: flex; }
+.type-grid .type-btn { height: 100%; font-size: .95rem; line-height: 1.2; }
+.add-top + .search { margin-bottom: 4px; }
