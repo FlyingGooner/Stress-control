@@ -8,7 +8,7 @@ import { viewOverview } from './views/overview.js';
 import { viewArchive, archiveList } from './views/archive.js';
 import { viewTrash } from './views/trash.js';
 import { viewSettings, personHint } from './views/settings.js';
-import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, copyPassword } from './views/data.js';
+import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, copyPassword, ownPassword } from './views/data.js';
 
 const CONFIG = { startView: 'cases', longPressMs: 450 };
 document.getElementById('version').textContent = 'v' + self.APP_VERSION;
@@ -426,6 +426,7 @@ app.addEventListener('click', (ev) => {
     case 'backupsave': saveBackup(); return;
     case 'pwdset': rememberPassword(); return;
     case 'pwdcopy': copyPassword(); return;
+    case 'pwdown': ownPassword(); return;
     case 'pwdshow': S.showPwd = !S.showPwd; break;
     default: return;
   }
