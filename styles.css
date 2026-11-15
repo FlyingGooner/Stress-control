@@ -469,3 +469,12 @@ select.day-kid { flex: none; max-width: 6.5em; min-height: 36px; padding: 2px 6p
 .seg { min-height: 40px; border: 0; background: none; font: inherit; font-weight: 500; font-size: .875rem; color: var(--fg, var(--on-surface)); cursor: pointer; }
 .seg + .seg { border-left: 1px solid var(--outline); }
 .seg.on { background: var(--primary-container); color: var(--on-primary-container); }
+/* Ny dag (0.2.68): rutnät med lika fält, hel knapp under */
+.pick-row.day-add { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5em, 1fr)); gap: 10px; align-items: end; margin-top: 16px; }
+.day-add .day-lab { min-width: 0; font-size: .8rem; }
+.day-add .day-lab > input, .day-add .day-lab > select, .day-add .day-lab > input.day-w, .day-add select.day-kid {
+  width: 100%; max-width: none; min-height: 48px; padding: 0 10px; border: 0; border-bottom: 1px solid var(--outline); border-radius: var(--r-sm) var(--r-sm) 0 0;
+  background: var(--surface-container-high); color: var(--fg); font: inherit; font-size: 1rem; box-sizing: border-box; }
+.day-add .day-lab > input:focus, .day-add .day-lab > select:focus { border-bottom: 2px solid var(--primary); outline: none; }
+.day-add .add-btn { grid-column: 1 / -1; width: 100%; min-height: 48px; margin: 0; border-radius: var(--r-xl); font-size: 1rem; font-weight: 500; }
+.days > .muted.small { margin: 10px 0 0; }

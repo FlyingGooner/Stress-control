@@ -111,7 +111,7 @@ export function daysBlock(c, fd, mode) {
   const kidName = (k) => S.state.people.find((x) => x.id === k)?.name;
   const lastKid = list.at(-1)?.[3] || (kids.length === 1 ? kids[0].id : ''), adults = adultsOf(S.state), many = adults.length > 1;
   const pName = (p) => dayPerson(S.state, c, p)?.name;
-  const whoSel = (attrs, cur) => el('select', { class: 'day-kid', ...attrs }, el('option', { value: '', selected: !cur, text: who ? `${who.name} (trådens)` : 'Vem…' }), adults.filter((x) => x.id !== c.p).map((x) => el('option', { value: x.id, selected: x.id === cur, text: x.name })));
+  const whoSel = (attrs, cur) => el('select', { class: 'day-kid', ...attrs }, el('option', { value: '', selected: !cur, text: who ? who.name : 'Vem…' }), adults.filter((x) => x.id !== c.p).map((x) => el('option', { value: x.id, selected: x.id === cur, text: x.name })));
   const kidSel = (attrs, cur) => el('select', { class: 'day-kid', ...attrs }, el('option', { value: '', selected: !cur, text: 'Barn…' }), kids.map((x) => el('option', { value: x.id, selected: x.id === cur, text: x.name })));
   return el('div', { class: 'days' },
     el('h2', { class: 'sub-h', text: fd.name + (list.length ? ` · ${list.filter((x) => x[2]).length} av ${list.length} ansökta` : '') }),
@@ -135,7 +135,7 @@ export function daysBlock(c, fd, mode) {
       many ? el('label', { class: 'day-lab' }, el('span', { text: 'Vem' }), whoSel({ id: 'dy-p-' + fd.id })) : null,
       kids.length ? el('label', { class: 'day-lab' }, el('span', { text: 'Barn' }), kidSel({ id: 'dy-k-' + fd.id }, lastKid)) : null,
       el('label', { class: 'day-lab' }, el('span', { text: many ? 'Jobbade, tim' : `Jobbade, av ${hrs(dh)} tim` }), el('input', { type: 'text', inputmode: 'decimal', id: 'dy-w-' + fd.id, class: 'day-w', placeholder: '0', autocomplete: 'off' })),
-      el('button', { class: 'weigh-save add-btn', 'data-act': 'dayadd', 'data-id': fd.id, 'aria-label': 'Lägg till dag', text: '+' })),
+      el('button', { class: 'weigh-save add-btn', 'data-act': 'dayadd', 'data-id': fd.id, text: '+ Lägg till dag' })),
     many ? null : el('p', { class: 'muted small', text: 'Vill du välja vem som var hemma per dag (t.ex. du eller din partner): lägg till personen under Inställningar → Personer.' }),
     kids.length ? null : el('p', { class: 'muted small', text: 'Vill du välja barn per dag: lägg till barnet under Inställningar → Personer med Relation Barn.' }),
     el('p', { class: 'import-error small', id: 'dy-e-' + fd.id, role: 'alert' }));
