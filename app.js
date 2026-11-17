@@ -468,7 +468,7 @@ let swipe = null;
 document.addEventListener('touchstart', (ev) => {
   const t = ev.touches[0];
   swipe = ev.touches.length === 1 && !topLayer(S) && t.clientX > 24 && t.clientX < innerWidth - 24
-    && !ev.target.closest('input, textarea, select, dialog') ? { x: t.clientX, y: t.clientY } : null;
+    && !ev.target.closest('input, textarea, select, dialog, .tabbar') ? { x: t.clientX, y: t.clientY } : null;
 }, { passive: true });
 document.addEventListener('touchend', (ev) => {
   if (!swipe) return;
@@ -644,3 +644,19 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     if (hadController) snackbar('Ny version finns', 'Ladda om', () => location.reload(), 0);
   });
 }
+
+// Swipe sideways on the bottom menu → the next/previous view (2026-11-17, same in all apps).
+(function navSwipe(nav, item, on) {
+  if (!nav) return;
+  let t0 = null;
+  nav.addEventListener('touchstart', (e) => { const t = e.touches[0]; t0 = e.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+  nav.addEventListener('touchend', (e) => {
+    if (!t0) return;
+    const t = e.changedTouches[0], dx = t.clientX - t0.x, dy = t.clientY - t0.y;
+    t0 = null;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+    const items = [...nav.querySelectorAll(item)].filter((x) => !x.hidden && x.offsetParent);
+    const next = items[items.findIndex((x) => x.matches(on)) + (dx < 0 ? 1 : -1)];
+    if (next) next.click();
+  }, { passive: true });
+})(document.querySelector('.tabbar'), '.tab', '.on');
