@@ -40,6 +40,7 @@ I18N.add({
   'Ny kod skapad. Spara en ny backup nu.': 'New code created. Save a new backup now.',
   'Din egen kod är sparad. Spara en ny backup nu.': 'Your own code is saved. Save a new backup now.',
   'Spara backup': 'Save backup',
+  'Fler val': 'More options', 'Ett okrypterat kalkylark, t.ex. för Excel.': 'An unencrypted spreadsheet, e.g. for Excel.', 'All data finns bara i den här webbläsaren. Läs in backup-filen på en annan enhet för att flytta den.': 'All data is only in this browser. Load the backup file on another device to move it.', 'Backupen låses med koden. Spara den i din lösenordshanterare.': 'The backup is locked with the code. Save it in your password manager.',
   'Välj egen kod': 'Choose your own code',
   'Koden låser dina backup-filer och sparas på den här enheten.': 'The code locks your backup files and is stored on this device.',
   'Spara kod': 'Save code',
