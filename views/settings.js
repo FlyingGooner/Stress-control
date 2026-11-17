@@ -145,7 +145,7 @@ export function viewSettings() {
           Object.assign(el('a', { class: 'link', download: 'Football-not-soccer.html', text: 'Ladda ner (HTML)' }), { href: 'https://flyinggooner.github.io/Football-not-soccer/Football-not-soccer.html' }),
           Object.assign(el('a', { class: 'link', rel: 'noopener', target: '_blank', text: 'GitHub' }), { href: 'https://github.com/FlyingGooner/Football-not-soccer' })),
         el('div', { class: 'dl-app' }, el('b', { text: 'Task buddy' + (" (den här)") }),
-          null,
+          Object.assign(el('a', { class: 'link', target: '_blank', rel: 'noopener', text: 'Öppna' }), { href: 'https://flyinggooner.github.io/Stress-control/' }),
           Object.assign(el('a', { class: 'link', download: 'Stress-control.html', text: 'Ladda ner (HTML)' }), { href: 'Stress-control.html' }),
           Object.assign(el('a', { class: 'link', rel: 'noopener', target: '_blank', text: 'GitHub' }), { href: 'https://github.com/FlyingGooner/Stress-control' })),
         el('p', { class: 'small', text: 'Spara som app: Android (Chrome) – tryck ⋮ och välj Installera app. iPhone (Safari) – tryck Dela och välj Lägg till på hemskärmen.' }),
