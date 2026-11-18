@@ -57,12 +57,13 @@ export function sortBar(which) {
   const cur = sortOf(S.state, which), all = SORTS[which], keys = which === 'arch' ? ['x', 'c', 't'] : ['d', 'u', 'c', 't'];   // d = viktigaste datumet (keyDate)
   const arrow = (v) => (v[1] === '+' ? '↑' : '↓'), name = all[cur[0]] || all[keys[0]];
   const btn = el('button', { class: 'filt sort-btn' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${name}. Tryck för att välja`, text: `↕ ${name} ${arrow(cur)}` });
-  const row = S.sortOpen ? el('div', { class: 'sort-cols', role: 'group', 'aria-label': 'Sortera på' }, keys.map((k) => {
+  // Fälls ut som en meny under knappen; stängs med knappen igen eller ett tryck utanför (app.js).
+  const row = S.sortOpen ? el('div', { class: 'sort-pop', role: 'group', 'aria-label': 'Sortera på' }, keys.map((k) => {
     const on = cur[0] === k;
     return el('button', { class: 'sort-col' + (on ? ' on' : ''), 'data-act': 'sortcol', 'data-id': `${which}:${k}`, 'aria-pressed': String(on),
       'aria-label': on ? `${all[k]} – tryck för att vända` : `Sortera på ${all[k]}`, text: on ? `${all[k]} ${arrow(cur)}` : all[k] });
   })) : null;
-  return [btn, row];
+  return [el('span', { class: 'sort-wrap' }, btn, row), null];
 }
 // One row: person select, category chips (scroll sideways when they don't fit), sort chip at the end.
 export function filterRow(pchips, chips, schip) {

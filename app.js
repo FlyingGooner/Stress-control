@@ -167,6 +167,8 @@ tabbar.addEventListener('click', (ev) => {
 });
 
 /* ---------- Actions: one click handler, data-act on the element ---------- */
+// 2026-11-18: sorteringsmenyn stängs vid ett tryck utanför den.
+document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closest?.('.sort-wrap')) { S.sortOpen = false; ev.stopPropagation(); ev.preventDefault(); render(); } }, true);
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
   if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; }

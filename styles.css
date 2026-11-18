@@ -607,3 +607,9 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .sort-col { flex: 1; height: 36px; border: 1px solid var(--outline-variant); border-radius: 18px; background: var(--surface-container); color: var(--on-surface); font: 500 .85rem var(--font, inherit); cursor: pointer; }
 .sort-col.on { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
 .sort-col { padding: 0 6px; }
+/* 2026-11-18: sorteringen som meny under knappen */
+.sort-wrap { position: relative; flex: 0 0 auto; display: flex; }
+.sort-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 11em; display: grid; gap: 2px; padding: 6px;
+  border-radius: 16px; background: var(--surface-container-high, var(--surface-container)); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.sort-pop .sort-col { flex: none; height: 40px; text-align: left; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; }
+.sort-pop .sort-col.on { background: var(--primary-container); color: var(--on-primary-container); }
