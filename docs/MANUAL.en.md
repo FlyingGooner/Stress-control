@@ -48,6 +48,8 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 
 ## Types and categories
 - Settings → Threads → Types: tick more types, e.g. New home, Dental care, Worry or thought, Authority, Insurance, Car and garage, Studies and Call to make.
+- Fewer types (2026-11-18): **Care** (care or dental), **Fix** (home or car), **Case** and **Thoughts and talks** first ask what it is about – the fields follow the choice. New thread shows the six types you use most, the rest under **More types**.
+- In an open thread you change a field with **✎** next to it, and fill in empty fields with **＋ Fill in**. Tap **Done** when finished. ✎ Edit is only needed for title, type, person, extra fields and sub-goals.
 - **New home**: first choose **Buy or rent**. Buy shows price, bank, mortgage approval and bid; Rent shows rent, housing queue, application, apply by and move-in. **Apply by** has both date and time and shows in the reminders.
 - Edit a note: tap **✎** next to it in the Log, change the text and tap **Save**. Under **✎ Edit** it can also be changed or deleted (✕).
 - Long notes in the Log are folded to their first line – tap to read all of it. Pasted text is tidied: several empty lines in a row become one, and empty lines at the start and end are removed.

@@ -2,6 +2,11 @@
 // Mönster (regex) för texter med tal eller namn i; $1… översätts i sin tur. Saknas en text visas den svenska.
 I18N.setKey('sk.lang');
 I18N.add({
+  'Vård': 'Care', 'Vad gäller det': 'What is it about', 'Tandvård': 'Dental care', 'Kontaktat': 'Contacted', 'Bokad tid': 'Appointment', 'Utfall': 'Outcome', 'Kontakta vården': 'Contact care', 'Gå på besöket': 'Go to the appointment',
+  'Fixa': 'Fix', 'Var': 'Where', 'Hemma': 'At home', 'Bil': 'Car', 'Verkstad': 'Garage', 'Inlämnad': 'Dropped off', 'Klar': 'Done',
+  'Ärende': 'Case', 'Hos': 'With', 'Myndighet': 'Authority', 'Försäkringsbolag': 'Insurance company', 'Bolag': 'Company', 'Ärendenummer': 'Case number', 'Skickat': 'Sent', 'Svar senast': 'Reply by', 'Ersättning': 'Compensation', 'Svar': 'Reply',
+  'Tankar och samtal': 'Thoughts and talks', 'Oro': 'Worry', 'Samtal': 'Talk', 'Sökt': 'Applied', 'Intervju': 'Interview', 'Erbjudande': 'Offer', 'Nej': 'No',
+  'Välj datum': 'Pick a date', 'Välj datum och tid': 'Pick date and time', 'Lägg till': 'Add', 'Datum (valfritt)': 'Date (optional)',
   'Öppnas snabbare och fungerar utan nät': 'Opens faster and works offline', 'Installera': 'Install', 'Visa hur': 'Show how', '📲 Installera som app': '📲 Install as an app',
   '📲 Installera som app – öppnas snabbare och fungerar utan nät': '📲 Install as an app – opens faster and works offline', 'Installera som app': 'Install as an app', 'Tryck på Dela ⬆️ längst ner i Safari.': 'Tap Share ⬆️ at the bottom of Safari.', 'Välj Lägg till på hemskärmen.': 'Choose Add to Home Screen.', 'Tryck Lägg till. Öppna sedan appen från hemskärmen.': 'Tap Add. Then open the app from the home screen.',
   'Öppna, ladda ner, GitHub': 'Open, download, GitHub',
@@ -232,4 +237,8 @@ I18N.add({
   [/^Trådar raderas (ett år|\d+ dagar) efter att de tagits bort\. Ändra under Inställningar → Papperskorg\.$/, (g) => `Threads are deleted ${g[1] === 'ett år' ? 'one year' : g[1].replace('dagar', 'days')} after they were removed. Change under Settings → Trash.`],
   [/^Skapad (.+)$/, 'Created $1'],
   [/^Delmål (.+)$/, 'Step $1'],
+  [/^Fler typer \((\d+)\)$/, 'More types ($1)'],
+  [/^＋ Fyll i fler fält \((\d+)\)$/, '＋ Fill in more fields ($1)'],
+  [/^＋ Fyll i (.+)$/, (g, tr) => `＋ Fill in ${tr(g[1].charAt(0).toUpperCase() + g[1].slice(1)).toLowerCase()}`],
+  [/^Ändra (.+)$/, (g, tr) => `Edit ${tr(g[1])}`],
 ]);

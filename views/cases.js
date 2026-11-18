@@ -93,8 +93,16 @@ function picker() {
     el('input', { type: 'text', id: 'new-title', class: 'search', maxlength: 80, value: S.newTitle, placeholder: 'Rubrik, t.ex. Ont i knät', 'aria-label': 'Rubrik', autocomplete: 'off' }),
     el('p', { class: 'import-error small', id: 'new-error', role: 'alert' }),
     el('p', { class: 'muted small', text: 'Välj typ – fälten visas under. Fyll i det du vet, resten kan vänta.' }),
-    el('ul', { class: 'type-grid' }, types.map((t) => el('li', {}, el('button', { class: `type-btn c-${catOf(S.state, t).color}` + (dt === t ? ' on' : ''), 'data-act': 'ptype', 'data-id': t.id, 'aria-pressed': String(dt === t) },
-      el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t.icon }), el('span', { text: t.name }))))),
+    // 2026-11-18: de sex mest använda typerna först, resten under Fler typer – färre val på en gång.
+    (() => {
+      const used = new Map(); for (const c of S.state.cases) used.set(c.t, (used.get(c.t) || 0) + 1);
+      const sorted = types.map((t, i) => [t, i]).sort((a, b) => (used.get(b[0].id) || 0) - (used.get(a[0].id) || 0) || a[1] - b[1]).map(([t]) => t);
+      const top = sorted.slice(0, 6), rest = sorted.slice(6);
+      const grid = (ts) => el('ul', { class: 'type-grid' }, ts.map((t) => el('li', {}, el('button', { class: `type-btn c-${catOf(S.state, t).color}` + (dt === t ? ' on' : ''), 'data-act': 'ptype', 'data-id': t.id, 'aria-pressed': String(dt === t) },
+        el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t.icon }), el('span', { text: t.name })))));
+      return [grid(top), rest.length ? el('details', { class: 'more-types', 'data-sec': 'moretypes', open: setOpen.has('moretypes') || rest.includes(dt) },
+        el('summary', { text: `Fler typer (${rest.length})` }), grid(rest)) : null];
+    })(),
     dt ? el('div', { class: `draft c-${catOf(S.state, dt).color}` },
       el('h2', { class: 'sub-h', text: `${dt.icon} ${dt.name}` }),
       personSelect(d.p, 'dperson'),
@@ -168,13 +176,26 @@ function fieldInput(c, fd, act = 'fv') {
         el('option', { value: '', selected: !v, text: 'Välj…' }), opts.map((o) => el('option', { value: o, selected: o === v, text: o })),
         el('option', { value: '\u0000own', text: '+ Eget val…' })));
     }
-    case 'date': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'date', value: v ?? '' }));
-    case 'dt': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'datetime-local', value: v ?? '' }));
+    // 2026-11-18: tomt datumfält visar "Välj datum" (telefonen visar annars en tom ruta).
+    case 'date': return label(el('span', { text: fd.name }), el('span', { class: 'date-wrap' }, el('input', { ...common, type: 'date', value: v ?? '', class: v ? '' : 'empty' }), el('span', { class: 'date-ph', 'aria-hidden': 'true', text: 'Välj datum' })));
+    case 'dt': return label(el('span', { text: fd.name }), el('span', { class: 'date-wrap' }, el('input', { ...common, type: 'datetime-local', value: v ?? '', class: v ? '' : 'empty' }), el('span', { class: 'date-ph', 'aria-hidden': 'true', text: 'Välj datum och tid' })));
     case 'num': return label(el('span', { text: fd.name }), el('input', { ...common, type: 'text', inputmode: 'decimal', value: v != null ? String(v).replace('.', ',') : '' }));
     default: return label(el('span', { text: fd.name }), el('input', { ...common, type: 'text', maxlength: 200, value: v ?? '' }));
   }
 }
 
+function viewFields(c, t, fields, extra) {
+  const empty = (t?.fields || []).filter((fd) => fd.kind !== 'days' && c.f?.[fd.id] === undefined && shownField(fd, c));
+  const done = el('button', { class: 'link', 'data-act': 'fdone', text: 'Klar' });
+  return el('div', { class: 'view-fields-wrap' },
+    fields.length || extra.length ? el('dl', { class: 'view-fields' },
+      fields.map((fd) => S.fedit === fd.id ? el('div', { class: 'vf-edit' }, fieldInput(c, fd), done)
+        : el('div', { class: 'vf' }, el('dt', { text: fd.name }), el('dd', {}, el('span', { text: showVal(fd, c.f[fd.id]) }),
+          el('button', { class: 'icon sm', 'data-act': 'fopen', 'data-id': fd.id, 'aria-label': `Ändra ${fd.name}`, text: '✎' })))),
+      extra.map(([n, k, v]) => el('div', { class: 'vf' }, el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })))) : null,
+    empty.length ? (S.fedit === '*' ? el('div', { class: 'vf-edit vf-all' }, empty.map((fd) => fieldInput(c, fd)), done)
+      : el('button', { class: 'link vf-more', 'data-act': 'fopen', 'data-id': '*', text: `＋ Fyll i ${empty.length === 1 ? empty[0].name.toLowerCase() : `fler fält (${empty.length})`}` })) : null);
+}
 // View mode (tapping a case): read-only, plus the quick actions tick a sub-goal and add a note. Redigera opens caseEditor().
 export function caseView() {
   const c = S.state.cases.find((x) => x.id === S.open);
@@ -189,9 +210,8 @@ export function caseView() {
     el('h1', { class: 'case-h case-h-view', text: c.title }),
     el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)} · ändrad ${longDate(c.u)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') + (c.r ? ` · upprepas ${REPEAT[c.r].toLowerCase()}` : '') }),
     who ? el('p', { class: 'case-who', text: `👤 ${who.name} utför` }) : null,
-    fields.length || extra.length ? el('dl', { class: 'view-fields' },
-      fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })]),
-      extra.map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : t?.fields.some((fd) => fd.kind === 'days') ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+    // 2026-11-18: ändra ett fält direkt (✎), fyll i tomma fält utan att gå via Redigera.
+    viewFields(c, t, fields, extra),
     (t?.fields || []).filter((fd) => fd.kind === 'days').map((fd) => daysBlock(c, fd, 'view')),
     el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     c.s?.length ? [el('h2', { class: 'sub-h', text: `Delmål ${done}/${all}` }),
@@ -251,8 +271,9 @@ export function caseEditor() {
       el('button', { class: 'icon sm', 'data-act': 'sdel', 'data-i': i, 'aria-label': `Ta bort ${x}`, text: '✕' })))),
     el('div', { class: 'pick-row' },
       el('input', { type: 'text', id: 's-new', maxlength: 80, placeholder: isList(c) ? 'Varor, t.ex. mjölk, bröd' : 'Nytt delmål', 'aria-label': isList(c) ? 'Nya varor, skilj med komma' : 'Nytt delmål', autocomplete: 'off' }),
-      el('input', { type: 'date', id: 's-date', class: 'step-date', 'aria-label': 'Datum för nytt delmål (valfritt)' }),
-      el('button', { class: 'weigh-save add-btn', 'data-act': 'sadd', 'aria-label': 'Lägg till delmål', text: '+' })),
+      el('label', { class: 'date-pick', title: 'Datum (valfritt)' }, el('span', { 'aria-hidden': 'true', text: '📅' }),
+        el('input', { type: 'date', id: 's-date', 'aria-label': 'Datum för nytt delmål (valfritt)' })),
+      el('button', { class: 'weigh-save', 'data-act': 'sadd', text: 'Lägg till' })),
     el('h2', { class: 'sub-h', text: 'Logg' }),
     el('ul', { class: 'log' }, [...(c.l || [])].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => el('li', {},
       // 2026-11-18: i Redigera går anteckningen att ändra direkt (sparas när du lämnar fältet).

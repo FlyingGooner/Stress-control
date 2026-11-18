@@ -47,7 +47,9 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Deadline: i Inställningar → Typer kan varje datumfält bockas som deadline (t.ex. Klart senast, Förfaller). Då syns det i Aktuellt även när datumet passerat, tills tråden stängs.
 
 ## Typer och kategorier
-- Inställningar → Trådar → Typer: bocka i fler typer, t.ex. Ny bostad, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.
+- Inställningar → Trådar → Typer: bocka i fler typer, t.ex. Ny bostad, Ärende (myndighet eller försäkringsbolag), Studier och Tankar och samtal.
+- Färre typer (2026-11-18): **Vård** (vård eller tandvård), **Fixa** (hemma eller bil), **Ärende** och **Tankar och samtal** väljer först vad det gäller – fälten följer valet. Ny tråd visar de sex typer du använder mest, resten under **Fler typer**.
+- I en öppen tråd ändrar du ett fält med **✎** bredvid det, och fyller i tomma fält med **＋ Fyll i**. Tryck **Klar** när du är klar. ✎ Redigera behövs bara för rubrik, typ, person, extra fält och delmål.
 - **Ny bostad**: välj först **Köpa eller hyra**. Köpa visar pris, bank, lånelöfte och bud; Hyra visar hyra, bostadskö, intresseanmälan, ansök senast och inflyttning. **Ansök senast** har både datum och klockslag och syns i påminnelserna.
 - Ändra en anteckning: tryck **✎** bredvid den i Loggen, ändra texten och tryck **Spara**. Under **✎ Redigera** går den också att ändra eller ta bort (✕).
 - Långa anteckningar i Loggen visas hopfällda till första raden – tryck för att läsa hela. Inklistrad text städas: flera tomma rader i rad blir en, och tomma rader först och sist tas bort.

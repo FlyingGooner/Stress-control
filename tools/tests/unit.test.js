@@ -6,10 +6,10 @@ T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
   const d = defaults();
   T.eq(d.cats.map((c) => c.name), ['Hälsa', 'Ekonomi', 'Hem', 'Jobb', 'Relationer', 'Handla', 'Övrigt']);
   T.eq(d.types.filter((t) => t.on).map((t) => t.id), ['sym', 'task', 'job', 'eco', 'home', 'shop', 'fk']);
-  T.ok(d.types.length >= 13, 'fler förslag i inställningarna');
+  T.ok(d.types.length >= 11, 'fler förslag i inställningarna');
 });
 T.test('symptomtypens fält i rätt ordning', () => {
-  T.eq(DEFAULT_TYPES[0].fields.map((f) => f.name), ['Symptom', 'Började', 'Kontaktat vården', 'Ringde', 'Tid hos vården', 'Utfall av besök', 'Slutkommentar']);
+  T.eq(DEFAULT_TYPES[0].fields.map((f) => f.name), ['Vad gäller det', 'Vad', 'Började', 'Kontaktat', 'Bokad tid', 'Kostnad', 'Utfall', 'Slutkommentar']);
 });
 T.test('validering: okänd typ, fel datum och dubbletter hoppas över; fält efter sort', () => {
   const s = validate({ cases: [
@@ -74,10 +74,10 @@ T.test('trasig sparad data: kopia bevaras och load() säger till', async () => {
 });
 T.test('byta typ: värden följer med fältnamn, resten sparas synligt och kommer tillbaka', () => {
   const s = base(), c = s.cases[0];
-  s.types.push({ id: 'x', name: 'X', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'q', name: 'Symptom', kind: 'text' }] });
-  T.eq(typeChangeLoss(s, c, 'x').map((x) => x.n), ['Kontaktat vården']);
+  s.types.push({ id: 'x', name: 'X', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'q', name: 'Vad', kind: 'text' }] });
+  T.eq(typeChangeLoss(s, c, 'x').map((x) => x.n), ['Kontaktat']);
   T.ok(changeType(s, c, 'x', '2026-11-14'));
-  T.eq(c.t, 'x'); T.eq(c.f, { q: 'Knä' }); T.eq(c.o, [['Kontaktat vården', 'check', 1, 'Symptom']]); T.ok(!c.l);
+  T.eq(c.t, 'x'); T.eq(c.f, { q: 'Knä' }); T.eq(c.o, [['Kontaktat', 'check', 1, 'Vård']]); T.ok(!c.l);
   T.eq(validate(JSON.parse(JSON.stringify(s))).cases[0].o, c.o);
   T.ok(changeType(s, c, 'sym', '2026-11-14'));
   T.eq(c.f, { s1: 'Knä', s3: 1 }); T.ok(!c.o, 'tillbaka i fälten');
@@ -98,9 +98,9 @@ T.test('extra fält i ett ärende: lägg till, fyll i, tomt värde behålls, fö
   T.ok(!setExtra(c, 0, 'abc', '2026-11-14')); T.ok(setExtra(c, 0, '1 250,5', '2026-11-14'));
   T.eq(c.o, [['Pris', 'num', 1250.5, ''], ['Not', 'text', null, '']]);
   T.eq(validate(JSON.parse(JSON.stringify(s))).cases[0].o, c.o);
-  s.types.push({ id: 'y', name: 'Y', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'p', name: 'Pris', kind: 'num' }, { id: 'n', name: 'Not', kind: 'text' }, { id: 'a', name: 'Symptom', kind: 'text' }] });
+  s.types.push({ id: 'y', name: 'Y', icon: '📌', cat: 'h', on: 1, fields: [{ id: 'p', name: 'Pris', kind: 'num' }, { id: 'n', name: 'Not', kind: 'text' }, { id: 'a', name: 'Vad', kind: 'text' }] });
   changeType(s, c, 'y', '2026-11-14');
-  T.eq(c.f, { p: 1250.5, a: 'Knä' }); T.eq(c.o, [['Kontaktat vården', 'check', 1, 'Symptom']]);
+  T.eq(c.f, { p: 1250.5, a: 'Knä' }); T.eq(c.o, [['Kontaktat', 'check', 1, 'Vård']]);
 });
 T.test('aktuellt: datum inom påminnelsetiden, passerade deadlines, inte stängda', () => {
   const s = defaults();
@@ -260,4 +260,15 @@ T.test('version 9: Svara senast får klockslag, gammalt datum blir 23:59', () =>
 
 T.test('tidyNote: inklistrat mejl städas – en tom rad mellan stycken', () => {
   T.eq(tidyNote('\n\nMejlat  \n\nHej!\n\n\n\nVi är intresserade\r\nFråga 1\n\n\n'), 'Mejlat\n\nHej!\n\nVi är intresserade\nFråga 1');
+});
+
+T.test('version 11: Tandvård blir Vård, Bil blir Fixa, egna fält och värden följer med', () => {
+  const s = validate({ version: 10, cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }, { id: 'm', name: 'Hem', color: 'blue' }],
+    types: [{ id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1, fields: [{ id: 's1', name: 'Symptom', kind: 'text' }] },
+      { id: 'dent', name: 'Tandvård', icon: '🦷', cat: 'h', on: 1, fields: [{ id: 'wh', name: 'Vad', kind: 'text' }, { id: 'bk', name: 'Bokad tid', kind: 'dt' }] },
+      { id: 'car', name: 'Bil', icon: '🚗', cat: 'm', on: 0, fields: [{ id: 'wk', name: 'Verkstad', kind: 'text' }, { id: 'x9', name: 'Regnr', kind: 'text' }] }],
+    cases: [{ id: 'c1', t: 'dent', title: 'Tand', c: '2026-11-10', f: { wh: 'Lagning', bk: '2026-11-20T10:00' } }, { id: 'c2', t: 'car', title: 'Däck', c: '2026-11-10', f: { wk: 'Mekonomen', x9: 'ABC123' } }] });
+  T.eq(s.types.map((t) => t.id).sort(), ['home', 'sym']);
+  T.eq([s.cases[0].t, s.cases[0].f], ['sym', { kd: 'Tandvård', s1: 'Lagning', s5: '2026-11-20T10:00' }]);
+  T.eq([s.cases[1].t, s.cases[1].f.kd, s.cases[1].f.x9], ['home', 'Bil', 'ABC123']);
 });

@@ -52,6 +52,7 @@ const F = (id, name, kind = 'text', due) => (due ? { id, name, kind, due: 1 } : 
 // if (2026-11-18): fältet visas bara när ett annat fält (ett val) har ett visst värde, t.ex. Pris bara när Köpa eller hyra = Köpa.
 const Fi = (cond, ...a) => ({ ...F(...a), if: cond });
 export const shownField = (fd, c) => !fd.if || c?.f?.[fd.if[0]] === fd.if[1];
+export const JOB_STATUS = ['Sökt', 'Intervju', 'Erbjudande', 'Nej'];
 const HOUSE_FIELDS = [{ id: 'fm', name: 'Köpa eller hyra', kind: 'choice', opts: ['Köpa', 'Hyra'] }, F('ad', 'Adress'),
   Fi(['fm', 'Köpa'], 'pr', 'Pris', 'num'), Fi(['fm', 'Hyra'], 'rt', 'Hyra per månad', 'num'), F('vw', 'Visning', 'dt'),
   Fi(['fm', 'Köpa'], 'bk', 'Pratat med banken', 'check'), Fi(['fm', 'Köpa'], 'll', 'Lånelöfte', 'check'), Fi(['fm', 'Köpa'], 'bid', 'Bud', 'num'),
@@ -62,41 +63,42 @@ export const DEFAULT_CATS = [
   { id: 'j', name: 'Jobb', color: 'orange' }, { id: 'r', name: 'Relationer', color: 'purple' }, { id: 's', name: 'Handla', color: 'teal' }, { id: 'o', name: 'Övrigt', color: 'gray' },
 ];
 export const DEFAULT_TYPES = [
-  { id: 'sym', name: 'Symptom', icon: '🩺', cat: 'h', on: 1,
-    fields: [F('s1', 'Symptom'), F('s2', 'Började', 'date'), F('s3', 'Kontaktat vården', 'check'), F('s4', 'Ringde', 'dt'), F('s5', 'Tid hos vården', 'dt'), F('s6', 'Utfall av besök', 'note'), F('s7', 'Slutkommentar', 'note')],
-    steps: ['Ring vårdcentralen', 'Gå på besöket', 'Följ upp resultatet'] },
+  // 2026-11-18 (version 11): färre typer – ett val överst styr fälten (if). Vård = Symptom + Tandvård, Fixa = Hemma + Bil,
+  // Ärende = Myndighet + Försäkring, Tankar och samtal = Oro + Samtal.
+  { id: 'sym', name: 'Vård', icon: '🩺', cat: 'h', on: 1,
+    fields: [{ id: 'kd', name: 'Vad gäller det', kind: 'choice', opts: ['Vård', 'Tandvård'] }, F('s1', 'Vad'), F('s2', 'Började', 'date'), F('s3', 'Kontaktat', 'check'),
+      F('s5', 'Bokad tid', 'dt'), F('co', 'Kostnad', 'num'), F('s6', 'Utfall', 'note'), F('s7', 'Slutkommentar', 'note')],
+    steps: ['Kontakta vården', 'Gå på besöket', 'Följ upp'] },
   { id: 'task', name: 'Uppgift', icon: '✅', cat: 'o', on: 1, fields: [F('g', 'Mål', 'note'), F('d', 'Klart senast', 'date', 1)] },
   { id: 'job', name: 'Jobbansökan', icon: '💼', cat: 'j', on: 1,
-    fields: [F('co', 'Företag'), F('ro', 'Roll'), F('ap', 'Sökt', 'date'), F('cp', 'Kontaktperson'), F('st', 'Status'), F('iv', 'Intervju', 'dt'), F('pay', 'Lön och villkor'), F('cm', 'Kommentar', 'note')],
+    fields: [F('co', 'Företag'), F('ro', 'Roll'), F('ap', 'Sökt', 'date'), F('cp', 'Kontaktperson'), { id: 'st', name: 'Status', kind: 'choice', opts: JOB_STATUS },
+      F('iv', 'Intervju', 'dt'), F('pay', 'Lön och villkor'), F('cm', 'Kommentar', 'note')],
     steps: ['Skicka ansökan', 'Följ upp', 'Intervju'] },
   { id: 'eco', name: 'Ekonomi', icon: '💸', cat: 'e', on: 1,
     fields: [F('wh', 'Vad'), F('am', 'Belopp', 'num'), F('du', 'Förfaller', 'date', 1), F('pd', 'Betalt', 'check'), F('cm', 'Kommentar', 'note')] },
-  { id: 'home', name: 'Hemma', icon: '🔧', cat: 'm', on: 1,
-    fields: [F('wh', 'Vad'), F('who', 'Vem fixar'), F('d', 'Klart senast', 'date', 1), F('co', 'Kostnad', 'num'), F('cm', 'Kommentar', 'note')] },
+  { id: 'home', name: 'Fixa', icon: '🔧', cat: 'm', on: 1,
+    fields: [{ id: 'kd', name: 'Var', kind: 'choice', opts: ['Hemma', 'Bil'] }, F('wh', 'Vad'), Fi(['kd', 'Hemma'], 'who', 'Vem fixar'), Fi(['kd', 'Bil'], 'wk', 'Verkstad'),
+      Fi(['kd', 'Bil'], 'bk', 'Inlämnad', 'date'), F('d', 'Klart senast', 'date', 1), F('co', 'Kostnad', 'num'), F('dn', 'Klar', 'check'), F('cm', 'Kommentar', 'note')] },
   { id: 'shop', name: 'Inköp', icon: '🛒', cat: 's', on: 1, r: 'w',   // r: new cases repeat weekly; sub-goals are the items
     fields: [F('st', 'Butik'), F('d', 'Handla senast', 'date', 1), F('co', 'Kostnad', 'num')] },
   { id: 'house', name: 'Ny bostad', icon: '🏠', cat: 'm', on: 0, fields: HOUSE_FIELDS,   // 2026-11-18: köpa eller hyra (tidigare Bostadsköp)
     steps: ['Gå på visning', 'Lägg bud eller skicka intresseanmälan', 'Skriv kontrakt'] },
-  { id: 'dent', name: 'Tandvård', icon: '🦷', cat: 'h', on: 0, fields: [F('wh', 'Vad'), F('bk', 'Bokad tid', 'dt'), F('co', 'Kostnad', 'num'), F('cm', 'Kommentar', 'note')] },
-  { id: 'worry', name: 'Oro eller tanke', icon: '🧠', cat: 'h', on: 0,
-    fields: [F('wh', 'Vad oroar', 'note'), F('ws', 'Värsta utfall', 'note'), F('lk', 'Troligaste utfall', 'note'), F('can', 'Vad kan jag göra', 'note'), F('rl', 'Släppt', 'check')] },
   { id: 'fk', name: 'Försäkringskassan', icon: '🛟', cat: 'e', on: 1,
     fields: [{ id: 'wh', name: 'Vad', kind: 'choice', opts: FK_OPTS }, F('dy', 'Dagar', 'days'), F('cm', 'Kommentar', 'note')] },
-  { id: 'gov', name: 'Myndighet', icon: '🏛️', cat: 'o', on: 0,
-    fields: [F('ag', 'Myndighet'), F('no', 'Ärendenummer'), F('se', 'Skickat', 'date'), F('du', 'Svar senast', 'date', 1), F('an', 'Svar', 'note')] },
-  { id: 'ins', name: 'Försäkring', icon: '🛡️', cat: 'e', on: 0,
-    fields: [F('co', 'Bolag'), F('no', 'Skadenummer'), F('rp', 'Anmält', 'date'), F('am', 'Ersättning', 'num'), F('cm', 'Kommentar', 'note')] },
-  { id: 'car', name: 'Bil och verkstad', icon: '🚗', cat: 'm', on: 0,
-    fields: [F('wh', 'Vad'), F('wk', 'Verkstad'), F('bk', 'Inlämnad', 'date'), F('co', 'Kostnad', 'num'), F('dn', 'Klar', 'check')] },
+  { id: 'gov', name: 'Ärende', icon: '🏛️', cat: 'o', on: 0,
+    fields: [{ id: 'kd', name: 'Hos', kind: 'choice', opts: ['Myndighet', 'Försäkringsbolag'] }, Fi(['kd', 'Myndighet'], 'ag', 'Myndighet'), Fi(['kd', 'Försäkringsbolag'], 'co', 'Bolag'),
+      F('no', 'Ärendenummer'), F('se', 'Skickat', 'date'), F('du', 'Svar senast', 'date', 1), F('am', 'Ersättning', 'num'), F('an', 'Svar', 'note')] },
   { id: 'study', name: 'Studier', icon: '🎓', cat: 'j', on: 0, fields: [F('co', 'Kurs'), F('du', 'Deadline', 'date', 1), F('gr', 'Betyg'), F('cm', 'Kommentar', 'note')] },
-  { id: 'talk', name: 'Samtal att ta', icon: '💬', cat: 'r', on: 0,
-    fields: [F('wo', 'Med vem'), F('ab', 'Om vad', 'note'), F('dn', 'Tagit samtalet', 'check'), F('hw', 'Hur gick det', 'note')] },
+  { id: 'worry', name: 'Tankar och samtal', icon: '🧠', cat: 'r', on: 0,
+    fields: [{ id: 'kd', name: 'Vad', kind: 'choice', opts: ['Oro', 'Samtal'] },
+      Fi(['kd', 'Oro'], 'wh', 'Vad oroar', 'note'), Fi(['kd', 'Oro'], 'ws', 'Värsta utfall', 'note'), Fi(['kd', 'Oro'], 'lk', 'Troligaste utfall', 'note'), Fi(['kd', 'Oro'], 'can', 'Vad kan jag göra', 'note'), Fi(['kd', 'Oro'], 'rl', 'Släppt', 'check'),
+      Fi(['kd', 'Samtal'], 'wo', 'Med vem'), Fi(['kd', 'Samtal'], 'ab', 'Om vad', 'note'), Fi(['kd', 'Samtal'], 'dn', 'Tagit samtalet', 'check'), Fi(['kd', 'Samtal'], 'hw', 'Hur gick det', 'note')] },
 ];
 // Room for one more open case: max LIM.open open, LIM.cases in all.
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 10, pfields: clone(PERSON_FIELDS), people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 11, pfields: clone(PERSON_FIELDS), people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -164,10 +166,50 @@ function cleanCase(c, types, people) {
   if (l.length) out.l = l;
   return out;
 }
+// Version 11 (2026-11-18): fyra par typer slogs ihop. Trådar flyttas till den nya typen med valet satt (kd) och fälten
+// omdöpta; typerna blir de nya standardtyperna, plus fält som användaren själv lagt till. Arbetar på en kopia av rådata.
+const MERGE11 = [
+  { to: 'sym', from: 'dent', kdTo: 'Vård', kdFrom: 'Tandvård', map: { wh: 's1', bk: 's5', cm: 's7' } },
+  { to: 'home', from: 'car', kdTo: 'Hemma', kdFrom: 'Bil', map: {} },
+  { to: 'gov', from: 'ins', kdTo: 'Myndighet', kdFrom: 'Försäkringsbolag', map: { rp: 'se', cm: 'an' } },
+  { to: 'worry', from: 'talk', kdTo: 'Oro', kdFrom: 'Samtal', map: {} },
+];
+function merge11(raw0) {
+  let raw; try { raw = JSON.parse(JSON.stringify(raw0)); } catch { return raw0; }
+  if (!Array.isArray(raw.types)) return raw;
+  const byId = new Map(raw.types.filter(isObj).map((t) => [t.id, t]));
+  const fixCase = (c) => {
+    if (!isObj(c)) return;
+    const m = MERGE11.find((x) => x.from === c.t || x.to === c.t);
+    if (m && byId.has(m.to) || m && byId.has(m.from)) {
+      const f = isObj(c.f) ? c.f : {};
+      if (c.t === m.from) { for (const [a, b] of Object.entries(m.map)) if (a in f) { f[b] = f[a]; delete f[a]; } f.kd = m.kdFrom; c.t = m.to; }
+      else if (!f.kd) f.kd = m.kdTo;
+      c.f = f;
+    }
+    if (c.t === 'job' && isObj(c.f) && typeof c.f.st === 'string') c.f.st = c.f.st.slice(0, 60);
+  };
+  (Array.isArray(raw.cases) ? raw.cases : []).forEach(fixCase);
+  (Array.isArray(raw.trash) ? raw.trash : []).forEach(fixCase);
+  for (const m of MERGE11) {
+    const a = byId.get(m.to), b = byId.get(m.from);
+    if (!a && !b) continue;
+    const def = clone(DEFAULT_TYPES.find((t) => t.id === m.to)), known = new Set(def.fields.map((f) => f.id));
+    const oldIds = new Set([...Object.keys(m.map), ...Object.values(m.map)]);
+    for (const t of [a, b]) for (const f of (t && Array.isArray(t.fields) ? t.fields : [])) if (isObj(f) && !known.has(f.id) && !oldIds.has(f.id)) { def.fields.push(f); known.add(f.id); }
+    def.on = (a?.on || b?.on) ? 1 : 0;
+    if (a && isObj(a)) { if (a.cat) def.cat = a.cat; Object.keys(a).forEach((k) => delete a[k]); Object.assign(a, def); }
+    else raw.types.push(def);
+    if (b) raw.types = raw.types.filter((t) => t !== b);
+  }
+  for (const t of raw.types) if (isObj(t) && t.id === 'job' && Array.isArray(t.fields)) for (const f of t.fields) if (isObj(f) && f.id === 'st' && f.kind === 'text') { f.kind = 'choice'; f.opts = [...JOB_STATUS]; }
+  return raw;
+}
 // Untrusted object → valid state. Invalid parts are skipped, never thrown.
 export function validate(raw) {
   const s = defaults();
   if (!isObj(raw)) return s;
+  if (!(raw.version >= 11)) raw = merge11(raw);
   if (Array.isArray(raw.cats)) {
     const seen = new Set();
     const cats = raw.cats.map(cleanCat).filter((c) => c && !seen.has(c.id) && seen.add(c.id)).slice(0, LIM.cats);
@@ -618,7 +660,7 @@ export const EXPORT_SCHEMA = {
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
-  version: 10,
+  version: 11,
   pfields: [{ id: 'rel', name: 'Relation', kind: 'choice', opts: ['Jag', 'Barn'] }],
   people: [{ id: 'p1', name: 'Anna', h: 30, v: { rel: 'Jag' } }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],

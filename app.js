@@ -219,7 +219,7 @@ app.addEventListener('click', (ev) => {
     case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
     case 'stepsclose': S.steps = false; break;
     case 'cexp': S.exp = S.exp === id ? null : id; break;
-    case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; S.ledit = null; render(); scrollTo(0, 0); return;
+    case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; S.ledit = null; S.fedit = null; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
     case 'selt': {   // markeringsläge: tap toggles; the last one unmarked ends the mode
       const i = S.sel.indexOf(id);
@@ -245,7 +245,9 @@ app.addEventListener('click', (ev) => {
       else withUndo(`${what} ligger i papperskorgen`, () => { for (const c of list) trashCase(S.state, c, today()); });
       return;
     }
-    case 'cedit': S.edit = true; S.ledit = null; render(); scrollTo(0, 0); return;
+    case 'fopen': S.fedit = t.dataset.id; render(); document.querySelector('.vf-edit input, .vf-edit select, .vf-edit textarea')?.focus(); return;
+    case 'fdone': S.fedit = null; render(); return;
+    case 'cedit': S.edit = true; S.ledit = null; S.fedit = null; render(); scrollTo(0, 0); return;
     case 'lopen': S.ledit = Number(t.dataset.i); render(); document.getElementById('le-text')?.focus(); return;
     case 'lcancel': S.ledit = null; render(); return;
     case 'lsave': {
@@ -501,6 +503,7 @@ app.addEventListener('toggle', (ev) => {
   if (d instanceof HTMLDetailsElement && d.dataset.sec) { if (d.open) setOpen.add(d.dataset.sec); else setOpen.delete(d.dataset.sec); }
 }, true);
 app.addEventListener('change', (ev) => {
+  if (ev.target.type === 'date' || ev.target.type === 'datetime-local') ev.target.classList.toggle('empty', !ev.target.value);   // "Välj datum"-texten
   const t = ev.target;
   switch (t.dataset.act) {
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
