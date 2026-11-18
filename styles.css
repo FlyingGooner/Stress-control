@@ -550,3 +550,10 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   .tabbar::before { background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 55%); }
 }
 .help img.shot { display: block; width: 100%; max-width: 390px; height: auto; margin: 4px 0 12px; border: 1px solid var(--outline-variant, #ccc); border-radius: 12px; }
+/* 2026-11-18: långa logganteckningar fälls ihop */
+.log-fold > summary { cursor: pointer; list-style: none; color: var(--fg); }
+.log-fold > summary::-webkit-details-marker { display: none; }
+.log-fold > summary::after { content: ' ▾'; color: var(--muted); font-size: .8em; }
+.log-fold[open] > summary { display: none; }
+.log-full { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.4; }
+.log li { padding: 6px 0; }

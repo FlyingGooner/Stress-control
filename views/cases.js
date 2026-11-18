@@ -17,6 +17,13 @@ export function caseRow(c) {
     sel ? null : el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
     open && !sel ? caseSummary(c, t, cat) : null);
 }
+// Logg (2026-11-18): korta anteckningar visas hela; långa (flera rader eller > 90 tecken) fälls ihop till första raden.
+const firstLine = (x) => { const l = x.split('\n').find((y) => y.trim()) || ''; return l.length > 80 ? l.slice(0, 78) + '…' : l; };
+function logText(x) {
+  const t = x.replace(/\n{3,}/g, '\n\n');
+  if (!t.includes('\n') && t.length <= 90) return el('span', { class: 'log-x', text: t });
+  return el('details', { class: 'log-x log-fold' }, el('summary', { text: firstLine(t) }), el('div', { class: 'log-full', text: t }));
+}
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna tråden.
 export const showVal = (fd, v) => fd.kind === 'days' ? `${v.length} ${v.length === 1 ? 'dag' : 'dagar'} · ${v.filter((x) => x[2]).length} ansökta` : fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
 export function caseSummary(c, t, cat, actions) {
@@ -26,7 +33,7 @@ export function caseSummary(c, t, cat, actions) {
     fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : c.o?.some((x) => x[2] != null) ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
     c.o?.some((x) => x[2] != null) ? el('dl', { class: 'sum-old' }, c.o.filter((x) => x[2] != null).map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
     c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd, dn]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') }))) : null,
-    log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: x })))) : null,
+    log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: firstLine(x) })))) : null,
     actions || el('button', { class: 'sum-open', 'data-act': 'copen', 'data-id': c.id, text: 'Öppna tråden →' }));
 }
 // Category chips over a list of cases (Trådar, Arkiv, Papperskorg). key = the S property holding the filter, act = its data-act.
@@ -193,7 +200,7 @@ export function caseView() {
           el('span', { text: x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') + (!d && c.s[i][4] ? ' ↻' : '') })))))] : null,
     el('h2', { class: 'sub-h', text: 'Logg' }),
     c.l?.length ? el('ul', { class: 'log' }, [...c.l].reverse().map(([d, x]) => el('li', {},
-      el('span', { class: 'log-d', text: shortDate(d) }), el('span', { class: 'log-x', text: x })))) : null,
+      el('span', { class: 'log-d', text: shortDate(d) }), logText(x)))) : null,
     el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
     el('div', { class: 'save-row log-add' },
       el('input', { type: 'date', id: 'l-date', class: 'step-date', value: today(), max: today(), 'aria-label': 'Datum för anteckningen' }),
@@ -243,7 +250,7 @@ export function caseEditor() {
       el('button', { class: 'weigh-save add-btn', 'data-act': 'sadd', 'aria-label': 'Lägg till delmål', text: '+' })),
     el('h2', { class: 'sub-h', text: 'Logg' }),
     el('ul', { class: 'log' }, [...(c.l || [])].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => el('li', {},
-      el('span', { class: 'log-d', text: shortDate(d) }), el('span', { class: 'log-x', text: x }),
+      el('span', { class: 'log-d', text: shortDate(d) }), logText(x),
       el('button', { class: 'icon sm', 'data-act': 'ldel', 'data-i': i, 'aria-label': 'Ta bort anteckningen', text: '✕' })))),
     el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
     el('div', { class: 'save-row log-add' },

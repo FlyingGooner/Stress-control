@@ -250,3 +250,10 @@ T.test('Ny bostad: gamla Bostadsköp får Köpa eller hyra, gamla trådar blir K
   T.eq([t.name, t.fields[0].id, t.fields.find((f) => f.id === 'pr').if, s.cases[0].f.fm], ['Ny bostad', 'fm', ['fm', 'Köpa'], 'Köpa']);
   T.eq([shownField(t.fields.find((f) => f.id === 'rt'), s.cases[0]), shownField(t.fields.find((f) => f.id === 'pr'), s.cases[0])], [false, true]);
 });
+
+T.test('version 9: Svara senast får klockslag, gammalt datum blir 23:59', () => {
+  const s = validate({ version: 8, cats: [{ id: 'm', name: 'Hem', color: 'blue' }], types: [{ id: 'house', name: 'Ny bostad', icon: '🏠', cat: 'm', on: 1,
+    fields: [{ id: 'fm', name: 'Köpa eller hyra', kind: 'choice', opts: ['Köpa', 'Hyra'] }, { id: 'an', name: 'Svara senast', kind: 'date', due: 1, if: ['fm', 'Hyra'] }] }],
+    cases: [{ id: 'c1', t: 'house', title: 'Lgh', c: '2026-11-10', f: { fm: 'Hyra', an: '2026-11-20' } }] });
+  T.eq([s.types[0].fields[1].kind, s.cases[0].f.an], ['dt', '2026-11-20T23:59']);
+});
