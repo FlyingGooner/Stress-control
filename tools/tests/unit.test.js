@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort, shownField } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort, shownField, tidyNote } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -256,4 +256,8 @@ T.test('version 9: Svara senast får klockslag, gammalt datum blir 23:59', () =>
     fields: [{ id: 'fm', name: 'Köpa eller hyra', kind: 'choice', opts: ['Köpa', 'Hyra'] }, { id: 'an', name: 'Svara senast', kind: 'date', due: 1, if: ['fm', 'Hyra'] }] }],
     cases: [{ id: 'c1', t: 'house', title: 'Lgh', c: '2026-11-10', f: { fm: 'Hyra', an: '2026-11-20' } }] });
   T.eq([s.types[0].fields[1].kind, s.cases[0].f.an], ['dt', '2026-11-20T23:59']);
+});
+
+T.test('tidyNote: inklistrat mejl städas – en tom rad mellan stycken', () => {
+  T.eq(tidyNote('\n\nMejlat  \n\nHej!\n\n\n\nVi är intresserade\r\nFråga 1\n\n\n'), 'Mejlat\n\nHej!\n\nVi är intresserade\nFråga 1');
 });

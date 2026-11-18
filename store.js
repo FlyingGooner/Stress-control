@@ -34,6 +34,8 @@ export function cleanText(v, max = 60, multi = false) {
   const re = multi ? /[\u0000-\u0009\u000b-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g : /[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g;
   return v.replace(/\r\n?/g, '\n').replace(re, '').trim().slice(0, max);
 }
+// Städa en inklistrad anteckning (2026-11-18): mellanslag i radslut bort, flera tomma rader blir en, inga tomma rader först/sist.
+export const tidyNote = (v) => (typeof v === 'string' ? v.replace(/\r\n?/g, '\n').replace(/[ \t\u00a0]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim() : v);
 const p2 = (n) => String(n).padStart(2, '0');
 export const dateKey = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
 export function parseKey(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); }
@@ -158,7 +160,7 @@ function cleanCase(c, types, people) {
   if (o.length) out.o = o;
   const s = (Array.isArray(c.s) ? c.s : []).filter((x) => Array.isArray(x) && cleanText(x[0], 80)).slice(0, LIM.steps).map((x) => cleanStep(x[0], x[1], x[2], x[3], x[4]));
   if (s.length) out.s = s;
-  const l = (Array.isArray(c.l) ? c.l : []).filter((x) => Array.isArray(x) && validDate(x[0]) && cleanText(x[1], 500, true)).slice(-LIM.logKeep).map((x) => [x[0], cleanText(x[1], 500, true)]);
+  const l = (Array.isArray(c.l) ? c.l : []).filter((x) => Array.isArray(x) && validDate(x[0]) && cleanText(x[1], 500, true)).slice(-LIM.logKeep).map((x) => [x[0], cleanText(tidyNote(x[1]), 500, true)]);
   if (l.length) out.l = l;
   return out;
 }

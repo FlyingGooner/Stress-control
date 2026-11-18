@@ -1,6 +1,6 @@
 // Stress control – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX, tidyNote } from './store.js';
 // Styr fältet andra fälts synlighet (fields[].if)? Då ritas formuläret om när det ändras.
 const controls = (typeId, fieldId) => !!S.state.types.find((x) => x.id === typeId)?.fields.some((f) => f.if?.[0] === fieldId);
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
@@ -305,7 +305,7 @@ app.addEventListener('click', (ev) => {
       setStepRepeat(c, i, ({ '': 'w', w: 'm', m: 'y' })[row[4] || ''] || 0, today()); persist(); render(); return; }
     case 'sdel': { const c = cs(), i = Number(t.dataset.i); if (!c?.s?.[i]) return; withUndo(`${c.s[i][0]} togs bort`, () => { c.s.splice(i, 1); if (!c.s.length) delete c.s; touch(c); }); return; }
     case 'ladd': {
-      const c = cs(), x = cleanText(document.getElementById('l-new')?.value, 500, true);
+      const c = cs(), x = cleanText(tidyNote(document.getElementById('l-new')?.value), 500, true);
       if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
       if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per tråd – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
       const ld = document.getElementById('l-date')?.value, d = validDate(ld) && ld <= today() ? ld : today();
