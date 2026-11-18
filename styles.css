@@ -602,3 +602,4 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .rv-tick { width: 1.2em; flex: none; }
 .rv-log li { grid-template-columns: auto 1fr; padding: 5px 0; }
 .case-read .sub-h { margin-top: 14px; }
+.filt.sort-sel { flex: 0 1 34%; }

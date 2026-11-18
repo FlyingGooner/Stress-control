@@ -243,4 +243,6 @@ I18N.add({
   [/^Ändra (.+)$/, (g, tr) => `Edit ${tr(g[1])}`],
   [/^Alla kategorier \((\d+)\)$/, 'All categories ($1)'],
   [/^(.+) \((\d+)\)$/, (g, tr) => `${tr(g[1])} (${g[2]})`],
+  [/^↕ (Ändrad|Stängd|Skapad) (↓|↑)$/, (g, tr) => `↕ ${tr(g[1])} ${g[2]}`],
+  [/^↕ A–Ö$/, '↕ A–Z'], [/^↕ Ö–A$/, '↕ Z–A'],
 ]);

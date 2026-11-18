@@ -176,8 +176,6 @@ app.addEventListener('click', (ev) => {
   const touch = (c) => { c.u = today(); };
   switch (act) {
     // Trådar
-    case 'filter': S.filter = id; break;
-    case 'afilter': S.afilter = id; S.alimit = 100; break;
     case 'sortopen': S.sortOpen = !S.sortOpen; break;
     case 'sortcol': { const [w, k] = id.split(':'); if (!SORTS[w]?.[k]) return; S.state.sort = { ...S.state.sort, [w]: nextSort(S.state, w, k) }; persist(); break; }
     case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
@@ -190,7 +188,6 @@ app.addEventListener('click', (ev) => {
       });
       return;
     }
-    case 'tfilter': S.tfilter = id; break;
     case 'trashopen': S.trash = true; S.exp = null; render(); scrollTo(0, 0); return;
     case 'trashclose': S.trash = false; break;
     case 'pickopen': S.own = null; S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); return;
@@ -520,6 +517,7 @@ app.addEventListener('change', (ev) => {
     case 'filter': S.filter = t.value; render(); return;
     case 'afilter': S.afilter = t.value; S.alimit = 100; render(); return;
     case 'tfilter': S.tfilter = t.value; render(); return;
+    case 'sortsel': { const w = t.dataset.id; if (!SORTS[w]?.[t.value[0]]) return; S.state.sort = { ...S.state.sort, [w]: t.value }; persist(); render(); return; }
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; render(); } return;
     case 'dayapp': case 'dayw': case 'dayk': case 'dayp': {

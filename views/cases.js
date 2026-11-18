@@ -52,12 +52,12 @@ export function catFilter(all, key, act) {
 // Sortera: a chip in the filter row (↕ Ändrad ↓) unfolds the columns; a tap picks a column, the same one again flips
 // the direction. which = 'cases' | 'arch'. Returns [chip, column row or null].
 export function sortBar(which) {
-  const cur = sortOf(S.state, which), cols = SORTS[which], arrow = cur[1] === '+' ? '↑' : '↓', dir = cur[1] === '+' ? 'stigande' : 'fallande';
-  const chip = el('button', { class: 'filt sort-btn' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${cols[cur[0]]}, ${dir}. Tryck för att välja`, text: `↕ ${cols[cur[0]]}` });
-  const row = S.sortOpen ? el('div', { class: 'chips sort-cols', role: 'group', 'aria-label': 'Sortera på' },
-    Object.entries(cols).map(([k, l]) => el('button', { class: 'chip' + (k === cur[0] ? ' on' : ''), 'data-act': 'sortcol', 'data-id': `${which}:${k}`, 'aria-pressed': String(k === cur[0]),
-      'aria-label': k === cur[0] ? `${l}, ${dir} – tryck för att vända` : `Sortera på ${l}`, text: k === cur[0] ? `${l} ${arrow}` : l }))) : null;
-  return [chip, row];
+  // 2026-11-18: en rullista med kolumn och riktning – Ändrad (eller Stängd i Arkiv), Skapad och Rubrik räcker.
+  const cur = sortOf(S.state, which), first = which === 'arch' ? ['x', 'Stängd'] : ['u', 'Ändrad'];
+  const opts = [[first[0] + '-', `${first[1]} ↓`], [first[0] + '+', `${first[1]} ↑`], ['c-', 'Skapad ↓'], ['c+', 'Skapad ↑'], ['t+', 'A–Ö'], ['t-', 'Ö–A']];   // ↓ nyast först
+  const sel = el('select', { class: 'filt sort-sel', 'data-act': 'sortsel', 'data-id': which, 'aria-label': 'Sortera' },
+    opts.map(([v, l]) => el('option', { value: v, selected: v === cur, text: '↕ ' + l })));
+  return [sel, null];
 }
 // One row: person select, category chips (scroll sideways when they don't fit), sort chip at the end.
 export function filterRow(pchips, chips, schip) {
