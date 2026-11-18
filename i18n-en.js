@@ -241,4 +241,6 @@ I18N.add({
   [/^＋ Fyll i fler fält \((\d+)\)$/, '＋ Fill in more fields ($1)'],
   [/^＋ Fyll i (.+)$/, (g, tr) => `＋ Fill in ${tr(g[1].charAt(0).toUpperCase() + g[1].slice(1)).toLowerCase()}`],
   [/^Ändra (.+)$/, (g, tr) => `Edit ${tr(g[1])}`],
+  [/^Alla kategorier \((\d+)\)$/, 'All categories ($1)'],
+  [/^(.+) \((\d+)\)$/, (g, tr) => `${tr(g[1])} (${g[2]})`],
 ]);

@@ -42,16 +42,18 @@ export function catFilter(all, key, act) {
   const counts = new Map();
   for (const c of all) { const k = typeOf(S.state, c)?.cat; counts.set(k, (counts.get(k) || 0) + 1); }
   if (S[key] !== 'all' && !counts.get(S[key])) S[key] = 'all';
-  const chip = (id, label, color) => el('button', { class: 'chip' + (color ? ` c-${color}` : '') + (S[key] === id ? ' on' : ''), 'data-act': act, 'data-id': id, 'aria-pressed': String(S[key] === id), text: label });
-  const chips = el('div', { class: 'chips cat-chips', role: 'group', 'aria-label': 'Kategori' }, chip('all', `Alla ${all.length}`),
-    S.state.cats.filter((k) => counts.get(k.id)).map((k) => chip(k.id, `${k.name} ${counts.get(k.id)}`, k.color)));
+  // 2026-11-18: en rullista i stället för en rad knappar som inte får plats.
+  const cur = S.state.cats.find((k) => k.id === S[key]);
+  const opt = (id, label) => el('option', { value: id, selected: S[key] === id, text: label });
+  const chips = el('select', { class: 'filt' + (cur ? ` on c-${cur.color}` : ''), 'data-act': act, 'aria-label': 'Kategori' }, opt('all', `Alla kategorier (${all.length})`),
+    S.state.cats.filter((k) => counts.get(k.id)).map((k) => opt(k.id, `${k.name} (${counts.get(k.id)})`)));
   return [chips, S[key] === 'all' ? all : all.filter((c) => typeOf(S.state, c)?.cat === S[key])];
 }
 // Sortera: a chip in the filter row (↕ Ändrad ↓) unfolds the columns; a tap picks a column, the same one again flips
 // the direction. which = 'cases' | 'arch'. Returns [chip, column row or null].
 export function sortBar(which) {
   const cur = sortOf(S.state, which), cols = SORTS[which], arrow = cur[1] === '+' ? '↑' : '↓', dir = cur[1] === '+' ? 'stigande' : 'fallande';
-  const chip = el('button', { class: 'chip sort-chip' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${cols[cur[0]]}, ${dir}. Tryck för att välja`, text: `↕ ${cols[cur[0]]} ${arrow}` });
+  const chip = el('button', { class: 'filt sort-btn' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${cols[cur[0]]}, ${dir}. Tryck för att välja`, text: `↕ ${cols[cur[0]]}` });
   const row = S.sortOpen ? el('div', { class: 'chips sort-cols', role: 'group', 'aria-label': 'Sortera på' },
     Object.entries(cols).map(([k, l]) => el('button', { class: 'chip' + (k === cur[0] ? ' on' : ''), 'data-act': 'sortcol', 'data-id': `${which}:${k}`, 'aria-pressed': String(k === cur[0]),
       'aria-label': k === cur[0] ? `${l}, ${dir} – tryck för att vända` : `Sortera på ${l}`, text: k === cur[0] ? `${l} ${arrow}` : l }))) : null;
@@ -69,7 +71,7 @@ export function personFilter(all, key, act) {
   if (S[key] !== 'all' && !counts.get(S[key])) S[key] = 'all';
   if (counts.size < 2 && !(S.state.people || []).some((x) => counts.get(x.id))) return [null, all];   // nobody assigned: nothing to filter
   const opt = (id, label) => el('option', { value: id, selected: S[key] === id, text: label });
-  const sel = el('select', { class: 'chip person-sel' + (S[key] !== 'all' ? ' on' : ''), 'data-act': act, 'aria-label': 'Vem utför' }, opt('all', '👤 Alla'),
+  const sel = el('select', { class: 'filt' + (S[key] !== 'all' ? ' on' : ''), 'data-act': act, 'aria-label': 'Vem utför' }, opt('all', '👤 Alla'),
     S.state.people.filter((x) => counts.get(x.id)).map((x) => opt(x.id, `👤 ${x.name} ${counts.get(x.id)}`)),
     counts.get('-') ? opt('-', `👤 Ingen ${counts.get('-')}`) : null);
   return [sel, S[key] === 'all' ? all : all.filter((c) => (personOf(S.state, c)?.id || '-') === S[key])];

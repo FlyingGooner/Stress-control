@@ -517,6 +517,9 @@ app.addEventListener('change', (ev) => {
       return;
     }
     case 'pfilter': S.pfilter = t.value; render(); return;
+    case 'filter': S.filter = t.value; render(); return;
+    case 'afilter': S.afilter = t.value; S.alimit = 100; render(); return;
+    case 'tfilter': S.tfilter = t.value; render(); return;
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; render(); } return;
     case 'dayapp': case 'dayw': case 'dayk': case 'dayp': {

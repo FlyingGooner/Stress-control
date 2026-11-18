@@ -577,3 +577,13 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .vf-edit > .link { justify-self: end; }
 .vf-more { margin: 4px 0 8px; padding: 6px 0; }
 .card.case { padding: 16px 18px; }
+/* 2026-11-18: filterraden – tre lika rutor (vem, kategori, sortering) */
+.filter-row { display: flex; gap: 8px; margin: 4px 0 14px; }
+.filt { flex: 1 1 0; min-width: 0; height: 40px; padding: 0 28px 0 12px; border: 1px solid var(--outline-variant); border-radius: 20px;
+  background: var(--surface-container) no-repeat right 10px center / 10px 6px; color: var(--on-surface); font: 500 .875rem var(--font, inherit);
+  appearance: none; -webkit-appearance: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-size: 5px 5px, 5px 5px; background-position: right 15px center, right 10px center; }
+.filt.on { background-color: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+.filt.on[class*=" c-"] { background-color: var(--cc-c); color: var(--cc-on); }
+.filt.sort-btn { flex: 0 0 auto; padding: 0 14px; background-image: none; text-align: center; }
