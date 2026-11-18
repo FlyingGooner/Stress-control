@@ -558,3 +558,8 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .log-full { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.4; }
 .log li { padding: 6px 0; }
 .log-edit { width: 100%; min-width: 0; padding: 6px 10px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; line-height: 1.4; resize: vertical; }
+/* 2026-11-18: ändra en anteckning i loggen */
+.log li.log-editing { grid-template-columns: auto 1fr; }
+.log-editbox { display: grid; gap: 6px; }
+.log-editbox .row-actions { display: flex; justify-content: flex-end; gap: 12px; align-items: center; }
+.primary.sm { width: auto; min-height: 40px; padding: 0 20px; }

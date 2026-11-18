@@ -219,7 +219,7 @@ app.addEventListener('click', (ev) => {
     case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
     case 'stepsclose': S.steps = false; break;
     case 'cexp': S.exp = S.exp === id ? null : id; break;
-    case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; render(); scrollTo(0, 0); return;
+    case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; S.ledit = null; render(); scrollTo(0, 0); return;
     case 'cclose': S.open = null; break;
     case 'selt': {   // markeringsläge: tap toggles; the last one unmarked ends the mode
       const i = S.sel.indexOf(id);
@@ -245,7 +245,15 @@ app.addEventListener('click', (ev) => {
       else withUndo(`${what} ligger i papperskorgen`, () => { for (const c of list) trashCase(S.state, c, today()); });
       return;
     }
-    case 'cedit': S.edit = true; render(); scrollTo(0, 0); return;
+    case 'cedit': S.edit = true; S.ledit = null; render(); scrollTo(0, 0); return;
+    case 'lopen': S.ledit = Number(t.dataset.i); render(); document.getElementById('le-text')?.focus(); return;
+    case 'lcancel': S.ledit = null; render(); return;
+    case 'lsave': {
+      const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i];
+      const v = cleanText(tidyNote(document.getElementById('le-text')?.value), 500, true);
+      if (row && v) { if (v !== row[1]) { row[1] = v; c.u = today(); persist(); } S.ledit = null; render(); snackbar('Anteckningen är ändrad', null, null, 2500); }
+      return;
+    }
     case 'cedclose': S.edit = false; break;
     case 'cdone': {
       const c = cs(); if (!c) return;

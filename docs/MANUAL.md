@@ -49,7 +49,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 ## Typer och kategorier
 - Inställningar → Trådar → Typer: bocka i fler typer, t.ex. Ny bostad, Tandvård, Oro eller tanke, Myndighet, Försäkring, Bil och verkstad, Studier och Samtal att ta.
 - **Ny bostad**: välj först **Köpa eller hyra**. Köpa visar pris, bank, lånelöfte och bud; Hyra visar hyra, bostadskö, intresseanmälan, svara senast och inflyttning. **Svara senast** har både datum och klockslag och syns i påminnelserna.
-- Ändra en anteckning: tryck **✎ Redigera** i tråden och skriv direkt i anteckningen – den sparas när du lämnar fältet. ✕ tar bort den.
+- Ändra en anteckning: tryck **✎** bredvid den i Loggen, ändra texten och tryck **Spara**. Under **✎ Redigera** går den också att ändra eller ta bort (✕).
 - Långa anteckningar i Loggen visas hopfällda till första raden – tryck för att läsa hela. Inklistrad text städas: flera tomma rader i rad blir en, och tomma rader först och sist tas bort.
 - + Egen typ: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal, bock, val i lista och dagar – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
 - Förslag på delmål (ett per rad, längst ner i typen) läggs in i varje ny tråd av typen. I Ny tråd syns förslagen under fälten, och du kan bocka ur dem du inte behöver. Listan över typer visar hur många delmål varje typ har.

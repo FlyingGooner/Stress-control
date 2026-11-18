@@ -199,8 +199,13 @@ export function caseView() {
         el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }),
           el('span', { text: x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') + (!d && c.s[i][4] ? ' ↻' : '') })))))] : null,
     el('h2', { class: 'sub-h', text: 'Logg' }),
-    c.l?.length ? el('ul', { class: 'log' }, [...c.l].reverse().map(([d, x]) => el('li', {},
-      el('span', { class: 'log-d', text: shortDate(d) }), logText(x)))) : null,
+    // 2026-11-18: ✎ på varje anteckning – ändra direkt i loggen (Spara / Avbryt), ingen omväg via Redigera.
+    c.l?.length ? el('ul', { class: 'log' }, [...c.l].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => S.ledit === i
+      ? el('li', { class: 'log-editing' }, el('span', { class: 'log-d', text: shortDate(d) }),
+        el('div', { class: 'log-editbox' }, el('textarea', { id: 'le-text', class: 'log-edit', rows: Math.min(14, Math.max(3, x.split('\n').length + Math.floor(x.length / 40))), maxlength: 500, 'aria-label': 'Ändra anteckningen', text: x }),
+          el('div', { class: 'row-actions' }, el('button', { class: 'link', 'data-act': 'lcancel', text: 'Avbryt' }), el('button', { class: 'primary sm', 'data-act': 'lsave', 'data-i': i, text: 'Spara' }))))
+      : el('li', {}, el('span', { class: 'log-d', text: shortDate(d) }), logText(x),
+        el('button', { class: 'icon sm', 'data-act': 'lopen', 'data-i': i, 'aria-label': 'Ändra anteckningen', text: '✎' })))) : null,
     el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
     el('div', { class: 'save-row log-add' },
       el('input', { type: 'date', id: 'l-date', class: 'step-date', value: today(), max: today(), 'aria-label': 'Datum för anteckningen' }),
