@@ -587,3 +587,18 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .filt.on { background-color: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
 .filt.on[class*=" c-"] { background-color: var(--cc-c); color: var(--cc-on); }
 .filt.sort-btn { flex: 0 0 auto; padding: 0 14px; background-image: none; text-align: center; }
+/* 2026-11-18: läsläge – kompakt */
+.case-read .case-h-view { margin: 6px 0 2px; }
+.rv-meta { margin: 0 0 10px; color: var(--muted); font-size: .8rem; }
+.rv { display: grid; grid-template-columns: minmax(7em, 38%) 1fr; margin: 0 0 6px; }
+.rv-row { display: contents; }
+.rv dt, .rv dd { padding: 7px 0; border-top: 1px solid var(--outline-variant, rgba(0,0,0,.08)); }
+.rv dt { color: var(--muted); font-size: .8rem; padding-right: 10px; }
+.rv dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rv-steps { list-style: none; margin: 0; padding: 0; }
+.rv-steps li { display: flex; gap: 8px; padding: 4px 0; }
+.rv-steps li.done { color: var(--muted); }
+.rv-steps li.late { color: var(--error, #b3261e); }
+.rv-tick { width: 1.2em; flex: none; }
+.rv-log li { grid-template-columns: auto 1fr; padding: 5px 0; }
+.case-read .sub-h { margin-top: 14px; }

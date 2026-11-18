@@ -49,9 +49,9 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 ## Typer och kategorier
 - Inställningar → Trådar → Typer: bocka i fler typer, t.ex. Ny bostad, Ärende (myndighet eller försäkringsbolag), Studier och Tankar och samtal.
 - Färre typer (2026-11-18): **Vård** (vård eller tandvård), **Fixa** (hemma eller bil), **Ärende** och **Tankar och samtal** väljer först vad det gäller – fälten följer valet. Ny tråd visar de sex typer du använder mest, resten under **Fler typer**.
-- I en öppen tråd ändrar du ett fält med **✎** bredvid det, och fyller i tomma fält med **＋ Fyll i**. Tryck **Klar** när du är klar. ✎ Redigera behövs bara för rubrik, typ, person, extra fält och delmål.
+- En öppen tråd visas i **läsläge**: kompakt, med fälten på en rad var. Allt ändras under **✎ Redigera**: fält, delmål, anteckningar och mer.
 - **Ny bostad**: välj först **Köpa eller hyra**. Köpa visar pris, bank, lånelöfte och bud; Hyra visar hyra, bostadskö, intresseanmälan, ansök senast och inflyttning. **Ansök senast** har både datum och klockslag och syns i påminnelserna.
-- Ändra en anteckning: tryck **✎** bredvid den i Loggen, ändra texten och tryck **Spara**. Under **✎ Redigera** går den också att ändra eller ta bort (✕).
+- Ändra en anteckning: tryck **✎ Redigera** och skriv direkt i den. ✕ tar bort den.
 - Långa anteckningar i Loggen visas hopfällda till första raden – tryck för att läsa hela. Inklistrad text städas: flera tomma rader i rad blir en, och tomma rader först och sist tas bort.
 - + Egen typ: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal, bock, val i lista och dagar – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
 - Förslag på delmål (ett per rad, längst ner i typen) läggs in i varje ny tråd av typen. I Ny tråd syns förslagen under fälten, och du kan bocka ur dem du inte behöver. Listan över typer visar hur många delmål varje typ har.

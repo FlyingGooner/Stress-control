@@ -186,52 +186,29 @@ function fieldInput(c, fd, act = 'fv') {
   }
 }
 
-function viewFields(c, t, fields, extra) {
-  const empty = (t?.fields || []).filter((fd) => fd.kind !== 'days' && c.f?.[fd.id] === undefined && shownField(fd, c));
-  const done = el('button', { class: 'link', 'data-act': 'fdone', text: 'Klar' });
-  return el('div', { class: 'view-fields-wrap' },
-    fields.length || extra.length ? el('dl', { class: 'view-fields' },
-      fields.map((fd) => S.fedit === fd.id ? el('div', { class: 'vf-edit' }, fieldInput(c, fd), done)
-        : el('div', { class: 'vf' }, el('dt', { text: fd.name }), el('dd', {}, el('span', { text: showVal(fd, c.f[fd.id]) }),
-          el('button', { class: 'icon sm', 'data-act': 'fopen', 'data-id': fd.id, 'aria-label': `Ändra ${fd.name}`, text: '✎' })))),
-      extra.map(([n, k, v]) => el('div', { class: 'vf' }, el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })))) : null,
-    empty.length ? (S.fedit === '*' ? el('div', { class: 'vf-edit vf-all' }, empty.map((fd) => fieldInput(c, fd)), done)
-      : el('button', { class: 'link vf-more', 'data-act': 'fopen', 'data-id': '*', text: `＋ Fyll i ${empty.length === 1 ? empty[0].name.toLowerCase() : `fler fält (${empty.length})`}` })) : null);
-}
 // View mode (tapping a case): read-only, plus the quick actions tick a sub-goal and add a note. Redigera opens caseEditor().
 export function caseView() {
+  // 2026-11-18: läsläge eller redigeringsläge – läsläget är bara läsning, kompakt (etikett och värde på samma rad).
   const c = S.state.cases.find((x) => x.id === S.open);
   if (!c) return null;
   if (S.edit) return caseEditor();
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
   const fields = (t?.fields || []).filter((fd) => fd.kind !== 'days' && c.f?.[fd.id] !== undefined && shownField(fd, c)), extra = (c.o || []).filter((x) => x[2] != null), who = personOf(S.state, c);
-  return el('section', { class: `card case c-${cat.color}` },
+  const row = (n, v) => el('div', { class: 'rv-row' }, el('dt', { text: n }), el('dd', { text: v }));
+  return el('section', { class: `card case case-read c-${cat.color}` },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
-      el('span', { class: 'cat-chip', text: `${t?.icon || '📌'} ${t?.name ?? 'Okänd typ'} · ${cat.name}` })),
+      el('span', { class: 'cat-chip', text: `${t?.icon || '📌'} ${t?.name ?? 'Okänd typ'}` })),
     el('h1', { class: 'case-h case-h-view', text: c.title }),
-    el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)} · ändrad ${longDate(c.u)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') + (c.r ? ` · upprepas ${REPEAT[c.r].toLowerCase()}` : '') }),
-    who ? el('p', { class: 'case-who', text: `👤 ${who.name} utför` }) : null,
-    // 2026-11-18: ändra ett fält direkt (✎), fyll i tomma fält utan att gå via Redigera.
-    viewFields(c, t, fields, extra),
+    el('p', { class: 'rv-meta', text: [who ? `👤 ${who.name}` : null, `ändrad ${shortDate(c.u)}`, c.x ? `stängd ${shortDate(c.x)}` : null, c.r ? `upprepas ${REPEAT[c.r].toLowerCase()}` : null].filter(Boolean).join(' · ') }),
+    fields.length || extra.length ? el('dl', { class: 'rv' }, fields.map((fd) => row(fd.name, showVal(fd, c.f[fd.id]))), extra.map(([n, k, v]) => row(n, showVal({ kind: k }, v)))) : null,
     (t?.fields || []).filter((fd) => fd.kind === 'days').map((fd) => daysBlock(c, fd, 'view')),
-    el('p', { class: 'import-error small', id: 'c-error', role: 'alert' }),
     c.s?.length ? [el('h2', { class: 'sub-h', text: `Delmål ${done}/${all}` }),
-      el('ul', { class: 'steps' }, stepOrder(c).map(([[x, d, dd, dn], i]) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
-        el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }),
-          el('span', { text: x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') + (!d && c.s[i][4] ? ' ↻' : '') })))))] : null,
-    el('h2', { class: 'sub-h', text: 'Logg' }),
-    // 2026-11-18: ✎ på varje anteckning – ändra direkt i loggen (Spara / Avbryt), ingen omväg via Redigera.
-    c.l?.length ? el('ul', { class: 'log' }, [...c.l].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => S.ledit === i
-      ? el('li', { class: 'log-editing' }, el('span', { class: 'log-d', text: shortDate(d) }),
-        el('div', { class: 'log-editbox' }, el('textarea', { id: 'le-text', class: 'log-edit', rows: Math.min(14, Math.max(3, x.split('\n').length + Math.floor(x.length / 40))), maxlength: 500, 'aria-label': 'Ändra anteckningen', text: x }),
-          el('div', { class: 'row-actions' }, el('button', { class: 'link', 'data-act': 'lcancel', text: 'Avbryt' }), el('button', { class: 'primary sm', 'data-act': 'lsave', 'data-i': i, text: 'Spara' }))))
-      : el('li', {}, el('span', { class: 'log-d', text: shortDate(d) }), logText(x),
-        el('button', { class: 'icon sm', 'data-act': 'lopen', 'data-i': i, 'aria-label': 'Ändra anteckningen', text: '✎' })))) : null,
-    el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
-    el('div', { class: 'save-row log-add' },
-      el('input', { type: 'date', id: 'l-date', class: 'step-date', value: today(), max: today(), 'aria-label': 'Datum för anteckningen' }),
-      el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
+      el('ul', { class: 'rv-steps' }, stepOrder(c).map(([[x, d, dd, dn], i]) => el('li', { class: (d ? 'done' : '') + (!d && dd && dd < today() ? ' late' : '') },
+        el('span', { class: 'rv-tick', 'aria-hidden': 'true', text: d ? '✓' : '○' }),
+        el('span', { text: x + (d ? (dn ? ` · ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') + (!d && c.s[i][4] ? ' ↻' : '') }))))] : null,
+    c.l?.length ? [el('h2', { class: 'sub-h', text: 'Logg' }),
+      el('ul', { class: 'log rv-log' }, [...c.l].reverse().map(([d, x]) => el('li', {}, el('span', { class: 'log-d', text: shortDate(d) }), logText(x))))] : null,
     el('button', { class: 'primary save-case', 'data-act': 'cedit', text: '✎ Redigera' }));
 }
 
