@@ -3,7 +3,7 @@
 importScripts('version.js');
 const CACHE_VERSION = 'sk-' + self.APP_VERSION;
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'store.js', 'ui.js', 'nav.js', 'views/cases.js', 'views/overview.js', 'views/archive.js', 'views/settings.js', 'views/data.js', 'views/trash.js', 'version.js', 'i18n.js', 'i18n-en.js', 'backup.js', 'csv.js', 'manifest.webmanifest',
-  'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
+  'icons/icon.svg', 'docs/manual/install-android.png', 'docs/manual/install-ios.png', 'docs/manual/install-android-en.png', 'docs/manual/install-ios-en.png', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE_VERSION).then((c) => c.addAll(ASSETS.map((a) => new Request(a, { cache: 'reload' })))));

@@ -90,9 +90,14 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Under Data you see how much storage the app uses. If it gets close to the limit (about 5 MB): save a backup file and delete old threads.
 - The backup file is always locked with **your code**: 16 random characters the app creates for you the first time it starts and stores on the device. If you would rather use your own code (e.g. the same in all your apps), tap **Choose your own code** – it needs at least 16 characters with upper and lower case, a digit and a special character, the same requirements as the created one. A backup takes one tap. Under Settings → Data you find Your code: **Show**, **Copy** and **New code**. Save the code in your password manager – on a new phone (or after Delete all data) you need it to open a backup. If you restore a backup with a different code, that code is used for new backups from then on. New code means old backup files open only with the old code (Undo is available). The app collects no data – the code is just a key that protects your backups.
 
-## Install and offline
-- Android (Chrome): the ⋮ menu → Install app. iPhone (Safari): Share → Add to Home Screen. The app then works offline.
-- On iPhone: install the app on the home screen. Otherwise Safari can clear saved data for sites you have not visited for a while. Save a backup file regularly anyway.
+## Install as an app
+
+![Android: Chrome menu ⋮ → Install app](manual/install-android-en.png)
+- **Android (Chrome):** open the app link, tap ⋮ at the top right and choose **Install app**.
+
+![iPhone: Safari → Share → Add to Home Screen](manual/install-ios-en.png)
+- **iPhone (Safari):** open the link in Safari, tap **Share** (the box with the arrow) and choose **Add to Home Screen** → **Add**.
+- Installed, the app works like a normal app, even offline.
 
 ## Privacy
 - The app makes no requests – no server, no analytics, no account. Everything you write is only on this phone.
