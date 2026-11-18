@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort, shownField, tidyNote } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort, shownField, tidyNote, keyDate } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -271,4 +271,13 @@ T.test('version 11: Tandvård blir Vård, Bil blir Fixa, egna fält och värden 
   T.eq(s.types.map((t) => t.id).sort(), ['home', 'sym']);
   T.eq([s.cases[0].t, s.cases[0].f], ['sym', { kd: 'Tandvård', s1: 'Lagning', s5: '2026-11-20T10:00' }]);
   T.eq([s.cases[1].t, s.cases[1].f.kd, s.cases[1].f.x9], ['home', 'Bil', 'ABC123']);
+});
+
+T.test('keyDate: deadline eller öppet delmål först, annars nästa datum, annars senaste', () => {
+  const s = defaults();
+  const job = { id: 'j', t: 'job', title: 'J', c: '2026-11-01', f: { ap: '2026-11-02', iv: '2026-11-25T10:00' } };
+  T.eq(keyDate(s, job, '2026-11-18'), '2026-11-25');
+  T.eq(keyDate(s, { ...job, f: { ap: '2026-11-02' } }, '2026-11-18'), '2026-11-02');
+  T.eq(keyDate(s, { ...job, s: [['Följ upp', 0, '2026-11-20'], ['Skicka', 1, '2026-11-01']] }, '2026-11-18'), '2026-11-20');
+  T.eq(keyDate(s, { id: 'e', t: 'eco', title: 'E', c: '2026-11-01', f: { du: '2026-11-30' } }, '2026-11-18'), '2026-11-30');
 });

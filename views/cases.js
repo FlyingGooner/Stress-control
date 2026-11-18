@@ -54,7 +54,7 @@ export function catFilter(all, key, act) {
 export function sortBar(which) {
   // 2026-11-18: ↕ fäller ut tre kolumner (Ändrad eller Stängd, Skapad, Rubrik). Tryck på en kolumn för att sortera på den,
   // tryck igen för att vända ordningen (↓ fallande, ↑ stigande).
-  const cur = sortOf(S.state, which), all = SORTS[which], keys = which === 'arch' ? ['x', 'c', 't'] : ['u', 'c', 't'];
+  const cur = sortOf(S.state, which), all = SORTS[which], keys = which === 'arch' ? ['x', 'c', 't'] : ['d', 'u', 'c', 't'];   // d = viktigaste datumet (keyDate)
   const arrow = (v) => (v[1] === '+' ? '↑' : '↓'), name = all[cur[0]] || all[keys[0]];
   const btn = el('button', { class: 'filt sort-btn' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${name}. Tryck för att välja`, text: `↕ ${name} ${arrow(cur)}` });
   const row = S.sortOpen ? el('div', { class: 'sort-cols', role: 'group', 'aria-label': 'Sortera på' }, keys.map((k) => {

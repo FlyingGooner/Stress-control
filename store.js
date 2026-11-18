@@ -528,6 +528,17 @@ export function firstDate(state, c) {
   for (const [, , d] of c.s || []) if (d) ds.push(d);
   return ds.sort()[0] || '';
 }
+// Viktigaste datumet (2026-11-18) för sorteringen Datum: närmaste deadline (fält med due) eller delmål som inte är klart;
+// annars närmaste kommande datum i tråden (t.ex. Intervju, Visning); annars det senaste (t.ex. Sökt).
+export function keyDate(state, c, today = dateKey(new Date())) {
+  const t = typeOf(state, c), due = [], other = [];
+  for (const f of t?.fields || []) if ((f.kind === 'date' || f.kind === 'dt') && c.f?.[f.id] && shownField(f, c)) (f.due ? due : other).push(c.f[f.id].slice(0, 10));
+  for (const [, k, v] of c.o || []) if ((k === 'date' || k === 'dt') && v) other.push(v.slice(0, 10));
+  for (const [, d, dd] of c.s || []) if (!d && dd) due.push(dd);
+  if (due.length) return due.sort()[0];
+  const next = other.filter((d) => d >= today).sort()[0];
+  return next || other.sort().pop() || '';
+}
 // Papperskorg: Ta bort moves a case here; it is deleted for good after trashDays (0 = never).
 export const TRASH_DAYS = [7, 30, 90, 365, 0];
 export function trashCase(state, c, today) {
@@ -594,7 +605,7 @@ export function nextSort(state, list, k) {
 // A sorted copy. Cases without the value (no date) come last in both directions; ties keep the order given.
 export function sortCases(state, list, spec) {
   const k = spec[0], dir = spec[1] === '+' ? 1 : -1;
-  const val = (c) => (k === 'd' ? firstDate(state, c) : k === 't' ? c.title : c[k] || '');
+  const val = (c) => (k === 'd' ? keyDate(state, c) : k === 't' ? c.title : c[k] || '');
   const rows = list.map((c) => [c, val(c)]);
   rows.sort(([, a], [, b]) => (!a ? (b ? 1 : 0) : !b ? -1 : dir * (k === 't' ? a.localeCompare(b, 'sv') : a < b ? -1 : a > b ? 1 : 0)));
   return rows.map(([c]) => c);

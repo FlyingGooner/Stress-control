@@ -606,3 +606,4 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .sort-cols { display: flex; gap: 6px; margin: -6px 0 12px; }
 .sort-col { flex: 1; height: 36px; border: 1px solid var(--outline-variant); border-radius: 18px; background: var(--surface-container); color: var(--on-surface); font: 500 .85rem var(--font, inherit); cursor: pointer; }
 .sort-col.on { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+.sort-col { padding: 0 6px; }
