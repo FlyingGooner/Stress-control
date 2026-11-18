@@ -279,5 +279,6 @@ T.test('keyDate: deadline eller öppet delmål först, annars nästa datum, anna
   T.eq(keyDate(s, job, '2026-11-18'), '2026-11-25');
   T.eq(keyDate(s, { ...job, f: { ap: '2026-11-02' } }, '2026-11-18'), '2026-11-02');
   T.eq(keyDate(s, { ...job, s: [['Följ upp', 0, '2026-11-20'], ['Skicka', 1, '2026-11-01']] }, '2026-11-18'), '2026-11-20');
+  T.eq(keyDate(s, { id: 'v', t: 'fk', title: 'V', c: '2026-11-01', f: { dy: [['2026-11-17', 0, 0], ['2026-11-10', 0, 1]] } }, '2026-11-18'), '2026-11-17');
   T.eq(keyDate(s, { id: 'e', t: 'eco', title: 'E', c: '2026-11-01', f: { du: '2026-11-30' } }, '2026-11-18'), '2026-11-30');
 });

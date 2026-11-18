@@ -535,6 +535,8 @@ export function keyDate(state, c, today = dateKey(new Date())) {
   for (const f of t?.fields || []) if ((f.kind === 'date' || f.kind === 'dt') && c.f?.[f.id] && shownField(f, c)) (f.due ? due : other).push(c.f[f.id].slice(0, 10));
   for (const [, k, v] of c.o || []) if ((k === 'date' || k === 'dt') && v) other.push(v.slice(0, 10));
   for (const [, d, dd] of c.s || []) if (!d && dd) due.push(dd);
+  // Dagar (VAB m.m.): en dag som inte är ansökt räknas som en deadline, annars räknas dagarna som vanliga datum.
+  for (const f of t?.fields || []) if (f.kind === 'days') for (const [d, , a] of c.f?.[f.id] || []) (a ? other : due).push(d);
   if (due.length) return due.sort()[0];
   const next = other.filter((d) => d >= today).sort()[0];
   return next || other.sort().pop() || '';

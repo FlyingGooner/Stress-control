@@ -1,5 +1,5 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, adultsOf, dayPerson, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT, stepOrder, isList, shownField } from '../store.js';
+import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, adultsOf, dayPerson, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT, stepOrder, isList, shownField, keyDate } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
@@ -11,7 +11,8 @@ export function caseRow(c) {
   return el('li', { class: `case-li c-${cat.color}` + (open && !sel ? ' open' : '') + (on ? ' marked' : '') }, el('div', { class: 'case-line' }, el('button', { class: `case-row c-${cat.color}`, 'data-act': sel ? 'selt' : 'copen', 'data-id': c.id, ...(sel ? { 'aria-pressed': String(on) } : {}) },
     sel ? el('span', { class: 'sel-box', 'aria-hidden': 'true', text: on ? '✓' : '' }) : el('span', { class: 'case-icon', 'aria-hidden': 'true', text: t?.icon || '📌' }),
     el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
-      el('small', { text: `${t?.name ?? 'Okänd typ'} · ${c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)}` + (who ? ` · 👤 ${who.name}` : '') + (dd ? ` · ${dd[1]}/${dd[0]} ansökta` : '') })),
+      el('small', { text: `${t?.name ?? 'Okänd typ'} · ` + (sortOf(S.state, 'cases')[0] === 'd' && !c.x   // 2026-11-18: sorterat på Datum → visa datumet det sorteras på
+        ? (keyDate(S.state, c) ? `📅 ${shortDate(keyDate(S.state, c))}` : 'inget datum') : c.x ? 'stängd ' + shortDate(c.x) : 'ändrad ' + ago(c.u)) + (who ? ` · 👤 ${who.name}` : '') + (dd ? ` · ${dd[1]}/${dd[0]} ansökta` : '') })),
     all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null,
     ),
     sel ? null : el('button', { class: 'case-chev', 'data-act': 'cexp', 'data-id': c.id, 'aria-expanded': String(open), 'aria-label': open ? `Dölj sammanfattning av ${c.title}` : `Visa sammanfattning av ${c.title}`, text: open ? '▴' : '▾' })),
