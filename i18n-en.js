@@ -243,6 +243,6 @@ I18N.add({
   [/^Ändra (.+)$/, (g, tr) => `Edit ${tr(g[1])}`],
   [/^Alla kategorier \((\d+)\)$/, 'All categories ($1)'],
   [/^(.+) \((\d+)\)$/, (g, tr) => `${tr(g[1])} (${g[2]})`],
-  [/^↕ (Ändrad|Stängd|Skapad) (↓|↑)$/, (g, tr) => `↕ ${tr(g[1])} ${g[2]}`],
-  [/^↕ Rubrik A–Ö$/, '↕ Title A–Z'], [/^↕ Rubrik Ö–A$/, '↕ Title Z–A'],
+  [/^↕ (Ändrad|Stängd|Skapad|Rubrik) (↓|↑)$/, (g, tr) => `↕ ${tr(g[1])} ${g[2]}`],
+  [/^(Ändrad|Stängd|Skapad|Rubrik) (↓|↑)$/, (g, tr) => `${tr(g[1])} ${g[2]}`],
 ]);

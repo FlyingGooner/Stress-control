@@ -25,7 +25,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Logg: skriv en kort anteckning, t.ex. Ringde, fick tid 18/11. Datumet är idag, men du kan välja ett tidigare datum om du skriver in något i efterhand – anteckningen hamnar då på rätt plats i loggen. Upp till 50 anteckningar per tråd.
 - Färgen visar kategorin: rosa Hälsa, grön Ekonomi, blå Hem, orange Jobb, lila Relationer, grå Övrigt. Filtrera med knapparna överst.
 - Markera flera: håll fingret på en tråd tills den blir markerad. Tryck på fler trådar för att markera dem, eller Alla för hela listan med det filter du har valt. Arkivera eller Radera gäller alla markerade på en gång, och Ångra finns direkt efteråt. Raderade trådar hamnar i papperskorgen. ✕ eller Bakåt avslutar. I Arkiv fungerar det likadant, med Öppna igen och Radera.
-- Filtrera med **👤** (vem) och **kategori**, sortera med **↕**: Ändrad (i Arkiv Stängd), Skapad eller rubrik A–Ö. ↓ = nyast först. Valet sparas.
+- Filtrera med **👤** (vem) och **kategori**, sortera med **↕**: tryck för att fälla ut Ändrad (i Arkiv Stängd), Skapad och Rubrik. Tryck på en kolumn för att sortera på den, och igen för att vända ordningen (↓ fallande, ↑ stigande). Valet sparas.
 
 ## Stänga och arkivera
 - Spara i redigeringen tar dig tillbaka till visningen av tråden, och ✕ där till listan. När tråden är löst: tryck Löst – arkivera. Den flyttas till Arkiv och finns kvar där. I Arkiv kan du filtrera per kategori och söka i rubriken. Arkivet visar 100 trådar åt gången – Visa fler längst ner. Ångra finns direkt efteråt.

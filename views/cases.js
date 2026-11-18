@@ -52,12 +52,17 @@ export function catFilter(all, key, act) {
 // Sortera: a chip in the filter row (↕ Ändrad ↓) unfolds the columns; a tap picks a column, the same one again flips
 // the direction. which = 'cases' | 'arch'. Returns [chip, column row or null].
 export function sortBar(which) {
-  // 2026-11-18: en rullista med kolumn och riktning – Ändrad (eller Stängd i Arkiv), Skapad och Rubrik räcker.
-  const cur = sortOf(S.state, which), first = which === 'arch' ? ['x', 'Stängd'] : ['u', 'Ändrad'];
-  const opts = [[first[0] + '-', `${first[1]} ↓`], [first[0] + '+', `${first[1]} ↑`], ['c-', 'Skapad ↓'], ['c+', 'Skapad ↑'], ['t+', 'Rubrik A–Ö'], ['t-', 'Rubrik Ö–A']];   // ↓ nyast först
-  const sel = el('select', { class: 'filt sort-sel', 'data-act': 'sortsel', 'data-id': which, 'aria-label': 'Sortera' },
-    opts.map(([v, l]) => el('option', { value: v, selected: v === cur, text: '↕ ' + l })));
-  return [sel, null];
+  // 2026-11-18: ↕ fäller ut tre kolumner (Ändrad eller Stängd, Skapad, Rubrik). Tryck på en kolumn för att sortera på den,
+  // tryck igen för att vända ordningen (↓ fallande, ↑ stigande).
+  const cur = sortOf(S.state, which), all = SORTS[which], keys = which === 'arch' ? ['x', 'c', 't'] : ['u', 'c', 't'];
+  const arrow = (v) => (v[1] === '+' ? '↑' : '↓'), name = all[cur[0]] || all[keys[0]];
+  const btn = el('button', { class: 'filt sort-btn' + (S.sortOpen ? ' on' : ''), 'data-act': 'sortopen', 'aria-expanded': String(!!S.sortOpen), 'aria-label': `Sortering: ${name}. Tryck för att välja`, text: `↕ ${name} ${arrow(cur)}` });
+  const row = S.sortOpen ? el('div', { class: 'sort-cols', role: 'group', 'aria-label': 'Sortera på' }, keys.map((k) => {
+    const on = cur[0] === k;
+    return el('button', { class: 'sort-col' + (on ? ' on' : ''), 'data-act': 'sortcol', 'data-id': `${which}:${k}`, 'aria-pressed': String(on),
+      'aria-label': on ? `${all[k]} – tryck för att vända` : `Sortera på ${all[k]}`, text: on ? `${all[k]} ${arrow(cur)}` : all[k] });
+  })) : null;
+  return [btn, row];
 }
 // One row: person select, category chips (scroll sideways when they don't fit), sort chip at the end.
 export function filterRow(pchips, chips, schip) {
