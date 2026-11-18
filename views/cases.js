@@ -54,7 +54,7 @@ export function catFilter(all, key, act) {
 export function sortBar(which) {
   // 2026-11-18: en rullista med kolumn och riktning – Ändrad (eller Stängd i Arkiv), Skapad och Rubrik räcker.
   const cur = sortOf(S.state, which), first = which === 'arch' ? ['x', 'Stängd'] : ['u', 'Ändrad'];
-  const opts = [[first[0] + '-', `${first[1]} ↓`], [first[0] + '+', `${first[1]} ↑`], ['c-', 'Skapad ↓'], ['c+', 'Skapad ↑'], ['t+', 'A–Ö'], ['t-', 'Ö–A']];   // ↓ nyast först
+  const opts = [[first[0] + '-', `${first[1]} ↓`], [first[0] + '+', `${first[1]} ↑`], ['c-', 'Skapad ↓'], ['c+', 'Skapad ↑'], ['t+', 'Rubrik A–Ö'], ['t-', 'Rubrik Ö–A']];   // ↓ nyast först
   const sel = el('select', { class: 'filt sort-sel', 'data-act': 'sortsel', 'data-id': which, 'aria-label': 'Sortera' },
     opts.map(([v, l]) => el('option', { value: v, selected: v === cur, text: '↕ ' + l })));
   return [sel, null];
