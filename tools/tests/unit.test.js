@@ -1,5 +1,5 @@
 // Unit tests for store.js (ES module), run in Node by tools/test.ps1 (tools/node-unit.mjs). Same T API as test-harness.js.
-import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort } from '../../store.js';
+import { defaults, validate, cleanText, exportText, importText, newCase, setField, progress, openCases, closedCases, overview, cleanType, DEFAULT_TYPES, changeType, typeChangeLoss, addExtra, setExtra, alerts, nextCase, firstDate, addMonths, trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, trashArchivedBefore, archReady, setStepDone, setStepRepeat, splitItems, stepOrder, sortCases, sortOf, nextSort, shownField } from '../../store.js';
 
 const base = () => validate({ cases: [{ id: 'c1', t: 'sym', title: 'Ont', c: '2026-11-10', u: '2026-11-10', f: { s1: 'Knä', s3: 1 } }] });
 T.test('defaults: sex kategorier, fasta typer på och förslag av', () => {
@@ -27,8 +27,8 @@ T.test('validering: färg utanför listan, okänd kategori, fält-id __proto__ a
 });
 T.test('nytt ärende får typens förslag på delmål', () => {
   const s = defaults(), c = newCase(s, 'house', 'Villa Ek', '2026-11-14');
-  T.eq(c.s.map((x) => x[0]), ['Prata med banken', 'Få lånelöfte', 'Gå på visning', 'Lägg bud']);
-  T.eq(progress(c), [0, 4]);
+  T.eq(c.s.map((x) => x[0]), ['Gå på visning', 'Lägg bud eller skicka intresseanmälan', 'Skriv kontrakt']);
+  T.eq(progress(c), [0, 3]);
   T.eq(newCase(s, 'house', '   ', '2026-11-14'), null);
 });
 T.test('fält sätts efter sort: tal med komma, bock, tomt tar bort', () => {
@@ -241,4 +241,12 @@ T.test('version 7: Handla och Inköp läggs till i gammal data', () => {
   T.eq(s.cats.map((c) => c.id), ['h', 's', 'o']);
   T.eq(s.types.map((t) => t.id + t.on + (t.r || '')), ['task1', 'shop1w']);
   T.eq(validate({ version: 7, types: [{ id: 'task', name: 'Uppgift', cat: 'o', on: 1, fields: [] }] }).types.length, 1, 'borttagen typ kommer inte tillbaka');
+});
+
+T.test('Ny bostad: gamla Bostadsköp får Köpa eller hyra, gamla trådar blir Köpa (version 8)', () => {
+  const s = validate({ version: 7, cats: [{ id: 'm', name: 'Hem', color: 'blue' }], types: [{ id: 'house', name: 'Bostadsköp', icon: '🏠', cat: 'm', on: 1, fields: [{ id: 'pr', name: 'Pris', kind: 'num' }] }],
+    cases: [{ id: 'c1', t: 'house', title: 'Lgh', c: '2026-11-10', f: { pr: 5 } }] });
+  const t = s.types.find((x) => x.id === 'house');
+  T.eq([t.name, t.fields[0].id, t.fields.find((f) => f.id === 'pr').if, s.cases[0].f.fm], ['Ny bostad', 'fm', ['fm', 'Köpa'], 'Köpa']);
+  T.eq([shownField(t.fields.find((f) => f.id === 'rt'), s.cases[0]), shownField(t.fields.find((f) => f.id === 'pr'), s.cases[0])], [false, true]);
 });

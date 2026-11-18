@@ -47,7 +47,8 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Deadline: in Settings → Types each date field can be ticked as a deadline (e.g. Done by, Due). It then shows in Coming up even when the date has passed, until the thread is closed.
 
 ## Types and categories
-- Settings → Threads → Types: tick more types, e.g. Home purchase, Dental care, Worry or thought, Authority, Insurance, Car and garage, Studies and Call to make.
+- Settings → Threads → Types: tick more types, e.g. New home, Dental care, Worry or thought, Authority, Insurance, Car and garage, Studies and Call to make.
+- **New home**: first choose **Buy or rent**. Buy shows price, bank, mortgage approval and bid; Rent shows rent, housing queue, application, reply by and move-in.
 - + Own type: give it a name, icon (emoji) and category and add fields. Kinds: text, long text, date, date and time, number, checkbox, choice from list and days – e.g. House with Address, Price, Viewing, Talked to the bank ✓ and Mortgage approval ✓.
 - Suggested steps (one per line, at the bottom of the type) are added to each new thread of the type. In New thread the suggestions show below the fields, and you can untick the ones you do not need. The list of types shows how many steps each type has.
 - If you remove a field (or change its kind) filled-in values move to Extra fields in the threads of the type – nothing disappears.

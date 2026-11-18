@@ -1,5 +1,5 @@
 // Vy: Trådar (öppna trådar, filter per kategori), typväljaren och tråden (lager – Bakåt stänger). Tråden används också från Arkiv.
-import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, adultsOf, dayPerson, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT, stepOrder, isList } from '../store.js';
+import { openCases, sortCases, sortOf, SORTS, typeOf, catOf, personOf, childrenOf, adultsOf, dayPerson, dayHours, weekHours, absentHours, parseKey, progress, daysBetween, KINDS, REPEAT, stepOrder, isList, shownField } from '../store.js';
 import { today, S, el, shortDate, longDate, setOpen } from '../ui.js';
 import { typeEditor } from './settings.js';
 
@@ -20,7 +20,7 @@ export function caseRow(c) {
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna tråden.
 export const showVal = (fd, v) => fd.kind === 'days' ? `${v.length} ${v.length === 1 ? 'dag' : 'dagar'} · ${v.filter((x) => x[2]).length} ansökta` : fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);
 export function caseSummary(c, t, cat, actions) {
-  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined);
+  const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined && shownField(fd, c));
   const log = (c.l || []).slice(-3).reverse();
   return el('div', { class: `case-sum c-${cat.color}` },
     fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : c.o?.some((x) => x[2] != null) ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
@@ -91,7 +91,7 @@ function picker() {
     dt ? el('div', { class: `draft c-${catOf(S.state, dt).color}` },
       el('h2', { class: 'sub-h', text: `${dt.icon} ${dt.name}` }),
       personSelect(d.p, 'dperson'),
-      dt.fields.map((fd) => fieldInput(d, fd, 'dv')),
+      dt.fields.filter((fd) => shownField(fd, d)).map((fd) => fieldInput(d, fd, 'dv')),
       el('p', { class: 'import-error small', id: 'd-error', role: 'alert' }),
       dt.steps?.length ? [el('h2', { class: 'sub-h', text: 'Delmål' }),
         el('p', { class: 'muted small', text: 'Förslag från typen. Bocka ur det du inte behöver – ändra förslagen under Inställningar → Typer.' }),
@@ -174,7 +174,7 @@ export function caseView() {
   if (!c) return null;
   if (S.edit) return caseEditor();
   const t = typeOf(S.state, c), cat = catOf(S.state, t), [done, all] = progress(c);
-  const fields = (t?.fields || []).filter((fd) => fd.kind !== 'days' && c.f?.[fd.id] !== undefined), extra = (c.o || []).filter((x) => x[2] != null), who = personOf(S.state, c);
+  const fields = (t?.fields || []).filter((fd) => fd.kind !== 'days' && c.f?.[fd.id] !== undefined && shownField(fd, c)), extra = (c.o || []).filter((x) => x[2] != null), who = personOf(S.state, c);
   return el('section', { class: `card case c-${cat.color}` },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
@@ -213,7 +213,7 @@ export function caseEditor() {
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
     el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') }),
     personSelect(c.p, 'cperson'),
-    (t?.fields || []).map((fd) => fieldInput(c, fd)),
+    (t?.fields || []).filter((fd) => shownField(fd, c)).map((fd) => fieldInput(c, fd)),
     el('details', { class: 'old-fields' + (c.o?.length ? '' : ' empty'), 'data-sec': 'extra', open: !!c.o?.length || setOpen.has('extra') },   // folded until used
       el('summary', { class: 'sub-h', text: c.o?.length ? `Extra fält (${c.o.length})` : '+ Extra fält' }),
       el('p', { class: 'muted small', text: 'Fält bara i det här tråden – typen ändras inte.' }),

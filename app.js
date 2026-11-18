@@ -1,6 +1,8 @@
 // Stress control – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
 import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX } from './store.js';
+// Styr fältet andra fälts synlighet (fields[].if)? Då ritas formuläret om när det ändras.
+const controls = (typeId, fieldId) => !!S.state.types.find((x) => x.id === typeId)?.fields.some((f) => f.if?.[0] === fieldId);
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
 import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
 import { viewCases, showVal } from './views/cases.js';
@@ -500,6 +502,7 @@ app.addEventListener('change', (ev) => {
       const d = S.draft; if (!d) return;
       const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
       errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
+      if (ok && controls(d.t, t.dataset.id)) render();   // 2026-11-18: ett val som styr andra fält (Köpa eller hyra)
       return;
     }
     case 'pfilter': S.pfilter = t.value; render(); return;
@@ -576,7 +579,7 @@ app.addEventListener('change', (ev) => {
       const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
       const ok = setField(S.state, c, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
       errText('c-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
-      if (ok) persist();
+      if (ok) { persist(); if (controls(c.t, t.dataset.id)) render(); }
       return;
     }
     case 'ctitle': {
