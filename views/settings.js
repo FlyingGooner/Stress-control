@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, WEEK_HOURS, PERSON_KINDS, REL_CHILD, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS } from '../store.js';
+import { addDays, WEEK_HOURS, PERSON_KINDS, REL_CHILD, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS, endName, END_KINDS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData, savedPassword } from './data.js';
 
@@ -32,7 +32,9 @@ export function typeEditor() {
       el('button', { class: 'icon sm', 'data-act': 'fup', 'data-i': i, 'aria-label': 'Flytta upp', disabled: i === 0, text: '↑' }),
       el('button', { class: 'icon sm danger', 'data-act': 'fdel', 'data-i': i, 'aria-label': 'Ta bort fältet', text: '✕' }),
       f.kind === 'choice' ? el('textarea', { class: 'opts-edit', rows: 3, 'aria-label': `Val för ${f.name || 'fältet'}, ett per rad`, placeholder: 'Val, ett per rad', 'data-act': 'fopts', 'data-i': i, text: (f.opts || []).join('\n') }) : null,
-      f.kind === 'date' || f.kind === 'dt' ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: !!f.due, 'data-act': 'fdue', 'data-i': i }), el('span', { text: 'Deadline – påminn även när datumet passerat' })) : null))),
+      f.kind === 'date' || f.kind === 'dt' ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: !!f.due, 'data-act': 'fdue', 'data-i': i }), el('span', { text: 'Deadline – påminn även när datumet passerat' })) : null,
+      END_KINDS.includes(f.kind) && f.id ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: (d.end || []).includes(f.id), 'data-act': 'fend', 'data-i': i }),
+        el('span', { text: 'Slutdatum – används när trådar sorteras på Datum' + ((d.end || []).length > 1 && (d.end || []).includes(f.id) ? ` (${(d.end || []).indexOf(f.id) + 1})` : '') })) : null))),
     d.fields.length < LIM.fields ? el('button', { class: 'link', 'data-act': 'fadd', text: '+ Lägg till fält' }) : null,
     el('p', { class: 'muted small', text: 'Sorter: text, lång text, datum, datum och tid, tal, bock (t.ex. Pratat med banken ✓), val i lista (ett val per rad – i tråden går det också att lägga till egna) och dagar (VAB m.m.). Tar du bort ett fält flyttas ifyllda värden till Extra fält i trådarna, så inget försvinner.' }),
     el('h2', { class: 'sub-h', text: 'Förslag på delmål' }),
@@ -65,7 +67,7 @@ export function viewSettings() {
         el('ul', { class: 'edit-list' }, S.state.types.map((t) => el('li', { class: 'type-row' },
           el('input', { type: 'checkbox', checked: !!t.on, 'data-act': 'ton', 'data-id': t.id, 'aria-label': `Visa ${t.name}` }),
           el('button', { class: 'food-row', 'data-act': 'topen', 'data-id': t.id },
-            el('span', { class: 'post-name' }, `${t.icon} ${t.name}`, el('small', { text: `${S.state.cats.find((c) => c.id === t.cat)?.name ?? ''} · ${t.fields.length} fält` + (t.steps?.length ? ` · ${t.steps.length} delmål` : '') })))))),
+            el('span', { class: 'post-name' }, `${t.icon} ${t.name}` + (endName(t) ? ` (${endName(t)})` : ''), el('small', { text: `${S.state.cats.find((c) => c.id === t.cat)?.name ?? ''} · ${t.fields.length} fält` + (t.steps?.length ? ` · ${t.steps.length} delmål` : '') })))))),
         S.state.types.length < LIM.types ? el('button', { class: 'link', 'data-act': 'tnew', text: '+ Egen typ' }) : null),
       sec('cats', 'Kategorier', S.state.cats.map((c) => c.name).join(', '),
         el('ul', { class: 'edit-list' }, S.state.cats.map((c) => el('li', { class: `cat-row c-${c.color}` },

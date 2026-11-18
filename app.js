@@ -620,6 +620,7 @@ app.addEventListener('change', (ev) => {
     }
     case 'ton': { const ty = S.state.types.find((x) => x.id === t.dataset.id); if (ty) { ty.on = t.checked ? 1 : 0; persist(); } return; }
     case 'tset': if (S.tedit && t.dataset.id === 'cat') S.tedit.cat = t.value; return;
+    case 'fend': { const d = S.tedit, f = d?.fields[Number(t.dataset.i)]; if (!f) return; d.end = (d.end || []).filter((x) => x !== f.id); if (t.checked) d.end.push(f.id); render(); return; }
     case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) { f.kind = t.value; if (f.kind !== 'date' && f.kind !== 'dt') delete f.due; if (f.kind === 'choice') f.opts ||= []; else delete f.opts; render(); } return; }
     case 'fdue': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f) { if (t.checked) f.due = 1; else delete f.due; } return; }
     case 'trashdays': { const v = Number(t.value); if (TRASH_DAYS.includes(v)) { S.state.trashDays = v; purgeTrash(S.state, today()); persist(); render(); } return; }

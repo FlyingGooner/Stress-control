@@ -613,3 +613,5 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   border-radius: 16px; background: var(--surface-container-high, var(--surface-container)); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .sort-pop .sort-col { flex: none; height: 40px; text-align: left; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; }
 .sort-pop .sort-col.on { background: var(--primary-container); color: var(--on-primary-container); }
+.due-check { padding: 2px 0; }
+.due-check input[type=checkbox] { flex: none; width: 20px; height: 20px; min-height: 0; margin: 0; accent-color: var(--primary); }
