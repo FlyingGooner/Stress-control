@@ -55,7 +55,7 @@ export const shownField = (fd, c) => !fd.if || c?.f?.[fd.if[0]] === fd.if[1];
 const HOUSE_FIELDS = [{ id: 'fm', name: 'Köpa eller hyra', kind: 'choice', opts: ['Köpa', 'Hyra'] }, F('ad', 'Adress'),
   Fi(['fm', 'Köpa'], 'pr', 'Pris', 'num'), Fi(['fm', 'Hyra'], 'rt', 'Hyra per månad', 'num'), F('vw', 'Visning', 'dt'),
   Fi(['fm', 'Köpa'], 'bk', 'Pratat med banken', 'check'), Fi(['fm', 'Köpa'], 'll', 'Lånelöfte', 'check'), Fi(['fm', 'Köpa'], 'bid', 'Bud', 'num'),
-  Fi(['fm', 'Hyra'], 'q', 'Bostadskö och kötid'), Fi(['fm', 'Hyra'], 'ap', 'Intresseanmälan', 'date'), Fi(['fm', 'Hyra'], 'an', 'Svara senast', 'dt', 1),
+  Fi(['fm', 'Hyra'], 'q', 'Bostadskö och kötid'), Fi(['fm', 'Hyra'], 'ap', 'Intresseanmälan', 'date'), Fi(['fm', 'Hyra'], 'an', 'Ansök senast', 'dt', 1),
   Fi(['fm', 'Hyra'], 'mi', 'Inflyttning', 'date'), F('th', 'Tankar', 'note')];
 export const DEFAULT_CATS = [
   { id: 'h', name: 'Hälsa', color: 'pink' }, { id: 'e', name: 'Ekonomi', color: 'green' }, { id: 'm', name: 'Hem', color: 'blue' },
@@ -96,7 +96,7 @@ export const DEFAULT_TYPES = [
 export const roomFor = (state) => state.cases.length < LIM.cases && state.cases.filter((c) => !c.x).length < LIM.open;
 const clone = (x) => JSON.parse(JSON.stringify(x));
 export function defaults() {
-  return { version: 9, pfields: clone(PERSON_FIELDS), people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
+  return { version: 10, pfields: clone(PERSON_FIELDS), people: [], cats: clone(DEFAULT_CATS), types: clone(DEFAULT_TYPES), cases: [], trash: [], trashDays: 30, alertDays: 7, backup: { remind: 'month' } };
 }
 
 /* ---------- Validation ---------- */
@@ -195,6 +195,11 @@ export function validate(raw) {
       t.fields = t.fields.slice(0, LIM.fields);
     }
     if (!(raw.version >= 9)) for (const t of s.types) if (t.id === 'house') for (const f of t.fields) if (f.id === 'an' && f.kind === 'date') f.kind = 'dt';   // version 9: Svara senast med tid
+    if (!(raw.version >= 10)) for (const t of s.types) if (t.id === 'house') {   // version 10: Ansök senast, fälten i standardordning
+      for (const f of t.fields) if (f.id === 'an' && f.name === 'Svara senast') f.name = 'Ansök senast';
+      const pos = (f) => { const i = HOUSE_FIELDS.findIndex((x) => x.id === f.id); return i < 0 ? 999 : i; };
+      t.fields = t.fields.map((f, i) => [f, i]).sort((a, b) => pos(a[0]) - pos(b[0]) || a[1] - b[1]).map(([f]) => f);
+    }
     if (!(raw.version >= 4)) for (const t of s.types) if (t.id === 'fk' && t.icon === '👶') t.icon = '🛟';   // 0.2.47 had a baby icon – not only about children
     if (!(raw.version >= 2)) for (const t of s.types) {   // version 1 had no deadlines: mark the default ones
       const d = DEFAULT_TYPES.find((x) => x.id === t.id);
@@ -613,7 +618,7 @@ export const EXPORT_SCHEMA = {
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
 };
 export const EXPORT_EXAMPLE = {
-  version: 9,
+  version: 10,
   pfields: [{ id: 'rel', name: 'Relation', kind: 'choice', opts: ['Jag', 'Barn'] }],
   people: [{ id: 'p1', name: 'Anna', h: 30, v: { rel: 'Jag' } }],
   cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }],

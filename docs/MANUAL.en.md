@@ -48,7 +48,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 
 ## Types and categories
 - Settings → Threads → Types: tick more types, e.g. New home, Dental care, Worry or thought, Authority, Insurance, Car and garage, Studies and Call to make.
-- **New home**: first choose **Buy or rent**. Buy shows price, bank, mortgage approval and bid; Rent shows rent, housing queue, application, reply by and move-in. **Reply by** has both date and time and shows in the reminders.
+- **New home**: first choose **Buy or rent**. Buy shows price, bank, mortgage approval and bid; Rent shows rent, housing queue, application, apply by and move-in. **Apply by** has both date and time and shows in the reminders.
 - Edit a note: tap **✎** next to it in the Log, change the text and tap **Save**. Under **✎ Edit** it can also be changed or deleted (✕).
 - Long notes in the Log are folded to their first line – tap to read all of it. Pasted text is tidied: several empty lines in a row become one, and empty lines at the start and end are removed.
 - + Own type: give it a name, icon (emoji) and category and add fields. Kinds: text, long text, date, date and time, number, checkbox, choice from list and days – e.g. House with Address, Price, Viewing, Talked to the bank ✓ and Mortgage approval ✓.

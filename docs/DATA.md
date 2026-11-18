@@ -55,7 +55,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 
 ## Exempel
 ```json
-{ "version": 9, "alertDays": 7,
+{ "version": 10, "alertDays": 7,
   "people": [{ "id": "p1", "name": "Anna", "h": 30 }],
   "cats": [{ "id": "e", "name": "Ekonomi", "color": "green" }],
   "types": [{ "id": "eco", "name": "Ekonomi", "icon": "💸", "cat": "e", "on": 1,
