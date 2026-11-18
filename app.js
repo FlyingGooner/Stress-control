@@ -582,6 +582,12 @@ app.addEventListener('change', (ev) => {
       if (ok) { persist(); if (controls(c.t, t.dataset.id)) render(); }
       return;
     }
+    case 'ledit': {   // 2026-11-18: ändra en befintlig anteckning; tom = oförändrad (ta bort med ✕)
+      const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i]; if (!row) return;
+      const v = cleanText(tidyNote(t.value), 500, true);
+      if (v && v !== row[1]) { row[1] = v; c.u = today(); persist(); } else if (!v) t.value = row[1];
+      return;
+    }
     case 'ctitle': {
       const c = S.state.cases.find((x) => x.id === S.open), v = cleanText(t.value, 80);
       if (c && v) { c.title = v; c.u = today(); persist(); } else if (c) t.value = c.title;

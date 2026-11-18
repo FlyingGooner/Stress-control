@@ -557,3 +557,4 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .log-fold[open] > summary { display: none; }
 .log-full { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.4; }
 .log li { padding: 6px 0; }
+.log-edit { width: 100%; min-width: 0; padding: 6px 10px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; line-height: 1.4; resize: vertical; }

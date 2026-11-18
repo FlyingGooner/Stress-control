@@ -250,7 +250,8 @@ export function caseEditor() {
       el('button', { class: 'weigh-save add-btn', 'data-act': 'sadd', 'aria-label': 'Lägg till delmål', text: '+' })),
     el('h2', { class: 'sub-h', text: 'Logg' }),
     el('ul', { class: 'log' }, [...(c.l || [])].map((x, i) => [x, i]).reverse().map(([[d, x], i]) => el('li', {},
-      el('span', { class: 'log-d', text: shortDate(d) }), logText(x),
+      // 2026-11-18: i Redigera går anteckningen att ändra direkt (sparas när du lämnar fältet).
+      el('span', { class: 'log-d', text: shortDate(d) }), el('textarea', { class: 'log-edit', 'data-act': 'ledit', 'data-i': i, rows: Math.min(12, Math.max(1, x.split('\n').length + Math.floor(x.length / 40))), maxlength: 500, 'aria-label': 'Ändra anteckningen', text: x }),
       el('button', { class: 'icon sm', 'data-act': 'ldel', 'data-i': i, 'aria-label': 'Ta bort anteckningen', text: '✕' })))),
     el('textarea', { id: 'l-new', rows: 1, maxlength: 500, placeholder: 'Anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
     el('div', { class: 'save-row log-add' },
