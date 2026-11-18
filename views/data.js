@@ -87,7 +87,7 @@ export async function saveBackup() {
     try {
       snackbar('Krypterar backup…', null, null, 2000);
       r = await Backup.save({ slug: SLUG, today: today(), text: await Backup.encrypt(exportText(S.state, today()), pwd, SLUG) });
-    } catch { r = 'error'; } finally { busy = false; }
+    } catch (e) { r = 'error'; if (!Backup.lastError) Backup.note(e); } finally { busy = false; }
   } else if (!rememberOn()) r = await Backup.saveWithPassword({ slug: SLUG, today: today(), text: exportText(S.state, today()) });
   else {   // first time: the usual dialog, then the password is kept
     if (busy) return; busy = true;
@@ -95,14 +95,14 @@ export async function saveBackup() {
       const a = await Backup.askPassword('export', async (p) => ({ env: await Backup.encrypt(exportText(S.state, today()), p, SLUG) }));
       if (!a) r = 'cancelled';
       else { keep(a.pwd); r = await Backup.save({ slug: SLUG, today: today(), text: a.value.env }); if (r === 'saved' || r === 'fallback') snackbar('Backup sparad. Lösenordet är sparat på enheten – nästa gång räcker ett tryck.', null, null, 5000); }
-    } catch { r = 'error'; } finally { busy = false; }
+    } catch (e) { r = 'error'; if (!Backup.lastError) Backup.note(e); } finally { busy = false; }
     if (r === 'saved' || r === 'fallback') { S.state.backup.last = today(); S.state.backup.asked = null; persist(); if (currentView() === 'settings') render(); return; }
   }
   if (r === 'saved' || r === 'fallback') {
     S.state.backup.last = today(); S.state.backup.asked = null; persist();
     if (currentView() === 'settings') render();
   }
-  if (BACKUP_MSG[r]) snackbar(BACKUP_MSG[r], null, null, 4000);
+  if (BACKUP_MSG[r]) snackbar(BACKUP_MSG[r] + (r === 'error' && Backup.lastError ? ` (${Backup.lastError})` : ''), null, null, r === 'error' ? 8000 : 4000);
 }
 /* ---------- Backup-påminnelse ---------- */
 // Förfallen när det gått en vecka/månad sedan senaste backup (eller sedan första posten). "Inte nu" frågar igen om 3 dagar.
