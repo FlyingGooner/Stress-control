@@ -23,7 +23,7 @@ const firstLine = (x) => { const l = x.split('\n').find((y) => y.trim()) || ''; 
 function logText(x) {
   const t = x.replace(/\n{3,}/g, '\n\n');
   if (!t.includes('\n') && t.length <= 90) return el('span', { class: 'log-x', text: t });
-  return el('details', { class: 'log-x log-fold' }, el('summary', { text: firstLine(t) }), el('div', { class: 'log-full', text: t }));
+  return el('details', { class: 'log-x log-fold' }, el('summary', { text: firstLine(t) }), el('div', { class: 'log-full', 'data-act': 'logfold', text: t }));
 }
 // Read-only summary under a row: filled fields, sub-goals and the latest notes, then Öppna tråden.
 export const showVal = (fd, v) => fd.kind === 'days' ? `${v.length} ${v.length === 1 ? 'dag' : 'dagar'} · ${v.filter((x) => x[2]).length} ansökta` : fd.kind === 'check' ? 'Ja' : fd.kind === 'date' ? longDate(v) : fd.kind === 'dt' ? `${longDate(v.slice(0, 10))} ${v.slice(11)}` : fd.kind === 'num' ? Number(v).toLocaleString('sv-SE') : String(v);

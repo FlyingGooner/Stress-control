@@ -178,6 +178,7 @@ app.addEventListener('click', (ev) => {
   const touch = (c) => { c.u = today(); };
   switch (act) {
     // Trådar
+    case 'logfold': t.closest('details')?.removeAttribute('open'); return; // 2026-11-19: tryck på öppen logganteckning fäller ihop den.
     case 'sortopen': S.sortOpen = !S.sortOpen; break;
     case 'sortcol': { const [w, k] = id.split(':'); if (!SORTS[w]?.[k]) return; S.state.sort = { ...S.state.sort, [w]: nextSort(S.state, w, k) }; persist(); break; }
     case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
