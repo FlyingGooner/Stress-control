@@ -51,7 +51,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Under Inställningar → Typer → en typ: bocka i **Slutdatum** på de datumfält som ska användas när trådar sorteras på Datum (i den ordning du bockar).
 - Färre typer (2026-11-18): **Vård** (vård eller tandvård), **Fixa** (hemma eller bil), **Ärende** och **Tankar och samtal** väljer först vad det gäller – fälten följer valet. Ny tråd visar de sex typer du använder mest, resten under **Fler typer**.
 - En öppen tråd visas i **läsläge**: kompakt, med fälten på en rad var. Allt ändras under **✎ Redigera**: fält, delmål, anteckningar och mer.
-- **Ny bostad**: välj först **Köpa eller hyra**. Köpa visar pris, bank, lånelöfte och bud; Hyra visar hyra, bostadskö, intresseanmälan, ansök senast och inflyttning. **Ansök senast** har både datum och klockslag och syns i påminnelserna.
+- **Ny bostad**: välj först **Köpa eller hyra**. Köpa visar pris, bank, lånelöfte och bud; Hyra visar hyra, bostadskö, intresseanmälan skickad, ansök senast och inflyttning. **Ansök senast** har både datum och klockslag och syns i påminnelserna. Datum för sådant du redan har gjort (t.ex. Intresseanmälan skickad, Sökt, Skickat) visas inte i Aktuellt.
 - Ändra en anteckning: tryck **✎ Redigera** och skriv direkt i den. ✕ tar bort den.
 - Långa anteckningar i Loggen visas hopfällda till första raden – tryck för att läsa hela. Inklistrad text städas: flera tomma rader i rad blir en, och tomma rader först och sist tas bort.
 - + Egen typ: ge den namn, ikon (emoji) och kategori och lägg till fält. Sorter: text, lång text, datum, datum och tid, tal, bock, val i lista och dagar – t.ex. Hus med Adress, Pris, Visning, Pratat med banken ✓ och Lånelöfte ✓.
