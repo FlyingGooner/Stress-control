@@ -245,10 +245,10 @@ app.addEventListener('click', (ev) => {
       else withUndo(`${what} ligger i papperskorgen`, () => { for (const c of list) trashCase(S.state, c, today()); });
       return;
     }
-    case 'fopen': S.fedit = t.dataset.id; render(); document.querySelector('.vf-edit input, .vf-edit select, .vf-edit textarea')?.focus(); return;
+    case 'fopen': S.fedit = t.dataset.id; render(); return;   // 2026-11-21: inget tangentbord direkt
     case 'fdone': S.fedit = null; render(); return;
     case 'cedit': S.edit = true; S.ledit = null; S.fedit = null; render(); scrollTo(0, 0); return;
-    case 'lopen': S.ledit = Number(t.dataset.i); render(); document.getElementById('le-text')?.focus(); return;
+    case 'lopen': S.ledit = Number(t.dataset.i); render(); return;   // inget tangentbord direkt
     case 'lcancel': S.ledit = null; render(); return;
     case 'lsave': {
       const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i];
@@ -351,7 +351,7 @@ app.addEventListener('click', (ev) => {
       const d = S.tedit; if (d.fields.length >= LIM.fields) return;
       const used = new Set([...d.fields, ...(JSON.parse(S.teditOrig || '{}').fields || [])].map((f) => f.id));   // never reuse a removed field's id: its old values would land in the new field
       let n = d.fields.length + 1; while (used.has('f' + n)) n++;
-      d.fields.push({ id: 'f' + n, name: '', kind: 'text' }); render(); app.querySelector('.field-edit:last-child input')?.focus(); return;
+      d.fields.push({ id: 'f' + n, name: '', kind: 'text' }); render(); return;   // inget tangentbord direkt
     }
     case 'fup': { const f = S.tedit.fields, i = Number(t.dataset.i); if (i > 0) [f[i - 1], f[i]] = [f[i], f[i - 1]]; break; }
     case 'fdel': S.tedit.fields.splice(Number(t.dataset.i), 1); break;
