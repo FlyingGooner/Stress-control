@@ -32,11 +32,12 @@ export function viewOverview() {
         soon.length ? [acute.length ? el('h3', { class: 'up-h', text: `Snart – inom ${n} dagar` }) : null, el('ul', { class: 'alert-list' }, soon.map(row))] : null]
         : el('p', { class: 'muted small', text: `Inget som närmar sig de närmaste ${n} dagarna.` })),
     el('section', { class: 'card stats3' }, stat(o.open, 'öppna trådar', 'gocases', `${o.open} öppna trådar – visa`), stat(o.steps, 'delmål kvar', 'stepsopen', `${o.steps} delmål kvar – visa alla`), stat(o.closed30, 'stängda, 30 d', 'goarch', `${o.closed30} stängda senaste 30 dagarna – visa Arkiv`)),
-    el('section', { class: 'card' }, el('h2', { text: 'Per kategori' }),
-      el('ul', { class: 'bars' }, o.per.map(({ cat, n }) => el('li', { class: `c-${cat.color}` }, el('button', { class: 'bar-btn', 'data-act': 'gocases', 'data-id': cat.id, disabled: !n, 'aria-label': `${cat.name}: ${n} öppna – visa` },
+    // Bara kategorier med öppna trådar (2026-11-21): tomma rader tog plats utan att säga något.
+    o.per.some((p) => p.n) ? el('section', { class: 'card' }, el('h2', { text: 'Per kategori' }),
+      el('ul', { class: 'bars' }, o.per.filter((p) => p.n).map(({ cat, n }) => el('li', { class: `c-${cat.color}` }, el('button', { class: 'bar-btn', 'data-act': 'gocases', 'data-id': cat.id, disabled: !n, 'aria-label': `${cat.name}: ${n} öppna – visa` },
         el('span', { class: 'bar-name', text: cat.name }),
         el('progress', { max, value: n, 'aria-hidden': 'true' }),
-        el('span', { class: 'bar-n', text: String(n) })))))),
+        el('span', { class: 'bar-n', text: String(n) })))))) : null,
     later.length ? el('section', { class: 'card upcoming' }, el('h2', { text: 'Kommande' }),
       week.length ? [el('h3', { class: 'up-h', text: n < 7 ? 'Inom två veckor' : 'Nästa vecka' }), el('ul', { class: 'alert-list' }, week.map(row))] : null,
       month.length ? [el('h3', { class: 'up-h', text: 'Inom en månad' }), el('ul', { class: 'alert-list' }, month.map(row))] : null) : null,
