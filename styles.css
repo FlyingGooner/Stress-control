@@ -650,3 +650,7 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: 0s !important; }
 }
+/* Filterraden symmetrisk (2026-11-22): väljarna och sorteringsknappen exakt lika höga (väljarna fick 48 px av den allmänna select-regeln) */
+.filter-row { align-items: stretch; }
+.filter-row .filt { box-sizing: border-box; height: 44px; min-height: 44px; max-height: 44px; margin: 0; line-height: 1; border-radius: 22px; }
+.filter-row .filt.sort-btn { display: inline-flex; align-items: center; justify-content: center; }
