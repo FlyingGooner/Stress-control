@@ -1,6 +1,6 @@
 // Vy: Ärenden (öppna ärenden, närmast deadline först), Nytt ärende (rubrik + mallar) och ärendet (lager – Bakåt stänger).
 // Ärendet används också från Arkiv. 2026-11-22: omgjord – rubrik, beskrivning, deadline, person, delmål och logg; allt sparas direkt.
-import { openCases, personOf, catOf, COLOR_DOTS, progress, daysBetween, parseKey, dueDay, LOG_CHARS, DESC_CHARS, TITLE_CHARS, STEP_CHARS } from '../store.js';
+import { openCases, personOf, catOf, colorName, COLORS, COLOR_DOTS, progress, daysBetween, parseKey, dueDay, LOG_CHARS, DESC_CHARS, TITLE_CHARS, STEP_CHARS } from '../store.js';
 import { today, S, el, shortDate } from '../ui.js';
 
 // Deadline som text: "idag 14:00", "imorgon", "fre", "28/11", "3 dagar sen".
@@ -15,25 +15,23 @@ const dueClass = (c) => (c.x || !c.due ? '' : dueDay(c) < today() ? ' late' : du
 
 export function caseRow(c) {
   const [done, all] = progress(c), who = personOf(S.state, c), cat = catOf(S.state, c);
-  const info = [cat?.name, c.x ? `✓ klar ${shortDate(c.x)}` : c.due ? `📅 ${dueText(c.due)}` : 'ingen deadline', who ? `👤 ${who.name}` : null].filter(Boolean).join(' · ');
+  const info = [cat?.label || null, c.x ? `✓ klar ${shortDate(c.x)}` : c.due ? `📅 ${dueText(c.due)}` : 'ingen deadline', who ? `👤 ${who.name}` : null].filter(Boolean).join(' · ');
   return el('li', { class: 'case-li' + dueClass(c) + (cat ? ` c-${cat.color}` : '') },
     el('button', { class: 'case-row', 'data-act': 'copen', 'data-id': c.id },
       el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }), el('small', { class: 'case-info', text: info })),
       all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null));
 }
-// Kategorifilter (bara när det finns kategorier). '-' = utan kategori.
+// Färgfilter (bara när några ärenden har färg). '-' = utan färg.
 export function catFilter(list, key) {
-  const cats = S.state.cats;
-  if (!cats.length) return [null, list];
+  const n = (k) => list.filter((c) => (k === '-' ? !c.k : c.k === k)).length, used = COLORS.filter((k) => n(k));
   S[key] ??= 'all';
-  if (S[key] !== 'all' && S[key] !== '-' && !cats.some((k) => k.id === S[key])) S[key] = 'all';
-  const n = (id) => list.filter((c) => (id === '-' ? !c.k || !cats.some((k) => k.id === c.k) : c.k === id)).length;
-  const cur = cats.find((k) => k.id === S[key]);
-  const sel = el('select', { class: 'filt' + (cur ? ` on c-${cur.color}` : S[key] === '-' ? ' on' : ''), 'data-act': key, 'aria-label': 'Kategori' },
-    el('option', { value: 'all', selected: S[key] === 'all', text: `Alla kategorier (${list.length})` }),
-    cats.filter((k) => n(k.id)).map((k) => el('option', { value: k.id, selected: S[key] === k.id, text: `${COLOR_DOTS[k.color]} ${k.name} (${n(k.id)})` })),
-    n('-') ? el('option', { value: '-', selected: S[key] === '-', text: `Utan kategori (${n('-')})` }) : null);
-  return [sel, list.filter((c) => S[key] === 'all' || (S[key] === '-' ? !c.k || !cats.some((k) => k.id === c.k) : c.k === S[key]))];
+  if (S[key] !== 'all' && !n(S[key])) S[key] = 'all';
+  if (!used.length) return [null, list];
+  const sel = el('select', { class: 'filt' + (COLORS.includes(S[key]) ? ` on c-${S[key]}` : S[key] === '-' ? ' on' : ''), 'data-act': key, 'aria-label': 'Färg' },
+    el('option', { value: 'all', selected: S[key] === 'all', text: `Alla färger (${list.length})` }),
+    used.map((k) => el('option', { value: k, selected: S[key] === k, text: `${COLOR_DOTS[k]} ${colorName(S.state, k)} (${n(k)})` })),
+    n('-') ? el('option', { value: '-', selected: S[key] === '-', text: `Utan färg (${n('-')})` }) : null);
+  return [sel, list.filter((c) => S[key] === 'all' || (S[key] === '-' ? !c.k : c.k === S[key]))];
 }
 // Personfilter (bara när det finns personer).
 export function personFilter(list, key) {
@@ -70,11 +68,13 @@ export function caseView() {
   return el('section', { class: 'card case' + dueClass(c) + (catOf(S.state, c) ? ` c-${catOf(S.state, c).color}` : '') },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
-      S.state.cats.length ? el('select', { class: 'cat-chip' + (catOf(S.state, c) ? ` c-${catOf(S.state, c).color}` : ''), 'data-act': 'ccat', 'aria-label': 'Kategori' },
-        el('option', { value: '', selected: !catOf(S.state, c), text: 'Ingen kategori' }),
-        S.state.cats.map((k) => el('option', { value: k.id, selected: c.k === k.id, text: `${COLOR_DOTS[k.color]} ${k.name}` }))) : null,
       c.x ? el('span', { class: 'cat-chip', text: `✓ Klar ${shortDate(c.x)}` }) : null),
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: TITLE_CHARS, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
+    // Färg (2026-11-22): tryck på en prick; vad färgen betyder skrivs bredvid (gäller alla ärenden med den färgen).
+    el('div', { class: 'color-row', role: 'radiogroup', 'aria-label': 'Färg' },
+      COLORS.map((k) => el('button', { class: `color-dot c-${k}` + (c.k === k ? ' on' : ''), 'data-act': 'ccol', 'data-id': k, role: 'radio', 'aria-checked': String(c.k === k), 'aria-label': colorName(S.state, k) })),
+      el('button', { class: 'color-dot none' + (c.k ? '' : ' on'), 'data-act': 'ccol', 'data-id': '', role: 'radio', 'aria-checked': String(!c.k), 'aria-label': 'Ingen färg', text: '⊘' })),
+    c.k ? el('input', { type: 'text', class: 'color-label', maxlength: 30, value: S.state.labels[c.k] || '', placeholder: 'Vad betyder färgen? T.ex. Hem (valfritt)', 'aria-label': 'Vad färgen betyder', 'data-act': 'clabel', 'data-id': c.k, autocomplete: 'off' }) : null,
     el('textarea', { id: 'c-desc', class: 'case-desc', 'data-act': 'cdesc', maxlength: DESC_CHARS, rows: rows(c.d || '', 3), placeholder: 'Kort beskrivning – vad det gäller, kontakter, pris', 'aria-label': 'Beskrivning', text: c.d || '' }),
     el('div', { class: 'due-row' },
       el('span', { class: 'due-label', text: 'Deadline' }),

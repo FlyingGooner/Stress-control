@@ -160,7 +160,7 @@ tabbar.addEventListener('click', (ev) => {
 document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closest?.('.sort-wrap')) { S.sortOpen = false; ev.stopPropagation(); ev.preventDefault(); render(); } }, true);
 
 /* ---------- Actions: one click handler, data-act on the element ---------- */
-const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'kdel', 'tsave', 'tdel']);
+const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'tsave', 'tdel']);
 const openCase = (id) => { S.open = id; S.pick = false; render(); scrollTo(0, 0); };
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
@@ -230,20 +230,7 @@ app.addEventListener('click', (ev) => {
       withUndo(`Mallen ${tp.title} togs bort`, () => { S.state.tpls = S.state.tpls.filter((x) => x !== tp); });
       return;
     }
-    case 'knew': {
-      const inp = document.getElementById('k-new'), name = cleanText(inp?.value, 30);
-      if (!name || S.state.cats.length >= LIM.cats) { inp?.focus(); return; }
-      const used = new Set(S.state.cats.map((k) => k.color)), color = COLORS.find((x) => !used.has(x)) || 'gray';
-      S.state.cats.push({ id: uid(), name, color }); persist(); render(); document.getElementById('k-new')?.focus(); return;
-    }
-    case 'kdel': {   // removing a category clears it from every case and template – with Ångra
-      const k = S.state.cats.find((x) => x.id === id); if (!k) return;
-      withUndo(`${k.name} togs bort`, () => {
-        S.state.cats = S.state.cats.filter((x) => x !== k);
-        for (const x of [...S.state.cases, ...S.state.trash, ...S.state.tpls]) if (x.k === k.id) delete x.k;
-      });
-      persist(true); return;
-    }
+    case 'ccol': { if (!c) return; if (COLORS.includes(id)) c.k = id; else delete c.k; touch(); persist(); break; }
     case 'pnew': {
       const inp = document.getElementById('p-new'), name = cleanText(inp?.value, 30);
       if (!name || S.state.people.length >= LIM.people) { inp?.focus(); return; }
@@ -315,9 +302,6 @@ app.addEventListener('change', (ev) => {
     case 'pfilter': S.pfilter = t.value; render(); return;
     case 'kfilter': S.kfilter = t.value; render(); return;
     case 'akfilter': S.akfilter = t.value; S.alimit = 100; render(); return;
-    case 'ccat': { if (!c) return; if (S.state.cats.some((k) => k.id === t.value)) c.k = t.value; else delete c.k; touch(); persist(); render(); return; }
-    case 'kname': { const k = S.state.cats.find((x) => x.id === t.dataset.id), v = cleanText(t.value, 30); if (k && v) { k.name = v; persist(); } else if (k) t.value = k.name; return; }
-    case 'kcolor': { const k = S.state.cats.find((x) => x.id === t.dataset.id); if (k && COLORS.includes(t.value)) { k.color = t.value; persist(); render(); } return; }
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'ctitle': { if (!c) return; const v = cleanText(t.value, TITLE_CHARS); if (v) { c.title = v; touch(); persist(); } else t.value = c.title; return; }
     case 'cdesc': {
@@ -345,6 +329,11 @@ app.addEventListener('change', (ev) => {
       const tp = S.state.tpls.find((x) => x.id === t.dataset.id), v = cleanText(t.value, TITLE_CHARS);
       if (tp && v) { tp.title = v; persist(); } else if (tp) t.value = tp.title;
       return;
+    }
+    case 'clabel': {   // what a colour means – shared by every case with that colour
+      const k = t.dataset.id; if (!COLORS.includes(k)) return;
+      const v = cleanText(t.value, 30); if (v) S.state.labels[k] = v; else delete S.state.labels[k];
+      t.value = v; persist(); return;
     }
     case 'pname': {
       const p = S.state.people.find((x) => x.id === t.dataset.id), v = cleanText(t.value, 30);

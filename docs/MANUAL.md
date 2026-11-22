@@ -15,6 +15,11 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Delmål: skriv och tryck Lägg till. Bocka av när de är klara. Siffran i listan (t.ex. 1/3) visar hur många som är klara.
 - Anteckningar: skriv vad som hänt, t.ex. Ringde, fick tid 18/11. Den får dagens datum och hamnar överst. Du kan ändra en anteckning direkt i rutan.
 
+## Färg
+- Ge ett ärende en färg med prickarna överst i ärendet. ⊘ tar bort färgen.
+- Skriv vad färgen betyder i rutan under prickarna (t.ex. Hem), eller under Inställningar → Ärenden → Färger. Det gäller alla ärenden med den färgen och syns i listan och i filtret.
+- Listan kan filtreras på färg.
+
 ## Mallar
 - Mallar fungerar som rätterna i Fitness buddy. Har du ett ärende som återkommer, tryck Spara som mall längst ner i ärendet. Rubrik, beskrivning och delmål sparas.
 - Under + Nytt ärende finns dina mallar. Tryck på en mall för att starta ett nytt ärende med beskrivning och delmål ifyllda. Har du skrivit en rubrik används den, annars mallens.

@@ -7,7 +7,8 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 ## Toppnivå
 | Nyckel | Typ | Beskrivning |
 |---|---|---|
-| `version` | tal | `20` (2026-11-22, appen omgjord). Äldre data (typer, kategorier och fält) görs om vid inläsning och import, se nedan. |
+| `version` | tal | `22` (2026-11-22, appen omgjord; 21 hade kategorier, 22 bara färg – kategorins färg och namn flyttas till `k` och `labels`). Äldre data (typer, kategorier och fält) görs om vid inläsning och import, se nedan. |
+| `labels` | objekt | Vad färgerna betyder, valfritt: `{ färg: namn ≤ 30 }`, färg = `pink green blue orange purple teal red gray`. |
 | `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30 }`. |
 | `tpls` | lista, ≤ 100 | Mallar, som rätterna i Fitness buddy: `{ id, title ≤ 80, d?: beskrivning ≤ 4 000, s?: [delmål ≤ 80] }`. |
 | `cases` | lista, ≤ 10 000 (varav ≤ 500 öppna) | Ärenden. Över taket behålls alla öppna och de senast klara. |
@@ -22,6 +23,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `title ≤ 80` | Rubrik, krävs. |
 | `c`, `u` | Skapad och senast ändrad (datum, `u ≥ c`). |
 | `x?` | Klart datum: ärendet ligger i Arkiv. |
+| `k?` | Färg: en av `pink green blue orange purple teal red gray`. |
 | `d?` | Beskrivning, ≤ 4 000 tecken, radbrytningar behålls. |
 | `due?` | Deadline: datum (hela dagen) eller datum och tid. |
 | `p?` | Person-id: vem som utför ärendet. Okänd person → tas bort. |
@@ -46,10 +48,10 @@ Typer, kategorier, fält, upprepning och personers egenskaper finns inte längre
 
 ## Exempel
 ```json
-{ "version": 20,
+{ "version": 22, "labels": { "blue": "Hem" },
   "people": [{ "id": "p1", "name": "Anna" }],
   "tpls": [{ "id": "t1", "title": "Boka tandläkare", "s": ["Ring", "Gå dit"] }],
-  "cases": [{ "id": "c1", "title": "Fixa markisen", "d": "Klammer i kassetten", "due": "2026-12-01T09:00", "p": "p1",
+  "cases": [{ "id": "c1", "title": "Fixa markisen", "k": "blue", "d": "Klammer i kassetten", "due": "2026-12-01T09:00", "p": "p1",
     "c": "2026-11-10", "u": "2026-11-12", "s": [["Ring firman", 1], ["Boka tid", 0]], "l": [["2026-11-12", "Fick offert"]] }],
   "trash": [], "trashDays": 30, "backup": { "remind": "month" } }
 ```

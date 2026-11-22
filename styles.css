@@ -671,3 +671,9 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 .name-row input { flex: 1; min-width: 0; }
 .filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .trash-li { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; }
+/* Färg (2026-11-22): åtta prickar överst i ärendet */
+.color-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.color-dot { width: 32px; height: 32px; flex: none; border-radius: 50%; border: 0; background: var(--cc); padding: 0; box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px transparent; }
+.color-dot.on { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--on-surface, #1d1b20); }
+.color-dot.none { background: var(--surface-container-high, #e6e0e9); color: var(--muted); font-size: 1.1rem; }
+.color-label { width: 100%; box-sizing: border-box; margin: 0 0 8px; height: 40px; padding: 0 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; }

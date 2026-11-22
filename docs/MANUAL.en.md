@@ -15,6 +15,11 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Sub-goals: type and tap Add. Tick them off when done. The number in the list (e.g. 1/3) shows how many are done.
 - Notes: write what happened, e.g. Called, got an appointment 18/11. It gets today's date and goes on top. You can edit a note right in its box.
 
+## Colour
+- Give a task a colour with the dots at the top of the task. ⊘ removes the colour.
+- Write what the colour means in the box below the dots (e.g. Home), or under Settings → Tasks → Colours. It applies to every task with that colour and shows in the list and the filter.
+- The list can be filtered by colour.
+
 ## Templates
 - Templates work like the dishes in Fitness buddy. For a task that comes back, tap Save as template at the bottom of the task. Title, description and sub-goals are saved.
 - Your templates are under + New task. Tap one to start a new task with the description and sub-goals filled in. If you have typed a title it is used, otherwise the template's.

@@ -65,17 +65,18 @@ T.test('gamla data (version 14): fält blir beskrivning, slutdatum blir deadline
   T.eq(s.trash, [{ id: 't1', title: 'Borta', c: '2026-11-01', u: '2026-11-01', del: '2026-11-21' }]);
   T.eq(validate(JSON.parse(JSON.stringify(s))), s, 'ny data ändras inte vid nästa inläsning');
 });
-T.test('kategorier: standard, fel färg blir grå, okänd kategori tas bort från ärendet, gamla typens kategori följer med', () => {
-  T.eq(defaults().cats.map((c) => c.name), ['Hem', 'Ekonomi', 'Hälsa', 'Jobb', 'Relationer', 'Övrigt']);
-  const s = validate({ version: 21, cats: [{ id: 'a', name: 'A', color: 'url(x)' }], cases: [{ id: 'c1', title: 'x', c: '2026-11-01', k: 'a' }, { id: 'c2', title: 'y', c: '2026-11-01', k: 'zz' }] });
-  T.eq(s.cats, [{ id: 'a', name: 'A', color: 'gray' }]);
-  T.eq(s.cases.map((c) => c.k), ['a', undefined]);
-  T.eq(validate({ version: 21, cats: [] }).cats, [], 'tom lista är ett val');
-  T.eq(validate({ version: 20 }).cats.length, 6, 'version 20 saknade kategorier: standard');
+T.test('färg: bara åtta färger, valfri betydelse, gamla kategorier blir färg med namn', () => {
+  T.eq(defaults().labels, {});
+  const s = validate({ version: 22, labels: { blue: 'Hem', bad: 'x', red: '' }, cases: [{ id: 'c1', title: 'x', c: '2026-11-01', k: 'blue' }, { id: 'c2', title: 'y', c: '2026-11-01', k: 'url(x)' }] });
+  T.eq(s.labels, { blue: 'Hem' });
+  T.eq(s.cases.map((c) => c.k), ['blue', undefined]);
+  const v21 = validate({ version: 21, cats: [{ id: 'm', name: 'Hem', color: 'blue' }, { id: 'h', name: 'Hälsa', color: 'pink' }, { id: 'x', name: 'Också blå', color: 'blue' }],
+    cases: [{ id: 'c1', title: 'x', c: '2026-11-01', k: 'h' }, { id: 'c2', title: 'y', c: '2026-11-01', k: 'x' }] });
+  T.eq([v21.labels, v21.cases.map((c) => c.k)], [{ blue: 'Hem', pink: 'Hälsa' }, ['pink', 'blue']]);
   const o = validate({ version: 14, cats: [{ id: 'h', name: 'Hälsa', color: 'pink' }], types: [{ id: 'sym', cat: 'h', fields: [] }], cases: [{ id: 'c1', t: 'sym', title: 'Knä', c: '2026-11-01' }] });
-  T.eq([o.cats.length, o.cases[0].k], [1, 'h']);
-  const t = defaults(), c = newCase(t, 'Med kategori', '2026-11-01'); c.k = 'e';
-  T.eq(newCase(t, '', '2026-11-02', saveTemplate(t, c).tpl).k, 'e', 'mallen minns kategorin');
+  T.eq([o.labels, o.cases[0].k], [{ pink: 'Hälsa' }, 'pink']);
+  const t = defaults(), c = newCase(t, 'Med färg', '2026-11-01'); c.k = 'green';
+  T.eq(newCase(t, '', '2026-11-02', saveTemplate(t, c).tpl).k, 'green', 'mallen minns färgen');
 });
 T.test('papperskorg: ta bort, återställ, rensa efter trashDays', () => {
   const s = defaults(), c = newCase(s, 'A', '2026-11-01');
