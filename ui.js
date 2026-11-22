@@ -12,8 +12,11 @@ export const S = {
   alimit: 100,         // Arkiv: rows shown (Visa fler adds 100)
   trash: false,        // Inställningar: Papperskorg open (a layer)
   q: '',               // Arkiv: search text
+  draft: null,         // Nytt ärende (2026-11-22): ett ärende som inte sparats än – sparas när det får en rubrik
   installPrompt: null,
 };
+// The open case: the unsaved draft or a saved case.
+export const cur = () => (S.draft && S.open === S.draft.id ? S.draft : S.state.cases.find((x) => x.id === S.open));
 export const setOpen = new Set();   // Inställningar: open sections (data-sec), kept across re-renders
 export const longDate = (k) => parseKey(k).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
 export const shortDate = (k) => parseKey(k).toLocaleDateString('sv-SE', { day: 'numeric', month: 'numeric' });

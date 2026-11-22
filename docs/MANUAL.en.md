@@ -4,7 +4,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 
 ## Get started
 - Write down what is on your mind as a task. Then you can let go of the thought – the app keeps track of it.
-- Tap + New task, write a title (e.g. Fix the awning) and tap Create. The task opens at once.
+- Tap + New task. An empty task opens at once – write a title (e.g. Fix the awning) and it is saved. Your templates are shown under the title.
 - Every task has a title, a short description, a deadline (date and, if you like, a time), sub-goals and notes. Everything is saved as soon as you leave a field.
 
 ## Tasks
@@ -16,8 +16,8 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Notes: write what happened, e.g. Called, got an appointment 18/11. It gets today's date and goes on top. You can edit a note right in its box.
 
 ## Colour
-- Give a task a colour with the dots at the top of the task. ⊘ removes the colour.
-- Write what the colour means in the box below the dots (e.g. Home), or under Settings → Tasks → Colours. It applies to every task with that colour and shows in the list and the filter.
+- Tap 🎨 (or the colour dot) at the top right of the task and pick a colour. ⊘ removes the colour.
+- Write what the colour means in the box below the colours (e.g. Home), or under Settings → Tasks → Colours. It applies to every task with that colour and shows in the list and the filter.
 - The list can be filtered by colour.
 
 ## Templates

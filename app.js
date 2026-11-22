@@ -2,7 +2,7 @@
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
 // 2026-11-22: omgjord – ärenden med rubrik, beskrivning, deadline, person, delmål och logg; mallar som rätterna i Fitness buddy.
 import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, roomFor, LIM, COLORS, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
-import { today, S, setOpen, el } from './ui.js';
+import { today, S, setOpen, el, cur } from './ui.js';
 import { topLayer, layerDepth, closeTop } from './nav.js';
 import { viewCases } from './views/cases.js';
 import { viewArchive, archiveList } from './views/archive.js';
@@ -23,6 +23,8 @@ setSaveErrorHandler(() => status(SAVE_MSG, true));
 let saves = 0;
 // archTouched: a closed case is open in the editor, or types changed (cases updated in place) – see store.js save().
 function persist(archTouched = false) {
+  const d = S.draft;   // Nytt ärende: saved first when it has a title
+  if (d && S.open === d.id && cleanText(d.title, TITLE_CHARS)) { S.draft = null; S.state.cases.unshift(d); }
   const oc = S.open && S.state.cases.find((x) => x.id === S.open);
   if (!save(S.state, archTouched || !!oc?.x)) { status(SAVE_MSG, true); return; }
   if (saveFailed) updateOnline();
@@ -155,6 +157,8 @@ tabbar.addEventListener('click', (ev) => {
   go(t.dataset.view);
 });
 
+// The draft (Nytt ärende) becomes a saved case once it has a title. persist() saves nothing while it is a draft.
+function commit() { persist(); }
 /* ---------- Actions: one click handler, data-act on the element ---------- */
 // 2026-11-18: sorteringsmenyn stängs vid ett tryck utanför den.
 document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closest?.('.sort-wrap')) { S.sortOpen = false; ev.stopPropagation(); ev.preventDefault(); render(); } }, true);
@@ -167,23 +171,21 @@ app.addEventListener('click', (ev) => {
   if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; }
   if (!t || (S.navPending && ev.isTrusted)) return;
   const { act, id } = t.dataset;
-  const c = S.state.cases.find((x) => x.id === S.open);
+  const c = cur();
   const touch = () => { if (c) c.u = today(); };
   switch (act) {
     // Ärenden
-    case 'pickopen': S.pick = true; S.newTitle = ''; render(); scrollTo(0, 0); document.getElementById('new-title')?.focus(); return;
-    case 'pickclose': S.pick = false; break;
-    case 'cnew': case 'cfromtpl': {
-      const tpl = act === 'cfromtpl' ? S.state.tpls.find((x) => x.id === id) : null;
-      const title = document.getElementById('new-title')?.value || '';
-      if (act === 'cnew' && !cleanText(title, TITLE_CHARS)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
-      if (!roomFor(S.state)) { errText('new-error', `Högst ${LIM.open} öppna ärenden – markera några som klara först.`); return; }
-      const nc = newCase(S.state, title, today(), tpl);
-      if (!nc) return;
-      persist(); S.newTitle = ''; S.pick = false; S.open = nc.id; render(); scrollTo(0, 0); return;
+    case 'pickopen': {   // Nytt ärende (2026-11-22): öppnas direkt som ett tomt ärende; sparas när det får en rubrik
+      if (!roomFor(S.state)) { snackbar(`Högst ${LIM.open} öppna ärenden – markera några som klara först.`, null, null, 4000); return; }
+      S.draft = { id: uid(), title: '', c: today(), u: today() }; S.open = S.draft.id; render(); scrollTo(0, 0); document.getElementById('c-title')?.focus(); return;
+    }
+    case 'cfromtpl': {
+      const tpl = S.state.tpls.find((x) => x.id === id); if (!c || c !== S.draft || !tpl) return;
+      Object.assign(c, { title: tpl.title, ...(tpl.k ? { k: tpl.k } : {}), ...(tpl.d ? { d: tpl.d } : {}), ...(tpl.s?.length ? { s: tpl.s.map((x) => [x, 0]) } : {}) });
+      commit(); break;
     }
     case 'copen': openCase(id); return;
-    case 'cclose': S.open = null; break;
+    case 'cclose': S.open = null; S.draft = null; break;
     case 'cdueclr': if (!c) return; delete c.due; touch(); persist(); break;
     case 'cdone': {
       if (!c) return;
@@ -193,6 +195,7 @@ app.addEventListener('click', (ev) => {
     case 'creopen': if (!c) return; delete c.x; touch(); persist(true); snackbar(`${c.title} är öppet igen`, null, null, 2500); break;
     case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
       if (!c) return;
+      if (c === S.draft) { S.draft = null; S.open = null; break; }
       withUndo(`${c.title} flyttat till papperskorgen`, () => { trashCase(S.state, c, today()); S.open = null; });
       return;
     }
@@ -295,7 +298,7 @@ app.addEventListener('toggle', (ev) => {
 }, true);
 // Fields save when they change (leaving the field). Invalid input → the old value back.
 app.addEventListener('change', (ev) => {
-  const t = ev.target, c = S.state.cases.find((x) => x.id === S.open), touch = () => { c.u = today(); };
+  const t = ev.target, c = cur(), touch = () => { c.u = today(); };
   if (t.type === 'date' || t.type === 'time') t.classList.toggle('empty', !t.value);
   switch (t.dataset.act) {
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
@@ -303,7 +306,7 @@ app.addEventListener('change', (ev) => {
     case 'kfilter': S.kfilter = t.value; render(); return;
     case 'akfilter': S.akfilter = t.value; S.alimit = 100; render(); return;
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
-    case 'ctitle': { if (!c) return; const v = cleanText(t.value, TITLE_CHARS); if (v) { c.title = v; touch(); persist(); } else t.value = c.title; return; }
+    case 'ctitle': { if (!c) return; const v = cleanText(t.value, TITLE_CHARS), was = c === S.draft; if (v) { c.title = v; touch(); persist(); if (was) render(); } else t.value = c.title; return; }
     case 'cdesc': {
       if (!c) return; const v = cleanText(tidyNote(t.value), DESC_CHARS, true);
       if (v !== (c.d || '')) { if (v) c.d = v; else delete c.d; touch(); persist(); }
@@ -394,3 +397,6 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     if (next) next.click();
   }, { passive: true });
 })(document.querySelector('.tabbar'), '.tab', '.on');
+
+// Färgväljaren stängs vid ett tryck utanför den (2026-11-22).
+document.addEventListener('click', (ev) => { for (const d of document.querySelectorAll('details.color-pick[open]')) if (!d.contains(ev.target)) d.open = false; });

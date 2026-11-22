@@ -4,7 +4,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Kom igång
 - Skriv ner det som snurrar i huvudet som ett ärende. Då kan du släppa tanken, appen håller reda på den.
-- Tryck + Nytt ärende, skriv en rubrik (t.ex. Fixa markisen) och tryck Skapa. Ärendet öppnas direkt.
+- Tryck + Nytt ärende. Ett tomt ärende öppnas direkt – skriv en rubrik (t.ex. Fixa markisen), så sparas det. Har du mallar står de under rubriken.
 - Varje ärende har en rubrik, en kort beskrivning, en deadline (datum och, om du vill, klockslag), delmål och anteckningar. Allt sparas direkt när du lämnar ett fält.
 
 ## Ärenden
@@ -16,8 +16,8 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Anteckningar: skriv vad som hänt, t.ex. Ringde, fick tid 18/11. Den får dagens datum och hamnar överst. Du kan ändra en anteckning direkt i rutan.
 
 ## Färg
-- Ge ett ärende en färg med prickarna överst i ärendet. ⊘ tar bort färgen.
-- Skriv vad färgen betyder i rutan under prickarna (t.ex. Hem), eller under Inställningar → Ärenden → Färger. Det gäller alla ärenden med den färgen och syns i listan och i filtret.
+- Tryck på 🎨 (eller färgpricken) uppe till höger i ärendet och välj en färg. ⊘ tar bort färgen.
+- Skriv vad färgen betyder i rutan under färgerna (t.ex. Hem), eller under Inställningar → Ärenden → Färger. Det gäller alla ärenden med den färgen och syns i listan och i filtret.
 - Listan kan filtreras på färg.
 
 ## Mallar

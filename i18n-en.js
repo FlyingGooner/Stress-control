@@ -282,6 +282,7 @@ I18N.add({
   'Färger': 'Colours', 'Ingen färg': 'No colour', 'Utan betydelse': 'No meanings', 'Alla färger': 'All colours', 'Utan färg': 'Without colour', 'Vad färgen betyder': 'What the colour means',
   'Vad betyder färgen? T.ex. Hem (valfritt)': 'What does the colour mean? E.g. Home (optional)',
   'Ett ärende kan få en färg (överst i ärendet). Skriv vad färgerna betyder om du vill – det syns i listan och i filtret.': 'A task can get a colour (at the top of the task). Write what the colours mean if you like – it shows in the list and the filter.',
+  'Från mall:': 'From template:', 'Välj färg': 'Choose colour', 'Vad betyder färgen? (valfritt)': 'What does the colour mean? (optional)', 'Ärendet sparas när det har en rubrik.': 'The task is saved once it has a title.',
   'Rubrik': 'Title', 'Beskrivning': 'Description', 'Klar': 'Done', 'Skapad': 'Created', 'Ändrad': 'Changed', 'Delmål klara': 'Sub-goals done', 'Delmål totalt': 'Sub-goals in all',
 }, [
   [/^📅 (.+)$/, (g, tr) => `📅 ${tr(g[1])}`],
@@ -295,6 +296,7 @@ I18N.add({
   [/^Delmål (\d+\/\d+)$/, 'Sub-goals $1'],
   [/^(🩷|🟢|🔵|🟠|🟣|🩵|🔴|⚪) (.+)$/, (g, tr) => `${g[1]} ${tr(g[2])}`],
   [/^(\d+) kategorier$/, '$1 categories'],
+  [/^Färg: (.+)$/, (g, tr) => `Colour: ${tr(g[1])}`],
   [/^Vad (rosa|grön|blå|orange|lila|turkos|röd|grå) betyder$/, (g, tr) => `What ${tr(g[1][0].toUpperCase() + g[1].slice(1)).toLowerCase()} means`],
   [/^(\d+) mallar$/, '$1 templates'], [/^(\d+) personer$/, '$1 people'], [/^(\d+) st$/, '$1'],
   [/^(\d+) ärenden$/, (g) => `${g[1]} task${g[1] === '1' ? '' : 's'}`],

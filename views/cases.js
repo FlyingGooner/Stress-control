@@ -1,7 +1,7 @@
 // Vy: Ärenden (öppna ärenden, närmast deadline först), Nytt ärende (rubrik + mallar) och ärendet (lager – Bakåt stänger).
 // Ärendet används också från Arkiv. 2026-11-22: omgjord – rubrik, beskrivning, deadline, person, delmål och logg; allt sparas direkt.
 import { openCases, personOf, catOf, colorName, COLORS, COLOR_DOTS, progress, daysBetween, parseKey, dueDay, LOG_CHARS, DESC_CHARS, TITLE_CHARS, STEP_CHARS } from '../store.js';
-import { today, S, el, shortDate } from '../ui.js';
+import { today, S, el, shortDate, cur } from '../ui.js';
 
 // Deadline som text: "idag 14:00", "imorgon", "fre", "28/11", "3 dagar sen".
 export function dueText(due, t = today()) {
@@ -44,37 +44,28 @@ export function personFilter(list, key) {
   return [sel, list.filter((c) => S[key] === 'all' || (S[key] === '-' ? !c.p : c.p === S[key]))];
 }
 
-function newCaseView() {
-  return el('section', { class: 'card' },
-    el('div', { class: 'add-top' },
-      el('button', { class: 'icon', 'data-act': 'pickclose', 'aria-label': 'Stäng', text: '✕' }),
-      el('h1', { class: 'add-title', text: 'Nytt ärende' })),
-    el('input', { type: 'text', id: 'new-title', class: 'search', maxlength: TITLE_CHARS, value: S.newTitle, placeholder: 'Rubrik, t.ex. Fixa markisen', 'aria-label': 'Rubrik', autocomplete: 'off' }),
-    el('p', { class: 'import-error small', id: 'new-error', role: 'alert' }),
-    el('button', { class: 'primary', 'data-act': 'cnew', text: 'Skapa' }),
-    S.state.tpls.length ? [el('h2', { class: 'sub-h', text: 'Eller från en mall' }),
-      el('ul', { class: 'cases' }, S.state.tpls.map((t) => el('li', { class: 'case-li' },
-        el('button', { class: 'case-row', 'data-act': 'cfromtpl', 'data-id': t.id },
-          el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: t.title }),
-            el('small', { class: 'case-info', text: [t.s?.length ? `${t.s.length} delmål` : null, t.d ? 'beskrivning' : null].filter(Boolean).join(' · ') || 'bara rubrik' }))))))]
-      : el('p', { class: 'muted small', text: 'Tips: i ett ärende kan du trycka Spara som mall. Då kan du starta nya ärenden från det, med beskrivning och delmål ifyllda.' }));
-}
-
 const rows = (x, min = 1, max = 14) => Math.min(max, Math.max(min, x.split('\n').length + Math.floor(x.length / 38)));
 export function caseView() {
-  const c = S.state.cases.find((x) => x.id === S.open);
+  const c = cur();
   if (!c) return null;
+  const isNew = c === S.draft, col = catOf(S.state, c);
   const [done, all] = progress(c), dd = c.due ? c.due.slice(0, 10) : '', tt = c.due && c.due.length > 10 ? c.due.slice(11) : '';
   return el('section', { class: 'card case' + dueClass(c) + (catOf(S.state, c) ? ` c-${catOf(S.state, c).color}` : '') },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
+      // Färg (2026-11-22): en prick – tryck för att välja; vad färgen betyder skrivs i samma ruta.
+      el('details', { class: 'color-pick' },
+        el('summary', { class: 'color-dot' + (col ? ` c-${col.color}` : ' none'), 'aria-label': col ? `Färg: ${col.name}` : 'Välj färg', text: col ? '' : '🎨' }),
+        el('div', { class: 'color-pop' },
+          el('div', { class: 'color-row', role: 'radiogroup', 'aria-label': 'Färg' },
+            COLORS.map((k) => el('button', { class: `color-dot c-${k}` + (c.k === k ? ' on' : ''), 'data-act': 'ccol', 'data-id': k, role: 'radio', 'aria-checked': String(c.k === k), 'aria-label': colorName(S.state, k) })),
+            el('button', { class: 'color-dot none' + (c.k ? '' : ' on'), 'data-act': 'ccol', 'data-id': '', role: 'radio', 'aria-checked': String(!c.k), 'aria-label': 'Ingen färg', text: '⊘' })),
+          c.k ? el('input', { type: 'text', class: 'color-label', maxlength: 30, value: S.state.labels[c.k] || '', placeholder: 'Vad betyder färgen? (valfritt)', 'aria-label': 'Vad färgen betyder', 'data-act': 'clabel', 'data-id': c.k, autocomplete: 'off' }) : null)),
       c.x ? el('span', { class: 'cat-chip', text: `✓ Klar ${shortDate(c.x)}` }) : null),
-    el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: TITLE_CHARS, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
-    // Färg (2026-11-22): tryck på en prick; vad färgen betyder skrivs bredvid (gäller alla ärenden med den färgen).
-    el('div', { class: 'color-row', role: 'radiogroup', 'aria-label': 'Färg' },
-      COLORS.map((k) => el('button', { class: `color-dot c-${k}` + (c.k === k ? ' on' : ''), 'data-act': 'ccol', 'data-id': k, role: 'radio', 'aria-checked': String(c.k === k), 'aria-label': colorName(S.state, k) })),
-      el('button', { class: 'color-dot none' + (c.k ? '' : ' on'), 'data-act': 'ccol', 'data-id': '', role: 'radio', 'aria-checked': String(!c.k), 'aria-label': 'Ingen färg', text: '⊘' })),
-    c.k ? el('input', { type: 'text', class: 'color-label', maxlength: 30, value: S.state.labels[c.k] || '', placeholder: 'Vad betyder färgen? T.ex. Hem (valfritt)', 'aria-label': 'Vad färgen betyder', 'data-act': 'clabel', 'data-id': c.k, autocomplete: 'off' }) : null,
+    el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: TITLE_CHARS, value: c.title, placeholder: 'Rubrik, t.ex. Fixa markisen', 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
+    // Nytt ärende: mallarna under rubriken tills något är ifyllt.
+    isNew && !c.title && !c.d && !c.s && S.state.tpls.length ? el('div', { class: 'tpl-chips' }, el('span', { class: 'muted small', text: 'Från mall:' }),
+      S.state.tpls.map((t) => el('button', { class: 'chip', 'data-act': 'cfromtpl', 'data-id': t.id, text: t.title }))) : null,
     el('textarea', { id: 'c-desc', class: 'case-desc', 'data-act': 'cdesc', maxlength: DESC_CHARS, rows: rows(c.d || '', 3), placeholder: 'Kort beskrivning – vad det gäller, kontakter, pris', 'aria-label': 'Beskrivning', text: c.d || '' }),
     el('div', { class: 'due-row' },
       el('span', { class: 'due-label', text: 'Deadline' }),
@@ -100,15 +91,15 @@ export function caseView() {
       el('span', { class: 'log-d', text: shortDate(d) }),
       el('textarea', { class: 'log-edit', 'data-act': 'ledit', 'data-i': i, rows: rows(x), maxlength: LOG_CHARS, 'aria-label': 'Ändra anteckningen', text: x }),
       el('button', { class: 'icon sm', 'data-act': 'ldel', 'data-i': i, 'aria-label': 'Ta bort anteckningen', text: '✕' })))),
-    el('button', { class: 'primary save-case', 'data-act': c.x ? 'creopen' : 'cdone', text: c.x ? 'Öppna igen' : '✓ Klar' }),
-    el('div', { class: 'row-actions case-actions' },
-      el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
-      el('button', { class: 'link', 'data-act': 'tsave', text: 'Spara som mall' })),
-    el('p', { class: 'muted small center', text: 'Allt sparas direkt.' }));
+    isNew ? el('p', { class: 'muted small center', text: 'Ärendet sparas när det har en rubrik.' }) : [
+      el('button', { class: 'primary save-case', 'data-act': c.x ? 'creopen' : 'cdone', text: c.x ? 'Öppna igen' : '✓ Klar' }),
+      el('div', { class: 'row-actions case-actions' },
+        el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
+        el('button', { class: 'link', 'data-act': 'tsave', text: 'Spara som mall' })),
+      el('p', { class: 'muted small center', text: 'Allt sparas direkt.' })]);
 }
 
 export function viewCases() {
-  if (S.pick) return newCaseView();
   if (S.open) return caseView();
   const all = openCases(S.state), [psel, mine] = personFilter(all, 'pfilter'), [ksel, list] = catFilter(mine, 'kfilter');
   return [

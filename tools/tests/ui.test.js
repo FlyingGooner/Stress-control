@@ -16,14 +16,22 @@ T.test('personfilter', async () => {
   change(q('select[data-act="pfilter"]'), 'all'); await T.wait();
   T.eq(qa('.case-row').length, 3);
 });
-T.test('nytt ärende: rubrik krävs, sparas och öppnas', async () => {
+T.test('nytt ärende: öppnas direkt, sparas först när det får en rubrik', async () => {
+  const n = stored().cases.length;
   q('[data-act="pickopen"]').click(); await T.wait();
-  q('[data-act="cnew"]').click();
-  T.ok(q('#new-error').textContent, 'rubrik krävs');
-  q('#new-title').value = 'Fixa <b>markisen'; q('#new-title').dispatchEvent(new Event('input', { bubbles: true }));
-  q('[data-act="cnew"]').click(); await T.wait();
-  T.eq(stored().cases[0].title, 'Fixa <b>markisen');
-  T.ok(q('#c-title') && !q('#app b'), 'ärendet öppet, rubriken som text');
+  T.ok(q('#c-title') && !q('#c-title').value, 'tomt ärende öppet');
+  change(q('#c-desc'), 'Före rubriken'); await T.wait();
+  T.eq(stored().cases.length, n, 'inget sparat utan rubrik');
+  change(q('#c-title'), 'Fixa <b>markisen'); await T.wait();
+  T.eq([stored().cases[0].title, stored().cases[0].d], ['Fixa <b>markisen', 'Före rubriken']);
+  T.ok(!q('#app b') && q('[data-act="cdone"]'), 'rubriken som text, knapparna syns');
+});
+T.test('färg: en prick, tryck öppnar väljaren', async () => {
+  q('details.color-pick > summary').click(); await T.wait();
+  T.ok(q('details.color-pick').open);
+  q('[data-act="ccol"][data-id="blue"]').click(); await T.wait();
+  T.eq(stored().cases[0].k, 'blue');
+  T.ok(!q('details.color-pick').open, 'stängs efter val');
 });
 T.test('beskrivning, deadline, delmål och anteckning sparas direkt', async () => {
   change(q('#c-desc'), 'Rad 1\nRad 2');
