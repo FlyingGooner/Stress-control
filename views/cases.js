@@ -31,7 +31,8 @@ export function caseSummary(c, t, cat, actions) {
   const fields = (t?.fields || []).filter((fd) => c.f?.[fd.id] !== undefined && shownField(fd, c));
   const log = (c.l || []).slice(-3).reverse();
   return el('div', { class: `case-sum c-${cat.color}` },
-    fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : c.o?.some((x) => x[2] != null) ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
+    c.d ? el('p', { class: 'rv-desc', text: c.d }) : null,
+    fields.length ? el('dl', {}, fields.map((fd) => [el('dt', { text: fd.name }), el('dd', { text: showVal(fd, c.f[fd.id]) })])) : c.d || c.o?.some((x) => x[2] != null) ? null : el('p', { class: 'muted small', text: 'Inga fält ifyllda än.' }),
     c.o?.some((x) => x[2] != null) ? el('dl', { class: 'sum-old' }, c.o.filter((x) => x[2] != null).map(([n, k, v]) => [el('dt', { text: n }), el('dd', { text: showVal({ kind: k }, v) })])) : null,
     c.s?.length ? el('ul', { class: 'sum-steps' }, c.s.map(([x, d, dd, dn]) => el('li', { class: d ? 'done' : '', text: (d ? '✓ ' : '○ ') + x + (d ? (dn ? ` · klart ${shortDate(dn)}` : '') : dd ? ` · ${shortDate(dd)}` : '') }))) : null,
     log.length ? el('ul', { class: 'sum-log' }, log.map(([d, x]) => el('li', {}, el('small', { text: shortDate(d) + ' ' }), el('span', { text: firstLine(x) })))) : null,
