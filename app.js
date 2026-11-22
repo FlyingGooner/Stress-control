@@ -1,7 +1,7 @@
 // Task buddy – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
 // 2026-11-22: omgjord – ärenden med rubrik, beskrivning, deadline, person, delmål och logg; mallar som rätterna i Fitness buddy.
-import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, roomFor, LIM, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
+import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, roomFor, LIM, COLORS, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
 import { today, S, setOpen, el } from './ui.js';
 import { topLayer, layerDepth, closeTop } from './nav.js';
 import { viewCases } from './views/cases.js';
@@ -160,7 +160,7 @@ tabbar.addEventListener('click', (ev) => {
 document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closest?.('.sort-wrap')) { S.sortOpen = false; ev.stopPropagation(); ev.preventDefault(); render(); } }, true);
 
 /* ---------- Actions: one click handler, data-act on the element ---------- */
-const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'tsave', 'tdel']);
+const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'kdel', 'tsave', 'tdel']);
 const openCase = (id) => { S.open = id; S.pick = false; render(); scrollTo(0, 0); };
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
@@ -229,6 +229,20 @@ app.addEventListener('click', (ev) => {
       const tp = S.state.tpls.find((x) => x.id === id); if (!tp) return;
       withUndo(`Mallen ${tp.title} togs bort`, () => { S.state.tpls = S.state.tpls.filter((x) => x !== tp); });
       return;
+    }
+    case 'knew': {
+      const inp = document.getElementById('k-new'), name = cleanText(inp?.value, 30);
+      if (!name || S.state.cats.length >= LIM.cats) { inp?.focus(); return; }
+      const used = new Set(S.state.cats.map((k) => k.color)), color = COLORS.find((x) => !used.has(x)) || 'gray';
+      S.state.cats.push({ id: uid(), name, color }); persist(); render(); document.getElementById('k-new')?.focus(); return;
+    }
+    case 'kdel': {   // removing a category clears it from every case and template – with Ångra
+      const k = S.state.cats.find((x) => x.id === id); if (!k) return;
+      withUndo(`${k.name} togs bort`, () => {
+        S.state.cats = S.state.cats.filter((x) => x !== k);
+        for (const x of [...S.state.cases, ...S.state.trash, ...S.state.tpls]) if (x.k === k.id) delete x.k;
+      });
+      persist(true); return;
     }
     case 'pnew': {
       const inp = document.getElementById('p-new'), name = cleanText(inp?.value, 30);
@@ -299,6 +313,11 @@ app.addEventListener('change', (ev) => {
   switch (t.dataset.act) {
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
     case 'pfilter': S.pfilter = t.value; render(); return;
+    case 'kfilter': S.kfilter = t.value; render(); return;
+    case 'akfilter': S.akfilter = t.value; S.alimit = 100; render(); return;
+    case 'ccat': { if (!c) return; if (S.state.cats.some((k) => k.id === t.value)) c.k = t.value; else delete c.k; touch(); persist(); render(); return; }
+    case 'kname': { const k = S.state.cats.find((x) => x.id === t.dataset.id), v = cleanText(t.value, 30); if (k && v) { k.name = v; persist(); } else if (k) t.value = k.name; return; }
+    case 'kcolor': { const k = S.state.cats.find((x) => x.id === t.dataset.id); if (k && COLORS.includes(t.value)) { k.color = t.value; persist(); render(); } return; }
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'ctitle': { if (!c) return; const v = cleanText(t.value, TITLE_CHARS); if (v) { c.title = v; touch(); persist(); } else t.value = c.title; return; }
     case 'cdesc': {

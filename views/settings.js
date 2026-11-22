@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, LIM, storageUsed, STORAGE_QUOTA, TRASH_DAYS, TITLE_CHARS } from '../store.js';
+import { addDays, LIM, storageUsed, STORAGE_QUOTA, TRASH_DAYS, TITLE_CHARS, COLORS, COLOR_NAMES, COLOR_DOTS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData, savedPassword } from './data.js';
 
@@ -28,7 +28,7 @@ export function viewSettings() {
   const { tpls, people } = S.state;
   return [
     el('h1', { class: 'view-title', text: 'Inställningar' }),
-    group('cases', 'Ärenden', `${tpls.length} mallar · ${people.length} personer`,
+    group('cases', 'Ärenden', `${S.state.cats.length} kategorier · ${tpls.length} mallar · ${people.length} personer`,
       // Mallar (2026-11-22): som rätterna i Fitness buddy – sparas från ett ärende, här bara byta namn och ta bort.
       sec('tpls', 'Mallar', tpls.length ? `${tpls.length} st` : 'Inga',
         el('p', { class: 'muted small', text: 'Spara ett ärende som mall med Spara som mall längst ner i ärendet. Under Nytt ärende kan du sedan starta från mallen, med beskrivning och delmål ifyllda.' }),
@@ -36,6 +36,16 @@ export function viewSettings() {
           el('input', { type: 'text', maxlength: TITLE_CHARS, value: t.title, 'aria-label': 'Mallens namn', 'data-act': 'tname', 'data-id': t.id, autocomplete: 'off' }),
           el('small', { class: 'muted', text: t.s?.length ? `${t.s.length} delmål` : '' }),
           el('button', { class: 'icon sm danger', 'data-act': 'tdel', 'data-id': t.id, 'aria-label': `Ta bort ${t.title}`, text: '✕' })))) : null),
+      sec('cats', 'Kategorier', S.state.cats.length ? S.state.cats.map((k) => k.name).join(', ') : 'Inga',
+        el('p', { class: 'muted small', text: 'Välj kategori överst i ärendet. Färgen syns som kant i listan, och listan kan filtreras på kategori.' }),
+        S.state.cats.length ? el('ul', { class: 'edit-list' }, S.state.cats.map((k) => el('li', { class: `name-row cat-row c-${k.color}` },
+          el('span', { class: 'cat-dot', 'aria-hidden': 'true' }),
+          el('input', { type: 'text', maxlength: 30, value: k.name, 'aria-label': 'Kategorins namn', 'data-act': 'kname', 'data-id': k.id, autocomplete: 'off' }),
+          el('select', { 'data-act': 'kcolor', 'data-id': k.id, 'aria-label': 'Färg' }, COLORS.map((x) => el('option', { value: x, selected: x === k.color, text: `${COLOR_DOTS[x]} ${COLOR_NAMES[x]}` }))),
+          el('button', { class: 'icon sm danger', 'data-act': 'kdel', 'data-id': k.id, 'aria-label': `Ta bort ${k.name}`, text: '✕' })))) : null,
+        S.state.cats.length < LIM.cats ? el('div', { class: 'pick-row' },
+          el('input', { type: 'text', id: 'k-new', maxlength: 30, placeholder: 'Ny kategori', 'aria-label': 'Ny kategori', autocomplete: 'off' }),
+          el('button', { class: 'weigh-save', 'data-act': 'knew', text: 'Lägg till' })) : null),
       sec('people', 'Personer', people.length ? people.map((x) => x.name).join(', ') : 'Inga',
         el('p', { class: 'muted small', text: 'De som kan utföra ett ärende. Finns det personer kan du välja vem i ärendet och filtrera listan.' }),
         people.length ? el('ul', { class: 'edit-list' }, people.map((x) => el('li', { class: 'name-row' },

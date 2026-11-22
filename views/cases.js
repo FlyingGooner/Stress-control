@@ -1,6 +1,6 @@
 // Vy: Ärenden (öppna ärenden, närmast deadline först), Nytt ärende (rubrik + mallar) och ärendet (lager – Bakåt stänger).
 // Ärendet används också från Arkiv. 2026-11-22: omgjord – rubrik, beskrivning, deadline, person, delmål och logg; allt sparas direkt.
-import { openCases, personOf, progress, daysBetween, parseKey, dueDay, LOG_CHARS, DESC_CHARS, TITLE_CHARS, STEP_CHARS } from '../store.js';
+import { openCases, personOf, catOf, COLOR_DOTS, progress, daysBetween, parseKey, dueDay, LOG_CHARS, DESC_CHARS, TITLE_CHARS, STEP_CHARS } from '../store.js';
 import { today, S, el, shortDate } from '../ui.js';
 
 // Deadline som text: "idag 14:00", "imorgon", "fre", "28/11", "3 dagar sen".
@@ -14,12 +14,26 @@ export function dueText(due, t = today()) {
 const dueClass = (c) => (c.x || !c.due ? '' : dueDay(c) < today() ? ' late' : dueDay(c) === today() ? ' soon' : '');
 
 export function caseRow(c) {
-  const [done, all] = progress(c), who = personOf(S.state, c);
-  const info = [c.x ? `✓ klar ${shortDate(c.x)}` : c.due ? `📅 ${dueText(c.due)}` : 'ingen deadline', who ? `👤 ${who.name}` : null].filter(Boolean).join(' · ');
-  return el('li', { class: 'case-li' + dueClass(c) },
+  const [done, all] = progress(c), who = personOf(S.state, c), cat = catOf(S.state, c);
+  const info = [cat?.name, c.x ? `✓ klar ${shortDate(c.x)}` : c.due ? `📅 ${dueText(c.due)}` : 'ingen deadline', who ? `👤 ${who.name}` : null].filter(Boolean).join(' · ');
+  return el('li', { class: 'case-li' + dueClass(c) + (cat ? ` c-${cat.color}` : '') },
     el('button', { class: 'case-row', 'data-act': 'copen', 'data-id': c.id },
       el('span', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }), el('small', { class: 'case-info', text: info })),
       all ? el('span', { class: 'case-prog', 'aria-label': `${done} av ${all} delmål klara`, text: `${done}/${all}` }) : null));
+}
+// Kategorifilter (bara när det finns kategorier). '-' = utan kategori.
+export function catFilter(list, key) {
+  const cats = S.state.cats;
+  if (!cats.length) return [null, list];
+  S[key] ??= 'all';
+  if (S[key] !== 'all' && S[key] !== '-' && !cats.some((k) => k.id === S[key])) S[key] = 'all';
+  const n = (id) => list.filter((c) => (id === '-' ? !c.k || !cats.some((k) => k.id === c.k) : c.k === id)).length;
+  const cur = cats.find((k) => k.id === S[key]);
+  const sel = el('select', { class: 'filt' + (cur ? ` on c-${cur.color}` : S[key] === '-' ? ' on' : ''), 'data-act': key, 'aria-label': 'Kategori' },
+    el('option', { value: 'all', selected: S[key] === 'all', text: `Alla kategorier (${list.length})` }),
+    cats.filter((k) => n(k.id)).map((k) => el('option', { value: k.id, selected: S[key] === k.id, text: `${COLOR_DOTS[k.color]} ${k.name} (${n(k.id)})` })),
+    n('-') ? el('option', { value: '-', selected: S[key] === '-', text: `Utan kategori (${n('-')})` }) : null);
+  return [sel, list.filter((c) => S[key] === 'all' || (S[key] === '-' ? !c.k || !cats.some((k) => k.id === c.k) : c.k === S[key]))];
 }
 // Personfilter (bara när det finns personer).
 export function personFilter(list, key) {
@@ -53,9 +67,12 @@ export function caseView() {
   const c = S.state.cases.find((x) => x.id === S.open);
   if (!c) return null;
   const [done, all] = progress(c), dd = c.due ? c.due.slice(0, 10) : '', tt = c.due && c.due.length > 10 ? c.due.slice(11) : '';
-  return el('section', { class: 'card case' + dueClass(c) },
+  return el('section', { class: 'card case' + dueClass(c) + (catOf(S.state, c) ? ` c-${catOf(S.state, c).color}` : '') },
     el('div', { class: 'add-top' },
       el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
+      S.state.cats.length ? el('select', { class: 'cat-chip' + (catOf(S.state, c) ? ` c-${catOf(S.state, c).color}` : ''), 'data-act': 'ccat', 'aria-label': 'Kategori' },
+        el('option', { value: '', selected: !catOf(S.state, c), text: 'Ingen kategori' }),
+        S.state.cats.map((k) => el('option', { value: k.id, selected: c.k === k.id, text: `${COLOR_DOTS[k.color]} ${k.name}` }))) : null,
       c.x ? el('span', { class: 'cat-chip', text: `✓ Klar ${shortDate(c.x)}` }) : null),
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: TITLE_CHARS, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
     el('textarea', { id: 'c-desc', class: 'case-desc', 'data-act': 'cdesc', maxlength: DESC_CHARS, rows: rows(c.d || '', 3), placeholder: 'Kort beskrivning – vad det gäller, kontakter, pris', 'aria-label': 'Beskrivning', text: c.d || '' }),
@@ -93,12 +110,12 @@ export function caseView() {
 export function viewCases() {
   if (S.pick) return newCaseView();
   if (S.open) return caseView();
-  const all = openCases(S.state), [psel, list] = personFilter(all, 'pfilter');
+  const all = openCases(S.state), [psel, mine] = personFilter(all, 'pfilter'), [ksel, list] = catFilter(mine, 'kfilter');
   return [
     el('h1', { class: 'view-title', text: 'Ärenden' }),
-    psel ? el('div', { class: 'filter-row' }, psel) : null,
+    psel || ksel ? el('div', { class: 'filter-row' }, psel, ksel) : null,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
-      : el('p', { class: 'muted', text: all.length ? 'Inga ärenden för den personen.' : 'Inga öppna ärenden. Tryck + Nytt ärende för att lägga till ett.' }),
+      : el('p', { class: 'muted', text: all.length ? 'Inga ärenden med det filtret.' : 'Inga öppna ärenden. Tryck + Nytt ärende för att lägga till ett.' }),
     el('button', { class: 'primary new-case', 'data-act': 'pickopen', text: '+ Nytt ärende' }),
   ];
 }
