@@ -677,3 +677,13 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 .color-dot.on { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--on-surface, #1d1b20); }
 .color-dot.none { background: var(--surface-container-high, #e6e0e9); color: var(--muted); font-size: 1.1rem; }
 .color-label { width: 100%; box-sizing: border-box; margin: 0 0 8px; height: 40px; padding: 0 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; }
+/* 2026-11-22: färgen fyller raden (tonad yta) i stället för en ram */
+.case-li .case-row { box-shadow: none; background: var(--surface-container); }
+.case-li[class*=" c-"] .case-row { background: var(--cc-c); color: var(--cc-on); }
+.case-li[class*=" c-"] .case-main small { color: var(--cc-on); opacity: .8; }
+.case-li[class*=" c-"].late .case-info, .case-li[class*=" c-"].soon .case-info { opacity: 1; }
+.case-li[class*=" c-"] .case-prog { background: var(--surface); color: var(--on-surface); }
+.case.card { box-shadow: none; border-top: 6px solid var(--cc, transparent); }
+.case-li .case-main small { min-height: 0; } /* inga tomma rader under texten */
+.case-li.late .case-main small.case-info { color: #b3261e; opacity: 1; }
+@media (prefers-color-scheme: dark) { .case-li.late .case-main small.case-info { color: #ffb4ab; } }
