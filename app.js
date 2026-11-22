@@ -1,18 +1,16 @@
-// Stress control – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
+// Task buddy – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX, tidyNote, DESC_CHARS } from './store.js';
-// Styr fältet andra fälts synlighet (fields[].if)? Då ritas formuläret om när det ändras.
-const controls = (typeId, fieldId) => !!S.state.types.find((x) => x.id === typeId)?.fields.some((f) => f.if?.[0] === fieldId);
-import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
-import { topLayer, layerDepth, closeTop, isDirty } from './nav.js';
-import { viewCases, showVal } from './views/cases.js';
-import { viewOverview } from './views/overview.js';
+// 2026-11-22: omgjord – ärenden med rubrik, beskrivning, deadline, person, delmål och logg; mallar som rätterna i Fitness buddy.
+import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, roomFor, LIM, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
+import { today, S, setOpen, el } from './ui.js';
+import { topLayer, layerDepth, closeTop } from './nav.js';
+import { viewCases } from './views/cases.js';
 import { viewArchive, archiveList } from './views/archive.js';
 import { viewTrash } from './views/trash.js';
-import { viewSettings, personHint } from './views/settings.js';
+import { viewSettings } from './views/settings.js';
 import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, copyPassword, ownPassword, exportCsv } from './views/data.js';
 
-const CONFIG = { startView: 'cases', longPressMs: 450 };
+const CONFIG = { startView: 'cases' };
 document.getElementById('version').textContent = 'v' + self.APP_VERSION;
 const app = document.getElementById('app');
 const tabbar = document.querySelector('.tabbar');
@@ -80,9 +78,7 @@ document.getElementById('del-ok').addEventListener('click', () => { const a = de
 document.getElementById('del-dialog').addEventListener('close', () => { delAction = null; });
 
 /* ---------- Router (mobile only, see ../STIL.md) ---------- */
-// Actions that read or change the whole data (archive included): wait until it is loaded (a moment after start).
-const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'tsave', 'tdel', 'trashopen', 'tempty', 'aclean', 'tfromcase', 'pdel']);
-const VIEWS = { cases: viewCases, overview: viewOverview, archive: viewArchive, settings: () => (S.trash && !S.tedit ? viewTrash() : viewSettings()) };
+const VIEWS = { cases: viewCases, archive: viewArchive, settings: () => (S.trash ? viewTrash() : viewSettings()) };
 let view = CONFIG.startView;
 function render() {
   app.dataset.view = view;
@@ -92,12 +88,12 @@ function render() {
     t.classList.toggle('on', on);
     if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
   }
-  // Red count on Överblick: dates within the reminder time and passed deadlines.
-  const ov = tabbar.querySelector('[data-view="overview"]'), na = alerts(S.state, today()).length;
-  let bd = ov.querySelector('.tab-badge');
-  if (na && !bd) { bd = el('span', { class: 'tab-badge' }); ov.append(bd); }
+  // Röd siffra på Ärenden: deadline idag eller passerad.
+  const tab = tabbar.querySelector('[data-view="cases"]'), na = dueNow(S.state, today());
+  let bd = tab.querySelector('.tab-badge');
+  if (na && !bd) { bd = el('span', { class: 'tab-badge' }); tab.append(bd); }
   if (bd) { bd.hidden = !na; bd.textContent = na > 99 ? '99+' : String(na); }
-  ov.setAttribute('aria-label', na ? `Överblick, ${na} aktuella` : 'Överblick');
+  tab.setAttribute('aria-label', na ? `Ärenden, ${na} med deadline idag eller passerad` : 'Ärenden');
   syncHistory();
 }
 /* ---------- Bakåt (som simple-nutrition): flikar och lager i historiken, popstate stänger det översta ---------- */
@@ -105,7 +101,7 @@ function render() {
 // histDepth = open layers that have a history step. A layer that opens gets pushState; one closed by a button goes back
 // with history.go(), so no step points at a closed layer. While our own history.go() runs (ownNav) nothing is pushed:
 // tab changes wait in pendingView and new layers are pushed when popstate comes.
-let histDepth = 0, navTimer = 0, discard = false, pendingView = null, ownNav = false;
+let histDepth = 0, navTimer = 0, pendingView = null, ownNav = false;
 function syncHistory() {
   if (ownNav) return;
   const d = layerDepth(S);
@@ -123,7 +119,7 @@ function go(v, push = true) {
   // Layers closed by a tab change keep their steps; back skips them (popstate: step deeper than open layers → back again).
   if (push) histDepth = Math.min(histDepth, layerDepth(S));
   // Leaving Inställningar folds its sections again ('extra' belongs to Ärenden).
-  if (view === 'settings' && v !== 'settings') for (const k of [...setOpen]) if (k !== 'extra') setOpen.delete(k);
+  if (view === 'settings' && v !== 'settings') for (const k of [...setOpen]) setOpen.delete(k);
   view = v;
   if (location.hash !== '#' + v) {
     if (push) history.pushState({ app: 1, depth: histDepth }, '', '#' + v); else history.replaceState({ app: 1, depth: histDepth }, '', '#' + v);
@@ -140,12 +136,6 @@ addEventListener('popstate', (e) => {
     return;
   }
   if (layerDepth(S) > target) {
-    if (topLayer(S) === 'tedit' && !discard && isDirty(S.tedit, S.teditOrig)) {
-      history.pushState({ app: 1, layer: 'tedit', depth: histDepth }, '', location.hash);
-      document.getElementById('discard-dialog').showModal();
-      return;
-    }
-    discard = false;
     while (layerDepth(S) > target && closeTop(S));
     histDepth = layerDepth(S);
     render();
@@ -153,285 +143,126 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.sel = null; S.showPwd = false; S.own = null; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.trash = false; S.showPwd = false; go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
-document.getElementById('dd-ok').addEventListener('click', () => { discard = true; history.back(); });
 tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.draft = null; S.tedit = null; S.steps = false; S.trash = false; S.sel = null; S.showPwd = false; S.own = null;
+  S.open = null; S.pick = false; S.trash = false; S.showPwd = false;
   go(t.dataset.view);
 });
 
 /* ---------- Actions: one click handler, data-act on the element ---------- */
 // 2026-11-18: sorteringsmenyn stängs vid ett tryck utanför den.
 document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closest?.('.sort-wrap')) { S.sortOpen = false; ev.stopPropagation(); ev.preventDefault(); render(); } }, true);
+
+/* ---------- Actions: one click handler, data-act on the element ---------- */
+const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'tsave', 'tdel']);
+const openCase = (id) => { S.open = id; S.pick = false; render(); scrollTo(0, 0); };
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
   if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; }
   if (!t || (S.navPending && ev.isTrusted)) return;
   const { act, id } = t.dataset;
-  const cs = () => S.state.cases.find((x) => x.id === S.open);
-  const touch = (c) => { c.u = today(); };
+  const c = S.state.cases.find((x) => x.id === S.open);
+  const touch = () => { if (c) c.u = today(); };
   switch (act) {
-    // Trådar
-    case 'logfold': t.closest('details')?.removeAttribute('open'); return; // 2026-11-19: tryck på öppen logganteckning fäller ihop den.
-    case 'sortopen': S.sortOpen = !S.sortOpen; break;
-    case 'sortcol': { const [w, k] = id.split(':'); if (!SORTS[w]?.[k]) return; S.state.sort = { ...S.state.sort, [w]: nextSort(S.state, w, k) }; persist(); break; }
-    case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
-    case 'aclean': {   // Rensa arkivet: old archived cases go to the Papperskorg (can be restored there)
-      const years = Number(document.getElementById('aclean-age')?.value) || 2, before = addDays(today(), -365 * years);
-      const n = S.state.cases.filter((c) => c.x && c.x < before).length;
-      if (!n) { snackbar(`Inga arkiverade trådar äldre än ${years} år`, null, null, 3000); return; }
-      confirmDelete(`Flytta ${n} trådar till papperskorgen?`, `Arkiverade trådar som stängdes före ${longDate(before)}. De kan återställas från papperskorgen tills den rensas.`, () => {
-        withUndo(`${n} trådar flyttade till papperskorgen`, () => { trashArchivedBefore(S.state, before, today()); });
-      });
-      return;
+    // Ärenden
+    case 'pickopen': S.pick = true; S.newTitle = ''; render(); scrollTo(0, 0); document.getElementById('new-title')?.focus(); return;
+    case 'pickclose': S.pick = false; break;
+    case 'cnew': case 'cfromtpl': {
+      const tpl = act === 'cfromtpl' ? S.state.tpls.find((x) => x.id === id) : null;
+      const title = document.getElementById('new-title')?.value || '';
+      if (act === 'cnew' && !cleanText(title, TITLE_CHARS)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
+      if (!roomFor(S.state)) { errText('new-error', `Högst ${LIM.open} öppna ärenden – markera några som klara först.`); return; }
+      const nc = newCase(S.state, title, today(), tpl);
+      if (!nc) return;
+      persist(); S.newTitle = ''; S.pick = false; S.open = nc.id; render(); scrollTo(0, 0); return;
     }
-    case 'trashopen': S.trash = true; S.exp = null; render(); scrollTo(0, 0); return;
-    case 'trashclose': S.trash = false; break;
-    case 'pickopen': S.own = null; S.pick = true; S.draft = null; S.newTitle = ''; render(); scrollTo(0, 0); return;
-    case 'pickclose': S.pick = false; S.draft = null; break;
-    case 'ptype': {   // choose type: its form opens below; values already typed in fields with the same id are kept
-      if (S.draft?.t === id) return;
-      S.draft = { t: id, f: S.draft?.f, p: S.draft?.p };
-      if (!S.draft.p) delete S.draft.p;
-      if (!S.draft.f) delete S.draft.f;
-      const ty = S.state.types.find((x) => x.id === id);
-      render(); app.querySelector('.draft')?.scrollIntoView({ block: 'nearest' }); return;
-    }
-    case 'cnew': {   // creates the case (open, not archived) and closes the picker
-      const title = document.getElementById('new-title')?.value;
-      if (!cleanText(title, 80)) { errText('new-error', 'Skriv en rubrik först.'); document.getElementById('new-title')?.focus(); return; }
-      const c = newCase(S.state, id, title, today());
-      if (!c) { errText('new-error', `Max ${LIM.open} öppna trådar (${LIM.cases} totalt). Arkivera eller ta bort något först.`); return; }
-      if (S.draft?.t === id && S.draft.skip?.length && c.s) { c.s = c.s.filter((_, i) => !S.draft.skip.includes(i)); if (!c.s.length) delete c.s; }
-      if (S.draft?.t === id && S.state.people.some((x) => x.id === S.draft.p)) c.p = S.draft.p;
-      if (S.draft?.t === id && S.draft.f) { const ty = S.state.types.find((x) => x.id === id), f = {}; for (const [k, v] of Object.entries(S.draft.f)) if (ty?.fields.some((x) => x.id === k)) f[k] = v; if (Object.keys(f).length) c.f = f; }
-      S.pick = false; S.draft = null; S.newTitle = ''; persist(); render(); scrollTo(0, 0);   // saved and open: back to the list
-      snackbar(`${c.title} är sparad`, null, null, 2500); return;
-    }
-    case 'gocases': S.filter = id || 'all'; go('cases'); return;   // Överblick: open threads (a category with data-id)
-    case 'goarch': S.afilter = 'all'; go('archive'); return;
-    case 'stepsopen': S.steps = true; render(); scrollTo(0, 0); return;
-    case 'stepsclose': S.steps = false; break;
-    case 'cexp': S.exp = S.exp === id ? null : id; break;
-    case 'copen': S.exp = null; S.own = null; S.open = id; S.edit = false; S.ledit = null; S.fedit = null; render(); scrollTo(0, 0); return;
+    case 'copen': openCase(id); return;
     case 'cclose': S.open = null; break;
-    case 'selt': {   // markeringsläge: tap toggles; the last one unmarked ends the mode
-      const i = S.sel.indexOf(id);
-      if (i < 0) S.sel.push(id); else S.sel.splice(i, 1);
-      if (!S.sel.length) S.sel = null;
-      break;
-    }
-    case 'selclose': S.sel = null; break;
-    case 'selall': {
-      const ids = [...app.querySelectorAll('[data-act="selt"]')].map((x) => x.dataset.id);
-      S.sel = ids.every((x) => S.sel.includes(x)) ? null : [...new Set([...S.sel, ...ids])];
-      break;
-    }
-    case 'selarch': case 'seldel': case 'selreopen': {   // several at once, with Ångra (a snapshot, like Rensa arkivet)
-      const list = S.state.cases.filter((c) => (act === 'selarch' ? !c.x : act === 'selreopen' ? c.x : true) && S.sel.includes(c.id)); if (!list.length) return;
-      if (act === 'selreopen' && S.state.cases.filter((c) => !c.x).length + list.length > LIM.open) { snackbar(`Max ${LIM.open} öppna trådar – arkivera något först`, null, null, 3000); return; }
-      const n = list.length, what = n === 1 ? list[0].title : `${n} trådar`;
-      S.sel = null;
-      if (act === 'selarch') withUndo(`${what} är arkiverad${n === 1 ? '' : 'e'}`, () => {
-        for (const c of list) { c.x = today(); touch(c); nextCase(S.state, c, today()); }
-      });
-      else if (act === 'selreopen') withUndo(`${what} är öppen${n === 1 ? '' : 'na'} igen`, () => { for (const c of list) { delete c.x; touch(c); } });
-      else withUndo(`${what} ligger i papperskorgen`, () => { for (const c of list) trashCase(S.state, c, today()); });
-      return;
-    }
-    case 'fopen': S.fedit = t.dataset.id; render(); return;   // 2026-11-21: inget tangentbord direkt
-    case 'fdone': S.fedit = null; render(); return;
-    case 'cedit': S.edit = true; S.ledit = null; S.fedit = null; render(); scrollTo(0, 0); return;
-    case 'lopen': S.ledit = Number(t.dataset.i); render(); return;   // inget tangentbord direkt
-    case 'lcancel': S.ledit = null; render(); return;
-    case 'lsave': {
-      const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i];
-      const v = cleanText(tidyNote(document.getElementById('le-text')?.value), 2000, true);
-      if (row && v) { if (v !== row[1]) { row[1] = v; c.u = today(); persist(); } S.ledit = null; render(); snackbar('Anteckningen är ändrad', null, null, 2500); }
-      return;
-    }
-    case 'cedclose': S.edit = false; break;
+    case 'cdueclr': if (!c) return; delete c.due; touch(); persist(); break;
     case 'cdone': {
-      const c = cs(); if (!c) return;
-      const u0 = c.u;
-      c.x = today(); touch(c); S.open = null;
-      const nc = nextCase(S.state, c, today()), fd = nc && firstDate(S.state, nc);
-      persist();
-      snackbar(nc ? `${c.title} är arkiverad. Nästa är skapad${fd ? ' till ' + longDate(fd) : ''}` : `${c.title} är stängd och arkiverad`, 'Ångra', () => {
-        delete c.x; c.u = u0; if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc); persist(); render();
-      });
-      break;
-    }
-    case 'creopen': {   // a repeating case: the untouched copy made when it was archived goes away, so no double
-      const c = cs(); if (!c) return;
-      const nc = c.r && S.state.cases.find((x) => x !== c && !x.x && x.t === c.t && x.title === c.title && x.r === c.r && x.c >= c.x && x.u === x.c && !x.l && !(x.s || []).some((y) => y[1]));
-      if (nc) S.state.cases = S.state.cases.filter((x) => x !== nc);
-      delete c.x; touch(c); persist(); snackbar(`${c.title} är öppen igen` + (nc ? ' – nästa upprepning togs bort' : ''), null, null, 3000); break;
-    }
-    case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
-      const c = cs(); if (!c) return;
-      S.open = null;
-      withUndo(`${c.title} ligger i papperskorgen`, () => { trashCase(S.state, c, today()); });
+      if (!c) return;
+      withUndo(`${c.title} är klart – finns i Arkiv`, () => { c.x = today(); touch(); S.open = null; });
       return;
     }
+    case 'creopen': if (!c) return; delete c.x; touch(); persist(true); snackbar(`${c.title} är öppet igen`, null, null, 2500); break;
+    case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
+      if (!c) return;
+      withUndo(`${c.title} flyttat till papperskorgen`, () => { trashCase(S.state, c, today()); S.open = null; });
+      return;
+    }
+    case 'tsave': {   // Spara som mall
+      if (!c) return;
+      const r = saveTemplate(S.state, c);
+      if (!r) { snackbar(`Högst ${LIM.tpls} mallar`, null, null, 3000); return; }
+      persist(); snackbar(r.replaced ? `Mallen ${r.tpl.title} uppdaterad` : `Sparad som mall: ${r.tpl.title}`, null, null, 3000); return;
+    }
+    case 'sadd': {
+      const inp = document.getElementById('s-new'), x = cleanText(inp?.value, STEP_CHARS);
+      if (!c || !x) { inp?.focus(); return; }
+      if ((c.s || []).length >= LIM.steps) { errText('c-error', `Högst ${LIM.steps} delmål.`); return; }
+      (c.s ||= []).push([x, 0]); touch(); persist(); render(); document.getElementById('s-new')?.focus(); return;
+    }
+    case 'sdel': {
+      const i = Number(t.dataset.i); if (!c?.s?.[i]) return;
+      withUndo(`${c.s[i][0]} togs bort`, () => { c.s.splice(i, 1); if (!c.s.length) delete c.s; touch(); });
+      return;
+    }
+    case 'ladd': {
+      const inp = document.getElementById('l-new'), x = cleanText(tidyNote(inp?.value), LOG_CHARS, true);
+      if (!c || !x) { inp?.focus(); return; }
+      (c.l ||= []).push([today(), x]); if (c.l.length > LIM.log) c.l.shift(); touch(); persist(); break;
+    }
+    case 'ldel': {
+      const i = Number(t.dataset.i); if (!c?.l?.[i]) return;
+      withUndo('Anteckningen togs bort', () => { c.l.splice(i, 1); if (!c.l.length) delete c.l; touch(); });
+      return;
+    }
+    case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
+    // Inställningar
+    case 'tdel': {
+      const tp = S.state.tpls.find((x) => x.id === id); if (!tp) return;
+      withUndo(`Mallen ${tp.title} togs bort`, () => { S.state.tpls = S.state.tpls.filter((x) => x !== tp); });
+      return;
+    }
+    case 'pnew': {
+      const inp = document.getElementById('p-new'), name = cleanText(inp?.value, 30);
+      if (!name || S.state.people.length >= LIM.people) { inp?.focus(); return; }
+      S.state.people.push({ id: uid(), name }); persist(); render(); document.getElementById('p-new')?.focus(); return;
+    }
+    case 'pdel': {   // removing a person clears it from every case (open, archived, trash) – with Ångra
+      const p = S.state.people.find((x) => x.id === id); if (!p) return;
+      withUndo(`${p.name} togs bort`, () => {
+        S.state.people = S.state.people.filter((x) => x !== p);
+        for (const x of [...S.state.cases, ...S.state.trash]) if (x.p === p.id) delete x.p;
+      });
+      persist(true); return;
+    }
+    case 'trashopen': S.trash = true; render(); scrollTo(0, 0); return;
+    case 'trashclose': S.trash = false; break;
     case 'trest': {
-      const c = restoreCase(S.state, id); if (!c) { snackbar(`Max ${LIM.open} öppna trådar – arkivera något först`, null, null, 3000); return; }
-      persist(); render(); snackbar(`${c.title} är återställd` + (c.x ? ' till Arkiv' : ''), null, null, 2500); return;
+      const r = restoreCase(S.state, id);
+      if (!r) { snackbar('Kunde inte återställa – för många öppna ärenden', null, null, 3000); return; }
+      persist(true); snackbar(r.x ? `${r.title} återställt till Arkiv` : `${r.title} återställt`, null, null, 3000); break;
     }
     case 'tpurge': {
-      const c = S.state.trash.find((x) => x.id === id); if (!c) return;
-      confirmDelete(`Radera ${c.title} för gott?`, 'Tråden tas bort helt och kan inte återställas.', () => {
-        S.state.trash = S.state.trash.filter((x) => x !== c); persist(); render();
-      });
+      const x = S.state.trash.find((y) => y.id === id); if (!x) return;
+      confirmDelete(`Radera ${x.title}?`, 'Ärendet raderas för gott och kan inte återställas.', () => { S.state.trash = S.state.trash.filter((y) => y !== x); persist(true); render(); });
       return;
     }
     case 'tempty': {
       const n = S.state.trash.length; if (!n) return;
-      confirmDelete('Töm papperskorgen?', `${n} ${n === 1 ? 'tråd raderas' : 'trådar raderas'} för gott och kan inte återställas.`, () => {
-        S.state.trash = []; persist(); render();
-      });
+      confirmDelete(`Töm papperskorgen (${n})?`, 'Alla ärenden i papperskorgen raderas för gott.', () => { S.state.trash = []; persist(true); render(); });
       return;
     }
-    case 'sadd': {
-      const c = cs(), v = document.getElementById('s-new')?.value, xs = isList(c) ? splitItems(v) : [cleanText(v, 80)].filter(Boolean);   // shopping: "mjölk, bröd" = two items
-      if (!c || !xs.length) { document.getElementById('s-new')?.focus(); return; }
-      if ((c.s || []).length + xs.length > LIM.steps) { errText('c-error', `Max ${LIM.steps} delmål.`); return; }
-      const sd = document.getElementById('s-date')?.value; for (const x of xs) (c.s ||= []).push(validDate(sd) ? [x, 0, sd] : [x, 0]); touch(c); persist(); render(); document.getElementById('s-new')?.focus(); return;
-    }
-    case 'oadd': {
-      const c = cs(), n = document.getElementById('o-name'); if (!c) return;
-      if (!addExtra(c, n?.value, document.getElementById('o-kind')?.value, today())) { errText('c-error', cleanText(n?.value, 40) ? 'Fältet finns redan, eller max antal fält.' : 'Skriv ett namn på fältet.'); n?.focus(); return; }
-      persist(); render(); document.getElementById('f-o' + (c.o.length - 1))?.focus(); return;
-    }
-    case 'odel': { const c = cs(); if (!c?.o) return; const n = c.o[Number(t.dataset.i)]?.[0]; withUndo(`${n} togs bort`, () => { c.o.splice(Number(t.dataset.i), 1); if (!c.o.length) delete c.o; touch(c); }); return; }
-    case 'oclear': { const c = cs(); if (!c?.o) return; withUndo('Extra fält borttagna', () => { delete c.o; touch(c); }); return; }
-    case 'srep': { const c = cs(), i = Number(t.dataset.i), row = c?.s?.[i]; if (!row) return;   // repeat: Nej → Varje vecka → Varje månad → Varje år
-      setStepRepeat(c, i, ({ '': 'w', w: 'm', m: 'y' })[row[4] || ''] || 0, today()); persist(); render(); return; }
-    case 'sdel': { const c = cs(), i = Number(t.dataset.i); if (!c?.s?.[i]) return; withUndo(`${c.s[i][0]} togs bort`, () => { c.s.splice(i, 1); if (!c.s.length) delete c.s; touch(c); }); return; }
-    case 'ladd': {
-      const c = cs(), x = cleanText(tidyNote(document.getElementById('l-new')?.value), 2000, true);
-      if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
-      if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per tråd – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
-      const ld = document.getElementById('l-date')?.value, d = validDate(ld) && ld <= today() ? ld : today();
-      const l = (c.l ||= []); let i = l.length; while (i > 0 && l[i - 1][0] > d) i--;   // kept in date order: an earlier date goes in its place
-      l.splice(i, 0, [d, x]); touch(c); persist(); break;
-    }
-    case 'ldel': {
-      const c = cs(), i = Number(t.dataset.i); if (!c?.l?.[i]) return;
-      const [d, x] = c.l[i];
-      confirmDelete('Ta bort anteckningen?', `${shortDate(d)}: ${x.length > 120 ? x.slice(0, 120) + '…' : x}`, () => {
-        withUndo('Anteckningen togs bort', () => { c.l.splice(i, 1); if (!c.l.length) delete c.l; });
-      });
-      return;
-    }
-    // Inställningar: typer och kategorier
-    case 'topen': case 'tnew': {
-      const t0 = act === 'tnew' ? { id: 't' + uid(), name: '', icon: '📌', cat: S.state.cats[0].id, on: 1, fields: [{ id: 'f1', name: 'Kommentar', kind: 'note' }], isNew: true }
-        : S.state.types.find((x) => x.id === id);
-      if (!t0) return;
-      S.teditFor = null; S.tedit = { ...JSON.parse(JSON.stringify(t0)), steps: [...(t0.steps || [])] }; S.teditOrig = JSON.stringify(S.tedit);
-      render(); scrollTo(0, 0); return;
-    }
-    case 'tfromcase': {   // new type = the case's type + its old fields; on Spara the case changes to it
-      const c = cs(), ty = c && S.state.types.find((x) => x.id === c.t); if (!c?.o) return;
-      const fields = [...(ty?.fields || []).map((f) => ({ name: f.name, kind: f.kind })), ...c.o.map(([n, k]) => ({ name: n, kind: k }))]
-        .filter((f, i, a) => a.findIndex((g) => g.name === f.name && g.kind === f.kind) === i).slice(0, LIM.fields).map((f, i) => ({ id: 'f' + (i + 1), ...f }));
-      S.tedit = { id: 't' + uid(), name: '', icon: ty?.icon || '📌', cat: ty?.cat || S.state.cats[0].id, on: 1, fields, steps: [], isNew: true };
-      S.teditOrig = JSON.stringify(S.tedit); S.teditFor = c.id;
-      render(); scrollTo(0, 0); return;
-    }
-    case 'tclose': S.tedit = null; S.teditFor = null; break;
-    case 'fadd': {
-      const d = S.tedit; if (d.fields.length >= LIM.fields) return;
-      const used = new Set([...d.fields, ...(JSON.parse(S.teditOrig || '{}').fields || [])].map((f) => f.id));   // never reuse a removed field's id: its old values would land in the new field
-      let n = d.fields.length + 1; while (used.has('f' + n)) n++;
-      d.fields.push({ id: 'f' + n, name: '', kind: 'text' }); render(); return;   // inget tangentbord direkt
-    }
-    case 'fup': { const f = S.tedit.fields, i = Number(t.dataset.i); if (i > 0) [f[i - 1], f[i]] = [f[i], f[i - 1]]; break; }
-    case 'fdel': S.tedit.fields.splice(Number(t.dataset.i), 1); break;
-    case 'tsave': {
-      const d = S.tedit, cats = new Set(S.state.cats.map((c) => c.id));
-      const clean = cleanType({ ...d, fields: d.fields.map((f) => ({ ...f, name: cleanText(f.name, 40) })).filter((f) => f.name) }, cats);
-      if (!clean) { errText('t-error', 'Ge typen ett namn.'); return; }
-      const i = S.state.types.findIndex((x) => x.id === clean.id);
-      if (i >= 0) S.state.types[i] = clean; else S.state.types.push(clean);
-      // Values of removed fields (or fields whose kind changed) are kept as extra fields in each case – never dropped silently.
-      const old = i >= 0 ? JSON.parse(S.teditOrig) : null;
-      for (const c of [...S.state.cases, ...S.state.trash]) if (c.t === clean.id && c.f) {
-        for (const k of Object.keys(c.f)) {
-          const nf = clean.fields.find((f) => f.id === k), of = old?.fields.find((f) => f.id === k);
-          if (nf && nf.kind === of?.kind) continue;
-          if (of && (c.o || []).length < LIM.fields) (c.o ||= []).push([of.name, of.kind, c.f[k], clean.name]);
-          delete c.f[k];
-        }
-        if (!Object.keys(c.f).length) delete c.f;
-      }
-      const fc = S.teditFor && S.state.cases.find((x) => x.id === S.teditFor);
-      if (fc && fc.t !== clean.id) changeType(S.state, fc, clean.id, today());
-      S.tedit = null; S.teditFor = null; persist(true); snackbar(fc ? `${clean.name} sparad – tråden använder den nu` : `${clean.name} sparad`, null, null, 3000); break;
-    }
-    case 'tdel': {
-      const d = S.tedit; if ([...S.state.cases, ...S.state.trash].some((c) => c.t === d.id)) return;
-      S.tedit = null;
-      withUndo(`${d.name || 'Typen'} togs bort`, () => { S.state.types = S.state.types.filter((x) => x.id !== d.id); });
-      return;
-    }
-    case 'knew': {
-      if (S.state.cats.length >= LIM.cats) return;
-      S.state.cats.push({ id: 'k' + uid(), name: 'Ny kategori', color: COLORS[S.state.cats.length % COLORS.length] }); persist(); break;
-    }
-    case 'dayadd': case 'daydel': {   // Dagar: in the open case or in the Ny tråd draft
-      const c = S.pick ? S.draft : cs(); if (!c) return;
-      if (act === 'daydel') { if (delDay(c, id, Number(t.dataset.i), today())) { if (!S.pick) persist(); render(); } return; }
-      const d = document.getElementById('dy-d-' + id)?.value, w = parseHours(document.getElementById('dy-w-' + id)?.value);
-      if (w === false) { errText('dy-e-' + id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
-      if (!addDay(c, id, d, w, today(), document.getElementById('dy-k-' + id)?.value || '', document.getElementById('dy-p-' + id)?.value || '')) { errText('dy-e-' + id, c.f?.[id]?.some((x) => x[0] === d && (x[4] || '') === (document.getElementById('dy-p-' + id)?.value || '')) ? 'Den dagen finns redan.' : 'Välj ett datum.'); return; }
-      if (!S.pick) persist(); render(); return;
-    }
-    case 'owncancel': S.own = null; break;
-    case 'pfnew': {
-      if (S.state.pfields.length >= LIM.pfields) return;
-      let n = 1; while (S.state.pfields.some((f) => f.id === 'e' + n)) n++;
-      S.state.pfields.push({ id: 'e' + n, name: 'Ny egenskap', kind: 'text' }); persist(); render();
-      app.querySelector('.props-ed .field-edit:last-child input')?.select(); return;
-    }
-    case 'pfup': { const f = S.state.pfields, i = Number(t.dataset.i); if (i > 0) { [f[i - 1], f[i]] = [f[i], f[i - 1]]; persist(); } break; }
-    case 'pfdel': {
-      const f = S.state.pfields[Number(t.dataset.i)]; if (!f) return;
-      withUndo(`${f.name} togs bort`, () => { S.state.pfields = S.state.pfields.filter((q) => q !== f); for (const x of S.state.people) if (x.v) { delete x.v[f.id]; if (!Object.keys(x.v).length) delete x.v; } });
-      return;
-    }
-    case 'pnew': {
-      if (S.state.people.length >= LIM.people) return;
-      const id = 'p' + uid(); S.state.people.push({ id, name: 'Ny person' }); setOpen.add('p-' + id); persist(); render();
-      app.querySelector(`[data-sec="p-${id}"] [data-act=pname]`)?.select(); return;
-    }
-    case 'pdel': {   // removing a person clears it from every case (open, archived, trash) – with Ångra
-      const x = S.state.people.find((p) => p.id === id); if (!x) return;
-      const before = JSON.stringify(S.state);
-      S.state.people = S.state.people.filter((p) => p.id !== id);
-      for (const c of [...S.state.cases, ...S.state.trash]) if (c.p === id) delete c.p;
-      if (S.pfilter === id) S.pfilter = 'all';
-      if (S.apfilter === id) S.apfilter = 'all';
-      persist(true); render();
-      snackbar(`${x.name} togs bort`, 'Ångra', () => { S.state = JSON.parse(before); persist(true); render(); });
-      return;
-    }
-    case 'kdel': {
-      const k = S.state.cats.find((c) => c.id === id);
-      if (!k || S.state.types.some((x) => x.cat === id) || S.state.cats.length <= 1) return;
-      withUndo(`${k.name} togs bort`, () => { S.state.cats = S.state.cats.filter((c) => c.id !== id); if (S.filter === id) S.filter = 'all'; });
-      return;
-    }
+    // Allmänt
     case 'install':
-      S.installPrompt?.prompt();
-      S.installPrompt?.userChoice.finally(() => { S.installPrompt = null; render(); });
+      if (S.installPrompt) { S.installPrompt.prompt(); S.installPrompt.userChoice.finally(() => { S.installPrompt = null; render(); }); }
       return;
     case 'wipe': document.getElementById('confirm-dialog').showModal(); return;
     case 'import': openImport(document.getElementById('import-text').value); return;
@@ -446,211 +277,73 @@ app.addEventListener('click', (ev) => {
   render();
 });
 app.addEventListener('input', (ev) => {
-  const t = ev.target, d = S.tedit;
-  if (t.id === 'new-title') { S.newTitle = t.value; return; }
+  const t = ev.target;
+  if (t.id === 'new-title') { S.newTitle = t.value; errText('new-error', ''); return; }
   if (t.id === 'arch-q') { S.q = t.value; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return; }
-  if (!d) return;
-  if (t.dataset.act === 'tset' && ['name', 'icon'].includes(t.dataset.id)) d[t.dataset.id] = t.value;
-  if (t.dataset.act === 'fname') { const f = d.fields[Number(t.dataset.i)]; if (f) f.name = t.value; }
-  if (t.dataset.act === 'tsteps') d.steps = t.value.split('\n').map((x) => cleanText(x, 80)).filter(Boolean).slice(0, LIM.typeSteps);
-  if (t.dataset.act === 'fopts') { const f = d.fields[Number(t.dataset.i)]; if (f) f.opts = [...new Set(t.value.split('\n').map((x) => cleanText(x, 60)).filter(Boolean))].slice(0, OPTS_MAX); }
+  if (t.matches?.('textarea.case-desc, textarea.log-edit')) t.rows = Math.min(14, Math.max(t.classList.contains('case-desc') ? 3 : 1, t.value.split('\n').length + Math.floor(t.value.length / 38)));
 });
-/* ---------- Long press on a case in Trådar: markeringsläge (sel layer). The click after it is swallowed. ---------- */
-let press = null, pressFired = false;
-const endPress = () => { if (press) clearTimeout(press.timer); press = null; };
-app.addEventListener('pointerdown', (ev) => {
-  const row = ev.target.closest('[data-act="copen"]');
-  endPress(); pressFired = false;   // the row is redrawn during a long press, so its click may never come: a new touch clears the flag
-  if (!row || (view !== 'cases' && view !== 'archive') || topLayer(S) || ev.button > 0) return;
-  press = { x: ev.clientX, y: ev.clientY, timer: setTimeout(() => {
-    press = null; pressFired = true;
-    getSelection()?.removeAllRanges(); S.sel = [row.dataset.id]; S.exp = null; navigator.vibrate?.(20); render();
-  }, CONFIG.longPressMs) };
-});
-app.addEventListener('pointermove', (ev) => { if (press && Math.hypot(ev.clientX - press.x, ev.clientY - press.y) > 10) endPress(); });
-for (const t of ['pointerup', 'pointercancel', 'scroll']) addEventListener(t, endPress, { passive: true, capture: true });
-app.addEventListener('click', (ev) => { if (pressFired) { pressFired = false; ev.stopImmediatePropagation(); ev.preventDefault(); } }, true);
-app.addEventListener('contextmenu', (ev) => { if (ev.target.closest('.case-row')) ev.preventDefault(); });
-
-// Android starts its own text selection on a long press (on the text next to the row too): clear it while marking.
-document.addEventListener('selectionchange', () => { if ((press || S.sel) && !document.activeElement?.matches?.('input, textarea')) getSelection()?.removeAllRanges(); });
-
-/* ---------- Swipe sideways between the category filters in Trådar (no layer open; not from the screen edges = system Back) ---------- */
-let swipe = null;
-document.addEventListener('touchstart', (ev) => {
-  const t = ev.touches[0];
-  swipe = ev.touches.length === 1 && !topLayer(S) && t.clientX > 24 && t.clientX < innerWidth - 24
-    && !ev.target.closest('input, textarea, select, dialog, .tabbar') ? { x: t.clientX, y: t.clientY } : null;
-}, { passive: true });
-document.addEventListener('touchend', (ev) => {
-  if (!swipe) return;
-  const t = ev.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
-  swipe = null;
-  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
-  const chips = [...app.querySelectorAll('[data-act="filter"]')], i = chips.findIndex((x) => x.dataset.id === S.filter);
-  if (i < 0) return;
-  const next = chips[i + (dx < 0 ? 1 : -1)];
-  if (next) { next.click(); app.querySelector('.chip.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
-}, { passive: true });
 app.addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter') return;
   if (ev.target.id === 's-new') { ev.preventDefault(); app.querySelector('[data-act="sadd"]')?.click(); }
-  if (ev.target.id === 'o-name') { ev.preventDefault(); app.querySelector('[data-act="oadd"]')?.click(); }
-  if (ev.target.id === 'new-title') { ev.preventDefault(); app.querySelector('.type-btn')?.focus(); }
+  if (ev.target.id === 'p-new') { ev.preventDefault(); app.querySelector('[data-act="pnew"]')?.click(); }
+  if (ev.target.id === 'new-title') { ev.preventDefault(); app.querySelector('[data-act="cnew"]')?.click(); }
 });
 app.addEventListener('toggle', (ev) => {
   const d = ev.target;
   if (d instanceof HTMLDetailsElement && d.dataset.sec) { if (d.open) setOpen.add(d.dataset.sec); else setOpen.delete(d.dataset.sec); }
 }, true);
+// Fields save when they change (leaving the field). Invalid input → the old value back.
 app.addEventListener('change', (ev) => {
-  if (ev.target.type === 'date' || ev.target.type === 'datetime-local') ev.target.classList.toggle('empty', !ev.target.value);   // "Välj datum"-texten
-  const t = ev.target;
+  const t = ev.target, c = S.state.cases.find((x) => x.id === S.open), touch = () => { c.u = today(); };
+  if (t.type === 'date' || t.type === 'time') t.classList.toggle('empty', !t.value);
   switch (t.dataset.act) {
     case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
-    case 'dstep': { const d = S.draft; if (!d) return; const i = Number(t.dataset.i); d.skip = (d.skip || []).filter((x) => x !== i); if (!t.checked) d.skip.push(i); return; }
-    case 'dv': {   // a field in Ny tråd: kept in the draft until Skapa
-      if (t.value === '\u0000own') { S.own = t.dataset.id; render(); document.getElementById('f-' + t.dataset.id)?.focus(); return; }
-      const d = S.draft; if (!d) return;
-      const ok = setField(S.state, d, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
-      errText('d-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
-      if (ok && controls(d.t, t.dataset.id)) render();   // 2026-11-18: ett val som styr andra fält (Köpa eller hyra)
-      return;
-    }
     case 'pfilter': S.pfilter = t.value; render(); return;
-    case 'filter': S.filter = t.value; render(); return;
-    case 'afilter': S.afilter = t.value; S.alimit = 100; render(); return;
-    case 'tfilter': S.tfilter = t.value; render(); return;
-    case 'sortsel': { const w = t.dataset.id; if (!SORTS[w]?.[t.value[0]]) return; S.state.sort = { ...S.state.sort, [w]: t.value }; persist(); render(); return; }
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
-    case 'dperson': if (S.draft) { if (t.value) S.draft.p = t.value; else delete S.draft.p; render(); } return;
-    case 'dayapp': case 'dayw': case 'dayk': case 'dayp': {
-      const c = S.pick ? S.draft : S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      const ok = setDay(c, t.dataset.id, Number(t.dataset.i), t.dataset.act === 'dayapp' ? { a: t.checked } : t.dataset.act === 'dayk' ? { k: t.value } : t.dataset.act === 'dayp' ? { p: t.value } : { w: parseHours(t.value) }, today());
-      if (!ok) { errText('dy-e-' + t.dataset.id, 'Skriv timmar som 2, 2,5 eller 1:30.'); return; }
-      if (!S.pick) persist(); render(); return;
-    }
-    case 'pval': {   // a person's egenskap: saved on change; invalid input → old value back
-      const x = S.state.people.find((p) => p.id === t.dataset.id), f = S.state.pfields.find((q) => q.id === t.dataset.key); if (!x || !f) return;
-      const v = parseInput(f.kind, t.type === 'checkbox' ? t.checked : t.value);
-      if (v === false) { snackbar(`Kontrollera ${f.name.toLowerCase()}`, null, null, 2500); render(); return; }
-      const vals = { ...(x.v || {}) }; if (v === undefined) delete vals[f.id]; else vals[f.id] = v;
-      if (Object.keys(vals).length) x.v = vals; else delete x.v;
-      persist(); if (['choice', 'date', 'check'].includes(f.kind)) render(); else { const h = t.closest('details')?.querySelector('.p-hint'); if (h) h.textContent = personHint(x); }
+    case 'ctitle': { if (!c) return; const v = cleanText(t.value, TITLE_CHARS); if (v) { c.title = v; touch(); persist(); } else t.value = c.title; return; }
+    case 'cdesc': {
+      if (!c) return; const v = cleanText(tidyNote(t.value), DESC_CHARS, true);
+      if (v !== (c.d || '')) { if (v) c.d = v; else delete c.d; touch(); persist(); }
       return;
     }
-    case 'pfname': { const f = S.state.pfields[Number(t.dataset.i)], v = cleanText(t.value, 40); if (f && v) { f.name = v; persist(); render(); } else if (f) t.value = f.name; return; }
-    case 'pfkind': {   // changing kind keeps values that still fit
-      const f = S.state.pfields[Number(t.dataset.i)]; if (!f || !PERSON_KINDS.includes(t.value)) return;
-      f.kind = t.value; if (f.kind === 'choice') f.opts ||= []; else delete f.opts;
-      for (const x of S.state.people) if (x.v && f.id in x.v) { const y = cleanValue(f.kind, x.v[f.id]); if (y === undefined) delete x.v[f.id]; else x.v[f.id] = y; if (!Object.keys(x.v).length) delete x.v; }
-      persist(); render(); return;
+    case 'cdue': {   // date + optional time; the time waits for a date
+      if (!c) return;
+      const row = t.closest('.due-row'), d = row.querySelector('.due-date').value, tm = row.querySelector('.due-time').value;
+      const v = makeDue(d, tm);
+      if (v === false) { errText('c-error', 'Ogiltigt datum eller klockslag.'); return; }
+      errText('c-error', '');
+      if (v) c.due = v; else delete c.due; touch(); persist(); render(); return;
     }
-    case 'pfopts': { const f = S.state.pfields[Number(t.dataset.i)]; if (f) { f.opts = [...new Set(t.value.split('\n').map((x) => cleanText(x, 60)).filter(Boolean))].slice(0, OPTS_MAX); persist(); render(); } return; }
-    case 'phours': {
-      const x = S.state.people.find((p) => p.id === t.dataset.id), v = Number(String(t.value).replace(',', '.'));
-      if (!x) return;
-      if (Number.isFinite(v) && v >= 1 && v <= 80) { if (v === 40) delete x.h; else x.h = Math.round(v * 10) / 10; persist(); }
-      render(); return;
+    case 'cperson': { if (!c) return; if (S.state.people.some((x) => x.id === t.value)) c.p = t.value; else delete c.p; touch(); persist(); return; }
+    case 'stog': { const i = Number(t.dataset.i); if (!c?.s?.[i]) return; c.s[i][1] = t.checked ? 1 : 0; touch(); persist(); render(); return; }
+    case 'ledit': {   // empty = unchanged (remove with ✕)
+      const row = c?.l?.[Number(t.dataset.i)]; if (!row) return;
+      const v = cleanText(tidyNote(t.value), LOG_CHARS, true);
+      if (v && v !== row[1]) { row[1] = v; touch(); persist(); } else if (!v) t.value = row[1];
+      return;
     }
-    case 'cperson': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (S.state.people.some((x) => x.id === t.value)) c.p = t.value; else delete c.p; c.u = today(); persist(); return; }
+    case 'tname': {
+      const tp = S.state.tpls.find((x) => x.id === t.dataset.id), v = cleanText(t.value, TITLE_CHARS);
+      if (tp && v) { tp.title = v; persist(); } else if (tp) t.value = tp.title;
+      return;
+    }
     case 'pname': {
-      const x = S.state.people.find((p) => p.id === t.dataset.id), v = cleanText(t.value, 30);
-      if (x && v) { x.name = v; persist(); const n = t.closest('details')?.querySelector('.p-name'); if (n) n.textContent = '👤 ' + v; } else if (x) t.value = x.name;
+      const p = S.state.people.find((x) => x.id === t.dataset.id), v = cleanText(t.value, 30);
+      if (p && v) { p.name = v; persist(); } else if (p) t.value = p.name;
       return;
     }
-    case 'crep': { const c = S.state.cases.find((x) => x.id === S.open); if (!c) return; if (REPEAT[t.value]) c.r = t.value; else delete c.r; touch(c); persist(); render(); return; }
-    case 'ctype': {   // change type afterwards: values follow by field name, the rest goes to the log
-      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      const to = S.state.types.find((x) => x.id === t.value); if (!to) return;
-      const loss = typeChangeLoss(S.state, c, to.id);
-      if (!loss.length) { if (changeType(S.state, c, to.id, today())) { persist(); render(); } return; }
-      document.getElementById('ty-title').textContent = `Byta till ${to.name}?`;
-      document.getElementById('ty-text').textContent = loss.length === 1 ? `Det här fältet finns inte i ${to.name}:` : `De här ${loss.length} fälten finns inte i ${to.name}:`;
-      document.getElementById('ty-list').replaceChildren(...loss.map((x) => el('li', {}, el('b', { text: x.n + ': ' }), el('span', { text: showVal({ kind: x.k }, x.v) }))));
-      const dlg = document.getElementById('type-dialog');
-      dlg.onclose = () => {
-        dlg.onclose = null;
-        if (dlg.returnValue === 'keep') { changeType(S.state, c, to.id, today()); persist(); render(); snackbar('Bytt typ – fälten finns under Extra fält', null, null, 3000); }
-        else if (dlg.returnValue === 'drop') withUndo(`Bytt till ${to.name}, ${loss.length} ${loss.length === 1 ? 'värde' : 'värden'} borttagna`, () => changeType(S.state, c, to.id, today(), true));
-        else render();   // Avbryt: the list shows the old type again
-      };
-      dlg.returnValue = ''; dlg.showModal();
-      return;
-    }
-    case 'ov': {   // an extra field in the case
-      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      const ok = setExtra(c, Number(t.dataset.id.slice(1)), t.type === 'checkbox' ? t.checked : t.value, today());
-      errText('c-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.'); if (ok) persist();
-      return;
-    }
-    case 'fvown': case 'dvown': {   // Eget val: saved in the case (or draft) and added to the type's list
-      const c = t.dataset.act === 'dvown' ? S.draft : S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      if (!t.value.trim()) return;
-      if (addOption(S.state, c, t.dataset.id, t.value, today())) { S.own = null; persist(true); render(); }
-      return;
-    }
-    case 'fv': {   // a case field: saved directly; invalid input gives a message and is not saved
-      if (t.value === '\u0000own') { S.own = t.dataset.id; render(); document.getElementById('f-' + t.dataset.id)?.focus(); return; }
-      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      const ok = setField(S.state, c, t.dataset.id, t.type === 'checkbox' ? t.checked : t.value, today());
-      errText('c-error', ok ? '' : 'Kontrollera värdet – t.ex. ett tal som 1 250.');
-      if (ok) { persist(); if (controls(c.t, t.dataset.id)) render(); }
-      return;
-    }
-    case 'ledit': {   // 2026-11-18: ändra en befintlig anteckning; tom = oförändrad (ta bort med ✕)
-      const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i]; if (!row) return;
-      const v = cleanText(tidyNote(t.value), 2000, true);
-      if (v && v !== row[1]) { row[1] = v; c.u = today(); persist(); } else if (!v) t.value = row[1];
-      return;
-    }
-    case 'cdesc': {   // 2026-11-22: sammanfattning av tråden; tom = borttagen
-      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
-      const v = cleanText(tidyNote(t.value), DESC_CHARS, true);
-      if (v !== (c.d || '')) { if (v) c.d = v; else delete c.d; c.u = today(); persist(); }
-      return;
-    }
-    case 'ctitle': {
-      const c = S.state.cases.find((x) => x.id === S.open), v = cleanText(t.value, 80);
-      if (c && v) { c.title = v; c.u = today(); persist(); } else if (c) t.value = c.title;
-      return;
-    }
-    case 'sdate': {
-      const c = S.state.cases.find((x) => x.id === S.open), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
-      const i = Number(t.dataset.i);
-      c.s[i] = row[1] ? cleanStep(row[0], 1, row[2], validDate(t.value) ? t.value : today()) : cleanStep(row[0], 0, t.value, 0, row[4]);   // done: the done date; else the deadline
-      c.u = today(); persist(); render(); return;
-    }
-    case 'stog': {
-      const c = S.state.cases.find((x) => x.id === (t.dataset.case || S.open)), row = c?.s?.[Number(t.dataset.i)]; if (!row) return;
-      if (t.dataset.case && t.checked) { const before = JSON.stringify(S.state); setStepDone(c, Number(t.dataset.i), 1, today()); persist(); render(); snackbar(`${row[0]} klart`, 'Ångra', () => { S.state = JSON.parse(before); persist(); render(); }); return; }
-      setStepDone(c, Number(t.dataset.i), t.checked, today()); persist(); render(); return;
-    }
-    case 'ton': { const ty = S.state.types.find((x) => x.id === t.dataset.id); if (ty) { ty.on = t.checked ? 1 : 0; persist(); } return; }
-    case 'tset': if (S.tedit && t.dataset.id === 'cat') S.tedit.cat = t.value; return;
-    case 'fend': { const d = S.tedit, f = d?.fields[Number(t.dataset.i)]; if (!f) return; d.end = (d.end || []).filter((x) => x !== f.id); if (t.checked) d.end.push(f.id); render(); return; }
-    case 'fkind': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f && Object.hasOwn(KINDS, t.value)) { f.kind = t.value; if (f.kind !== 'date' && f.kind !== 'dt') delete f.due; if (f.kind === 'choice') f.opts ||= []; else delete f.opts; render(); } return; }
-    case 'fdue': { const f = S.tedit?.fields[Number(t.dataset.i)]; if (f) { if (t.checked) f.due = 1; else delete f.due; } return; }
-    case 'trashdays': { const v = Number(t.value); if (TRASH_DAYS.includes(v)) { S.state.trashDays = v; purgeTrash(S.state, today()); persist(); render(); } return; }
-    case 'alertdays': { const v = Number(t.value); if (ALERT_DAYS.includes(v)) { S.state.alertDays = v; persist(); render(); } return; }
-    case 'kname': {
-      const k = S.state.cats.find((c) => c.id === t.dataset.id), v = cleanText(t.value, 30);
-      if (k && v) { k.name = v; persist(); } else if (k) t.value = k.name;
-      return;
-    }
-    case 'kcolor': { const k = S.state.cats.find((c) => c.id === t.dataset.id); if (k && COLORS.includes(t.value)) { k.color = t.value; persist(); render(); } return; }
+    case 'trashdays': { const v = Number(t.value); if (TRASH_DAYS.includes(v)) { S.state.trashDays = v; purgeTrash(S.state, today()); persist(true); render(); } return; }
     case 'lang': self.I18N.setLang(t.value); return;
     case 'bkremind': if (['week', 'month', 'off'].includes(t.value)) { S.state.backup.remind = t.value; S.state.backup.asked = null; persist(); } return;
+    default: return;
   }
 });
-
 /* ---------- Install, refresh, service worker ---------- */
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installPrompt = e; if (view === 'settings') render(); });
 // Redraw when the app comes back – but not after a tap on the file field (the file picker hides the page; a redraw would
 // replace the input and lose the chosen file).
 let filePick = false;
 app.addEventListener('click', (ev) => { if (ev.target.id === 'import-file') filePick = true; }, true);
-// 📅 on a sub-goal without a date: the invisible date input on top opens its picker (showPicker where the tap alone does not).
-app.addEventListener('click', (ev) => { const i = ev.target.closest?.('.date-pick input'); if (i) try { i.showPicker?.(); } catch { /* not allowed: the tap opens it */ } });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   if (filePick) { filePick = false; return; }
@@ -663,7 +356,8 @@ go(location.hash.slice(1), false);
 initData({ persist, render, status, snackbar, view: () => view });
 setTimeout(() => loadFull(S.state).catch(() => S.state).then((full) => {
   S.state = full; updateOnline();
-  if (purgeTrash(S.state, today())) persist();   // Papperskorg: cases past their time are deleted at start
+  purgeTrash(S.state, today());   // Papperskorg: cases past their time are deleted at start
+  if (!loadFailed()) persist(true);   // version 20: older data (and its archive) is written in the new form at once
   if (!document.activeElement?.matches?.('input, textarea, select')) render();
   setTimeout(maybeAskBackup, 800);
 }), 0);

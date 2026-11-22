@@ -1,4 +1,6 @@
-# Stress control – specifikation
+# Task buddy (tidigare Stress control) – specifikation
+
+> **2026-11-22: appen är omgjord.** Typer, kategorier, fält, Överblick, upprepning och markeringsläge är borttagna. Ett ärende har rubrik, kort beskrivning, deadline (datum, valfri tid), person, delmål och anteckningar. Mallar fungerar som rätterna i Fitness buddy. Datamodellen står i `docs/DATA.md`, användningen i `docs/MANUAL.md`. Resten av den här filen beskriver den tidigare versionen och gäller bara där den inte säger emot detta.
 
 ## Idé
 > Namn i appen: det som här kallas **ärende** heter **tråd** för användaren (Ärendetyp = Typ). I koden heter det `case`.

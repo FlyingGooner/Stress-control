@@ -1,5 +1,5 @@
 // Vy: Inställningar – grupper (hopfällbara) med sektioner, som simple-nutrition. Allmänt: Data, installera, Hjälp.
-import { addDays, WEEK_HOURS, PERSON_KINDS, REL_CHILD, COLORS, COLOR_NAMES, KINDS, LIM, storageUsed, STORAGE_QUOTA, ALERT_DAYS, TRASH_DAYS, endName, END_KINDS } from '../store.js';
+import { addDays, LIM, storageUsed, STORAGE_QUOTA, TRASH_DAYS, TITLE_CHARS } from '../store.js';
 import { today, S, setOpen, el, shortDate } from '../ui.js';
 import { hasData, savedPassword } from './data.js';
 
@@ -13,41 +13,7 @@ function helpCard() {
   return wrap;
 }
 
-// Typredigeraren (lager, Bakåt stänger; osparat → "Släng ändringarna?"): namn, ikon, kategori, fält i ordning, förslag på delmål.
-export function typeEditor() {
-  const d = S.tedit, used = [...S.state.cases, ...S.state.trash].some((c) => c.t === d.id);
-  return el('section', { class: 'card' },
-    el('div', { class: 'add-top' },
-      el('button', { class: 'icon', 'data-act': 'tclose', 'aria-label': 'Stäng', text: '✕' }),
-      el('h1', { class: 'add-title', text: d.isNew ? 'Ny typ' : 'Ändra typ' })),
-    el('div', { class: 'pick-row' },
-      el('input', { type: 'text', id: 't-icon', class: 'icon-in', maxlength: 8, value: d.icon, 'aria-label': 'Ikon (emoji)', 'data-act': 'tset', 'data-id': 'icon', autocomplete: 'off' }),
-      el('input', { type: 'text', id: 't-name', maxlength: 30, value: d.name, placeholder: 'Namn, t.ex. Hus', 'aria-label': 'Namn', 'data-act': 'tset', 'data-id': 'name', autocomplete: 'off' })),
-    el('label', { class: 'goal-row' }, el('span', { text: 'Kategori' }),
-      el('select', { 'data-act': 'tset', 'data-id': 'cat', 'aria-label': 'Kategori' }, S.state.cats.map((c) => el('option', { value: c.id, selected: c.id === d.cat, text: c.name })))),
-    el('h2', { class: 'sub-h', text: 'Fält' }),
-    el('ul', { class: 'edit-list' }, d.fields.map((f, i) => el('li', { class: 'field-edit' },
-      el('input', { type: 'text', maxlength: 40, value: f.name, 'aria-label': 'Fältets namn', 'data-act': 'fname', 'data-i': i, autocomplete: 'off' }),
-      el('select', { 'data-act': 'fkind', 'data-i': i, 'aria-label': 'Sort' }, Object.entries(KINDS).map(([k, l]) => el('option', { value: k, selected: k === f.kind, text: l }))),
-      el('button', { class: 'icon sm', 'data-act': 'fup', 'data-i': i, 'aria-label': 'Flytta upp', disabled: i === 0, text: '↑' }),
-      el('button', { class: 'icon sm danger', 'data-act': 'fdel', 'data-i': i, 'aria-label': 'Ta bort fältet', text: '✕' }),
-      f.kind === 'choice' ? el('textarea', { class: 'opts-edit', rows: 3, 'aria-label': `Val för ${f.name || 'fältet'}, ett per rad`, placeholder: 'Val, ett per rad', 'data-act': 'fopts', 'data-i': i, text: (f.opts || []).join('\n') }) : null,
-      f.kind === 'date' || f.kind === 'dt' ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: !!f.due, 'data-act': 'fdue', 'data-i': i }), el('span', { text: 'Deadline – påminn även när datumet passerat' })) : null,
-      END_KINDS.includes(f.kind) && f.id ? el('label', { class: 'due-check' }, el('input', { type: 'checkbox', checked: (d.end || []).includes(f.id), 'data-act': 'fend', 'data-i': i }),
-        el('span', { text: 'Slutdatum – används när trådar sorteras på Datum' + ((d.end || []).length > 1 && (d.end || []).includes(f.id) ? ` (${(d.end || []).indexOf(f.id) + 1})` : '') })) : null))),
-    d.fields.length < LIM.fields ? el('button', { class: 'link', 'data-act': 'fadd', text: '+ Lägg till fält' }) : null,
-    el('p', { class: 'muted small', text: 'Sorter: text, lång text, datum, datum och tid, tal, bock (t.ex. Pratat med banken ✓), val i lista (ett val per rad – i tråden går det också att lägga till egna) och dagar (VAB m.m.). Tar du bort ett fält flyttas ifyllda värden till Extra fält i trådarna, så inget försvinner.' }),
-    el('h2', { class: 'sub-h', text: 'Förslag på delmål' }),
-    el('textarea', { id: 't-steps', rows: 3, 'aria-label': 'Förslag på delmål, ett per rad', placeholder: 'Ett per rad, t.ex. Prata med banken', 'data-act': 'tsteps', text: d.steps.join('\n') }),
-    el('p', { class: 'muted small', text: 'Läggs in som delmål när ett ny tråd av typen skapas.' }),
-    el('p', { class: 'import-error small', id: 't-error', role: 'alert' }),
-    el('div', { class: 'row-actions' },
-      d.isNew ? el('span') : el('button', { class: 'link danger', 'data-act': 'tdel', disabled: used, title: used ? 'Används av trådar' : null, text: used ? 'Används – kan stängas av' : 'Ta bort typen' }),
-      el('button', { class: 'weigh-save', 'data-act': 'tsave', text: 'Spara' })));
-}
-
 export function viewSettings() {
-  if (S.tedit) return typeEditor();
   const sec = (id, title, hint, ...kids) => el('details', { class: 'card set-sec', 'data-sec': id, open: setOpen.has(id) },
     el('summary', {}, el('span', { class: 'set-title', text: title }), hint ? el('span', { class: 'set-hint', text: hint }) : null),
     el('div', { class: 'set-body' }, kids));
@@ -59,44 +25,31 @@ export function viewSettings() {
   const mb = (n) => { const d = n < 1e5 ? 2 : 1; return (n / 1e6).toLocaleString('sv-SE', { minimumFractionDigits: d, maximumFractionDigits: d }); };
   let installed = false;
   try { installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { /* old browser */ }
+  const { tpls, people } = S.state;
   return [
     el('h1', { class: 'view-title', text: 'Inställningar' }),
-    group('cases', 'Trådar', `${S.state.types.filter((t) => t.on).length} typer · ${S.state.cats.length} kategorier` + (S.state.people.length ? ` · ${S.state.people.length} personer` : ''),
-      sec('types', 'Typer', `${S.state.types.filter((t) => t.on).length} av ${S.state.types.length} på`,
-        el('p', { class: 'muted small', text: 'Bocka i de typer du vill kunna välja. Tryck på en typ för att ändra namn, kategori och fält.' }),
-        el('ul', { class: 'edit-list' }, S.state.types.map((t) => el('li', { class: 'type-row' },
-          el('input', { type: 'checkbox', checked: !!t.on, 'data-act': 'ton', 'data-id': t.id, 'aria-label': `Visa ${t.name}` }),
-          el('button', { class: 'food-row', 'data-act': 'topen', 'data-id': t.id },
-            el('span', { class: 'post-name' }, `${t.icon} ${t.name}` + (endName(t) ? ` (${endName(t)})` : ''), el('small', { text: `${S.state.cats.find((c) => c.id === t.cat)?.name ?? ''} · ${t.fields.length} fält` + (t.steps?.length ? ` · ${t.steps.length} delmål` : '') })))))),
-        S.state.types.length < LIM.types ? el('button', { class: 'link', 'data-act': 'tnew', text: '+ Egen typ' }) : null),
-      sec('cats', 'Kategorier', S.state.cats.map((c) => c.name).join(', '),
-        el('ul', { class: 'edit-list' }, S.state.cats.map((c) => el('li', { class: `cat-row c-${c.color}` },
-          el('span', { class: 'cat-dot', 'aria-hidden': 'true' }),
-          el('input', { type: 'text', maxlength: 30, value: c.name, 'aria-label': 'Kategorins namn', 'data-act': 'kname', 'data-id': c.id, autocomplete: 'off' }),
-          el('select', { 'data-act': 'kcolor', 'data-id': c.id, 'aria-label': 'Färg' }, COLORS.map((k) => el('option', { value: k, selected: k === c.color, text: COLOR_NAMES[k] }))),
-          el('button', { class: 'icon sm danger', 'data-act': 'kdel', 'data-id': c.id, 'aria-label': `Ta bort ${c.name}`, disabled: S.state.types.some((t) => t.cat === c.id) || S.state.cats.length <= 1, text: '✕' })))),
-        el('p', { class: 'muted small', text: 'En kategori som används av en typ kan inte tas bort.' }),
-        S.state.cats.length < LIM.cats ? el('button', { class: 'link', 'data-act': 'knew', text: '+ Ny kategori' }) : null),
-      sec('people', 'Personer', S.state.people.length ? S.state.people.map((x) => x.name).join(', ') : 'Inga',
-        el('p', { class: 'muted small', text: 'De som kan utföra en tråd. Tryck på en person för att se och ändra dess egenskaper. Vilka egenskaper som finns väljer du under Egenskaper längst ner – de gäller alla personer.' }),
-        el('ul', { class: 'person-list' }, S.state.people.map(personCard)),
-        S.state.people.length < LIM.people ? el('button', { class: 'link', 'data-act': 'pnew', text: '+ Ny person' }) : null,
-        propsEditor())),
-    sec('alerts', 'Påminnelser', `${S.state.alertDays ?? 7} dagar innan`,
-      el('label', { class: 'goal-row' }, el('span', { text: 'Visa i Aktuellt' }),
-        el('select', { 'data-act': 'alertdays', 'aria-label': 'Dagar innan' }, ALERT_DAYS.map((d) => el('option', { value: d, selected: d === (S.state.alertDays ?? 7), text: d === 1 ? '1 dag innan' : `${d} dagar innan` })))),
-      el('p', { class: 'muted small', text: 'Datum i öppna trådar som närmar sig syns under Aktuellt i Överblick, med en röd siffra på fliken. Fält som är deadline (t.ex. Klart senast) syns även när datumet passerat. Välj deadline per fält under Typer.' })),
-    sec('trash', 'Papperskorg', `${S.state.trash.length} trådar · ${trashLabel(S.state.trashDays).toLowerCase()}`,
-      el('p', { class: 'muted small', text: 'Trådar du tar bort hamnar här. Vill du spara en tråd: arkivera den i stället.' }),
-      el('button', { class: 'link', 'data-act': 'trashopen', text: `Visa papperskorgen (${S.state.trash.length})` }),
-      el('label', { class: 'goal-row' }, el('span', { text: 'Raderas automatiskt' }),
-        el('select', { 'data-act': 'trashdays', 'aria-label': 'Raderas automatiskt' }, TRASH_DAYS.map((d) => el('option', { value: d, selected: d === S.state.trashDays, text: trashLabel(d) })))),
-      el('button', { class: 'link danger', 'data-act': 'tempty', disabled: !S.state.trash.length, text: 'Töm papperskorgen' }),
-      el('h2', { class: 'sub-h', text: 'Rensa arkivet' }),
-      el('p', { class: 'muted small', text: 'Flytta gamla arkiverade trådar till papperskorgen. Arkivet sparas komprimerat, så det behövs sällan.' }),
-      el('div', { class: 'pick-row' },
-        el('select', { id: 'aclean-age', 'aria-label': 'Stängda för mer än' }, [1, 2, 5, 10].map((y) => el('option', { value: y, selected: y === 2, text: `Stängda för mer än ${y} år sedan` }))),
-        el('button', { class: 'weigh-save', 'data-act': 'aclean', text: 'Flytta' }))),
+    group('cases', 'Ärenden', `${tpls.length} mallar · ${people.length} personer`,
+      // Mallar (2026-11-22): som rätterna i Fitness buddy – sparas från ett ärende, här bara byta namn och ta bort.
+      sec('tpls', 'Mallar', tpls.length ? `${tpls.length} st` : 'Inga',
+        el('p', { class: 'muted small', text: 'Spara ett ärende som mall med Spara som mall längst ner i ärendet. Under Nytt ärende kan du sedan starta från mallen, med beskrivning och delmål ifyllda.' }),
+        tpls.length ? el('ul', { class: 'edit-list' }, tpls.map((t) => el('li', { class: 'name-row' },
+          el('input', { type: 'text', maxlength: TITLE_CHARS, value: t.title, 'aria-label': 'Mallens namn', 'data-act': 'tname', 'data-id': t.id, autocomplete: 'off' }),
+          el('small', { class: 'muted', text: t.s?.length ? `${t.s.length} delmål` : '' }),
+          el('button', { class: 'icon sm danger', 'data-act': 'tdel', 'data-id': t.id, 'aria-label': `Ta bort ${t.title}`, text: '✕' })))) : null),
+      sec('people', 'Personer', people.length ? people.map((x) => x.name).join(', ') : 'Inga',
+        el('p', { class: 'muted small', text: 'De som kan utföra ett ärende. Finns det personer kan du välja vem i ärendet och filtrera listan.' }),
+        people.length ? el('ul', { class: 'edit-list' }, people.map((x) => el('li', { class: 'name-row' },
+          el('input', { type: 'text', maxlength: 30, value: x.name, 'aria-label': 'Namn', 'data-act': 'pname', 'data-id': x.id, autocomplete: 'off' }),
+          el('button', { class: 'icon sm danger', 'data-act': 'pdel', 'data-id': x.id, 'aria-label': `Ta bort ${x.name}`, text: '✕' })))) : null,
+        people.length < LIM.people ? el('div', { class: 'pick-row' },
+          el('input', { type: 'text', id: 'p-new', maxlength: 30, placeholder: 'Namn', 'aria-label': 'Ny person', autocomplete: 'off' }),
+          el('button', { class: 'weigh-save', 'data-act': 'pnew', text: 'Lägg till' })) : null),
+      sec('trash', 'Papperskorg', `${S.state.trash.length} ärenden · ${trashLabel(S.state.trashDays).toLowerCase()}`,
+        el('p', { class: 'muted small', text: 'Ärenden du tar bort hamnar här. Vill du spara ett ärende: markera det som klart i stället.' }),
+        el('button', { class: 'link', 'data-act': 'trashopen', text: `Visa papperskorgen (${S.state.trash.length})` }),
+        el('label', { class: 'goal-row' }, el('span', { text: 'Raderas automatiskt' }),
+          el('select', { 'data-act': 'trashdays', 'aria-label': 'Raderas automatiskt' }, TRASH_DAYS.map((d) => el('option', { value: d, selected: d === S.state.trashDays, text: trashLabel(d) })))),
+        el('button', { class: 'link danger', 'data-act': 'tempty', disabled: !S.state.trash.length, text: 'Töm papperskorgen' }))),
     group('app', 'Allmänt', 'Språk, data, hjälp',
       sec('lang', 'Språk', self.I18N.LANGS[self.I18N.lang()],
         el('label', { class: 'goal-row' }, el('span', { text: 'Språk' }),
@@ -155,57 +108,6 @@ export function viewSettings() {
       helpCard()),
     el('p', { class: 'muted small center', text: `Task buddy v${self.APP_VERSION} · inga externa anrop` }),
   ];
-}
-
-// Personer. A person card: avatar (initial), name and a short summary; open = name, working hours and every egenskap.
-const AV_COLORS = ['purple', 'teal', 'orange', 'blue', 'pink', 'green'];
-export const isChild = (x) => x.v?.rel === REL_CHILD;
-function ageOf(x) {
-  const b = x.v?.born; if (!b) return null;
-  const n = Math.floor((Number(today().replace(/-/g, '')) - Number(b.replace(/-/g, ''))) / 10000);
-  return n >= 0 ? n : null;
-}
-export function personHint(x) {
-  const age = ageOf(x), first = S.state.pfields.find((f) => f.kind === 'choice' && x.v?.[f.id]);
-  return [first ? x.v[first.id] : null, age != null ? `${age} år` : null, isChild(x) ? null : `${String(x.h ?? WEEK_HOURS).replace('.', ',')} tim/v`].filter(Boolean).join(' · ');
-}
-function propInput(x, f) {
-  const v = x.v?.[f.id], common = { 'data-act': 'pval', 'data-id': x.id, 'data-key': f.id, 'aria-label': f.name, autocomplete: 'off' };
-  switch (f.kind) {
-    case 'check': return el('input', { ...common, type: 'checkbox', checked: v === 1 });
-    case 'note': return el('textarea', { ...common, rows: 2, maxlength: 2000, text: v ?? '' });
-    case 'date': return el('input', { ...common, type: 'date', value: v ?? '' });
-    case 'num': return el('input', { ...common, type: 'text', inputmode: 'decimal', value: v != null ? String(v).replace('.', ',') : '' });
-    case 'choice': { const opts = [...(f.opts || [])]; if (v && !opts.includes(v)) opts.unshift(v);
-      return el('select', common, el('option', { value: '', selected: !v, text: '–' }), opts.map((o) => el('option', { value: o, selected: o === v, text: o }))); }
-    default: return el('input', { ...common, type: f.id === 'mail' ? 'email' : f.id === 'tel' ? 'tel' : 'text', maxlength: 200, value: v ?? '' });
-  }
-}
-function personCard(x, i) {
-  const prop = (label, input, cls = '') => el('label', { class: 'p-prop' + cls }, el('span', { class: 'p-label', text: label }), input);
-  return el('li', {}, el('details', { class: 'person', 'data-sec': 'p-' + x.id, open: setOpen.has('p-' + x.id) },
-    el('summary', {},
-      el('span', { class: `avatar c-${AV_COLORS[i % AV_COLORS.length]}`, 'aria-hidden': 'true', text: (x.name.trim()[0] || '?').toUpperCase() }),
-      el('span', { class: 'p-head' }, el('span', { class: 'p-name', text: x.name }), el('small', { class: 'p-hint', text: personHint(x) }))),
-    el('div', { class: 'p-body' },
-      prop('Namn', el('input', { type: 'text', maxlength: 30, value: x.name, 'data-act': 'pname', 'data-id': x.id, autocomplete: 'off' })),
-      isChild(x) ? null : prop('Arbetstid', el('span', { class: 'p-unit' }, el('input', { type: 'text', inputmode: 'decimal', value: String(x.h ?? WEEK_HOURS).replace('.', ','), 'data-act': 'phours', 'data-id': x.id, 'aria-label': 'Arbetstid, timmar per vecka', autocomplete: 'off' }), el('span', { text: 'tim/vecka' }))),
-      S.state.pfields.map((f) => prop(f.name, propInput(x, f), f.kind === 'check' ? ' p-check' : f.kind === 'note' ? ' p-wide' : '')),
-      el('button', { class: 'link danger', 'data-act': 'pdel', 'data-id': x.id, text: `Ta bort ${x.name}` }))));
-}
-// Egenskaper: the list of properties every person has – rename, kind, order, choices, remove (with Ångra), add.
-function propsEditor() {
-  const kinds = PERSON_KINDS.map((k) => [k, KINDS[k]]);
-  return el('details', { class: 'props-ed', 'data-sec': 'pprops', open: setOpen.has('pprops') },
-    el('summary', { class: 'sub-h', text: `Egenskaper (${S.state.pfields.length})` }),
-    el('p', { class: 'muted small', text: 'Gäller alla personer. Ändra namn och sort, flytta upp eller lägg till egna, t.ex. Allergier eller Skostorlek. Tar du bort en egenskap tas värdet bort hos alla (Ångra finns).' }),
-    el('ul', { class: 'edit-list' }, S.state.pfields.map((f, i) => el('li', { class: 'field-edit' },
-      el('input', { type: 'text', maxlength: 40, value: f.name, 'aria-label': 'Egenskapens namn', 'data-act': 'pfname', 'data-i': i, autocomplete: 'off' }),
-      el('select', { 'data-act': 'pfkind', 'data-i': i, 'aria-label': 'Sort' }, kinds.map(([k, l]) => el('option', { value: k, selected: k === f.kind, text: l }))),
-      el('button', { class: 'icon sm', 'data-act': 'pfup', 'data-i': i, 'aria-label': 'Flytta upp', disabled: i === 0, text: '↑' }),
-      el('button', { class: 'icon sm danger', 'data-act': 'pfdel', 'data-i': i, 'aria-label': `Ta bort ${f.name}`, text: '✕' }),
-      f.kind === 'choice' ? el('textarea', { class: 'opts-edit', rows: 3, 'aria-label': `Val för ${f.name}, ett per rad`, placeholder: 'Val, ett per rad', 'data-act': 'pfopts', 'data-i': i, text: (f.opts || []).join('\n') }) : null))),
-    S.state.pfields.length < LIM.pfields ? el('button', { class: 'link', 'data-act': 'pfnew', text: '+ Ny egenskap' }) : null);
 }
 
 export const trashLabel = (d) => (d ? `Efter ${d === 365 ? '1 år' : d + ' dagar'}` : 'Aldrig');

@@ -1,53 +1,43 @@
-# Datamodell – Stress control
+# Datamodell – Task buddy
 
-All data ligger i `localStorage`. `sk.data` innehåller inställningar och öppna ärenden som JSON. Stängda ärenden och papperskorgen ligger komprimerade i `sk.arch` (se Lagring nedan); modellen nedan är den hopslagna datan, samma som i exportfilen. Den valideras med `validate()` i `store.js` vid varje inläsning och import: ogiltiga delar hoppas över, inget kraschar. Ändras modellen ska `validate()`, `EXPORT_SCHEMA`/`EXPORT_EXAMPLE` (i `store.js`) och den här filen ändras tillsammans.
+All data ligger i `localStorage`. `sk.data` innehåller inställningar och öppna ärenden som JSON. Klara ärenden och papperskorgen ligger komprimerade i `sk.arch` (se Lagring nedan); modellen nedan är den hopslagna datan, samma som i exportfilen. Den valideras med `validate()` i `store.js` vid varje inläsning och import: ogiltiga delar hoppas över, inget kraschar. Ändras modellen ska `validate()`, `EXPORT_SCHEMA`/`EXPORT_EXAMPLE` (i `store.js`) och den här filen ändras tillsammans.
 
 Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `constructor`, `prototype`). Datum `ÅÅÅÅ-MM-DD` (2000–2100), datum och tid `ÅÅÅÅ-MM-DDTHH:MM`. Text rensas från styrtecken och kapas vid sin maxlängd. Tomma värden sparas inte.
 
 ## Toppnivå
 | Nyckel | Typ | Beskrivning |
 |---|---|---|
-| `version` | tal | `7`. Före version 7 läggs kategorin Handla (`s`) och typen Inköp (`shop`) till om de saknas. Version 1 saknade deadline-markering; vid inläsning markeras då standardtypernas deadline-fält. Före version 3 läggs typen Försäkringskassan (`fk`) till om den saknas. Före version 4 byts dess ikon 👶 mot 🛟. Före version 5 blir dess textfält Vad (`wh`) ett val i lista med Försäkringskassans ersättningar. |
-| `alertDays` | 1 \| 3 \| 7 \| 14 \| 30 | Hur många dagar framåt Aktuellt visar (standard 7). |
-| `sort` | objekt, valfri | Sortering: `{ cases?: "u-", arch?: "x-" }` = kolumn + riktning (`+` stigande, `-` fallande). Trådar: `u` ändrad, `c` skapad, `d` första datum i tråden, `t` rubrik. Arkiv: `x` stängd, `c` skapad, `t` rubrik. Saknas = `u-` och `x-`. Ogiltigt värde hoppas över. |
-| `pfields` | lista, ≤ 20 | Personers egenskaper, gemensamma för alla: `{ id, name ≤ 40, kind, opts? }`, `kind` = `text note date num check choice`. Saknas = standard (Relation, Född, Telefon, E-post, Arbetsgivare eller skola, Anteckning). |
-| `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30, h? }`. `h` = arbetstimmar per vecka 1–80 (saknas = 40); en normal arbetsdag är `h / 5`. `v?` = `{ egenskaps-id: värde }` efter egenskapens sort. Före version 6 låg uppgifterna direkt på personen (`rel`, `born`, `tel`, `mail`, `work`, `note`); de flyttas till `v` vid inläsning. |
-| `cats` | lista, 1–12 | Kategorier. |
-| `types` | lista, 1–30 | Ärendetyper. |
-| `cases` | lista, ≤ 10 000 (varav ≤ 500 öppna) | Ärenden. Över taket behålls alla öppna och de senast stängda. |
-| `trash` | lista, ≤ 2 000 | Papperskorg: borttagna ärenden, samma form som ärenden plus `d` (borttagen datum). Id får inte finnas bland `cases`. |
+| `version` | tal | `20` (2026-11-22, appen omgjord). Äldre data (typer, kategorier och fält) görs om vid inläsning och import, se nedan. |
+| `people` | lista, ≤ 20 | Personer som kan utföra ett ärende: `{ id, name ≤ 30 }`. |
+| `tpls` | lista, ≤ 100 | Mallar, som rätterna i Fitness buddy: `{ id, title ≤ 80, d?: beskrivning ≤ 4 000, s?: [delmål ≤ 80] }`. |
+| `cases` | lista, ≤ 10 000 (varav ≤ 500 öppna) | Ärenden. Över taket behålls alla öppna och de senast klara. |
+| `trash` | lista, ≤ 2 000 | Papperskorg: borttagna ärenden, samma form som ärenden plus `del` (borttagen datum). Id får inte finnas bland `cases`. |
 | `trashDays` | 7 \| 30 \| 90 \| 365 \| 0 | Dagar i papperskorgen innan ärendet raderas vid start (0 = aldrig, standard 30). |
 | `backup` | objekt | `{ remind: "week" \| "month" \| "off", last?: datum, asked?: datum }`. |
-
-## Kategori (`cats[]`)
-`{ id, name ≤ 30, color }` – `color` är en av `pink green blue orange purple teal red gray` (annars `gray`).
-
-## Ärendetyp (`types[]`)
-| Nyckel | Beskrivning |
-|---|---|
-| `id`, `name ≤ 30`, `icon ≤ 8 tecken` | Saknas ikon blir den 📌. |
-| `cat` | Kategori-id; okänt → första kategorin. |
-| `on` | `1` = syns i Nytt ärende, `0` = av (förslag). |
-| `fields` | ≤ 20 × `{ id, name ≤ 40, kind, due?, done?, ok? }`. `kind`: `text` (≤ 200), `note` (≤ 2 000, radbrytningar), `date`, `dt`, `num` (±1e9, två decimaler), `check` (`1`), `choice` (text ≤ 60; fältet har `opts`: ≤ 30 val ≤ 60, eget val i en tråd läggs till i listan), `days` (≤ 60 × `[datum, arbetade timmar 0–24, ansökt 0 \| 1, barn?, vem?]`, barn = person-id eller 0, vem = person-id för den som var hemma (annars trådens person, timmarna räknas från den personen), en rad per datum och person, sorterade; timmar borta = normal arbetsdag − arbetade timmar). `days` och `choice` kan inte vara extra fält. `due: 1` = deadline (bara `date`/`dt`): syns i Aktuellt även när den passerats. `done: 1` = datum för något redan gjort (bara `date`/`dt`, inte med `due`), t.ex. Intresseanmälan skickad: syns inte i Aktuellt. `ok: fält-id` (bara med `due`) = deadlinen är avklarad när det fältet är ifyllt eller ibockat, t.ex. Ansök senast → Ansökt, Förfaller → Betalt. Typen kan ha `end: [fält-id …]` = slutdatum i prioritetsordning (bara `date`, `dt`, `days`), används för sorteringen Datum. `if: [fält-id, värde]` (valfritt) = fältet visas bara när det andra fältet har det värdet, t.ex. Pris bara när Köpa eller hyra = Köpa. |
-| `steps?` | ≤ 10 texter ≤ 80: förslag på delmål när ett ärende skapas. |
 
 ## Ärende (`cases[]`)
 | Nyckel | Beskrivning |
 |---|---|
-| `id`, `t` | Ärendets id och typ-id (okänd typ → ärendet hoppas över). |
+| `id` | Ärendets id. |
 | `title ≤ 80` | Rubrik, krävs. |
 | `c`, `u` | Skapad och senast ändrad (datum, `u ≥ c`). |
-| `x?` | Stängd (arkiverad) datum. |
-| `p?` | Person-id: vem som utför ärendet. Okänd person → tas bort. Tas en person bort rensas `p` i alla ärenden. Följer med till nästa upprepning. |
-| `r?` | Upprepa: `w` = varje vecka, `m` = varje månad, `y` = varje år. När ärendet arkiveras skapas ett nytt öppet ärende med samma typ, rubrik och fält; alla datum (fält, extra fält, delmål) flyttas en vecka, en månad eller ett år (31 jan → 28/29 feb). Bockar och delmål nollställs, loggen följer inte med. |
-| `f?` | `{ fält-id: värde }` efter typens fält. Värden för fält som inte finns i typen tas bort vid validering. |
-| `o?` | Extra fält bara i ärendet, ≤ 20 × `[namn ≤ 40, kind, värde \| null, från-typ ≤ 30 eller ""]`. Tillagda för hand, kvar från en tidigare typ, eller flyttade hit när ett fält togs bort ur typen. |
-| `s?` | Delmål, ≤ 100 × `[text ≤ 80, 0 \| 1, deadline?, klart?, upprepa?]`. `deadline` är ett datum eller `0` (ingen) och syns i Aktuellt tills delmålet bockats av. `klart` = datum när det bockades av (bara när `1`), annars `0`. Femte delen `w` \| `m` \| `y` = upprepa: avbockning lägger in nästa tur direkt efter. |
-| `d?` | Sammanfattning av tråden, text ≤ 4000 (2026-11-22). |
-| `l?` | Logg, `[datum, text ≤ 2000]`. Nya anteckningar bara upp till 50 per ärende; äldre data med fler (upp till 200) behålls. |
+| `x?` | Klart datum: ärendet ligger i Arkiv. |
+| `d?` | Beskrivning, ≤ 4 000 tecken, radbrytningar behålls. |
+| `due?` | Deadline: datum (hela dagen) eller datum och tid. |
+| `p?` | Person-id: vem som utför ärendet. Okänd person → tas bort. |
+| `s?` | Delmål, ≤ 100 × `[text ≤ 80, 0 \| 1]`. |
+| `l?` | Anteckningar, ≤ 200 × `[datum, text ≤ 2 000]`, äldst först. |
+
+## Äldre data (version < 20)
+Typer, kategorier, fält, upprepning och personers egenskaper finns inte längre. Varje gammal tråd blir ett ärende:
+- Rubrik, skapad, ändrad, stängd (`x`), person och logg behålls. Sammanfattningen (`d`) blir början på beskrivningen.
+- Ifyllda fält och extra fält skrivs som rader `Fältnamn: värde` i beskrivningen (bock = Ja, dagar = antal dagar).
+- Deadline: typens slutdatum (`end`), annars ett fält markerat som deadline (`due`), annars närmaste öppna delmål med datum.
+- Delmål behåller text och bock; ett datum skrivs inom parentes efter texten.
+- Papperskorgens gamla borttagen-datum (`d`) blir `del`. Mallar skapas inte av de gamla typerna.
 
 ## Lagring
-- `sk.data`: allt utom stängda ärenden och papperskorg, plus `arch: 1`. Skrivs vid varje ändring. Saknas `arch` är `sk.data` komplett och `sk.arch` ignoreras.
+- `sk.data`: allt utom klara (arkiverade) ärenden och papperskorg, plus `arch: 1`. Skrivs vid varje ändring. Saknas `arch` är `sk.data` komplett och `sk.arch` ignoreras.
 - `sk.arch`: `[stängda ärenden, papperskorg]` som JSON, komprimerat med deflate-raw (webbläsarens `CompressionStream`) och packat 15 bitar per tecken (tecken 0x20–0x801F): `Z<antal byte>:<tecken>`. Utan `CompressionStream` sparas `J<json>`.
 - När arkivdelen ändras skrivs först hela datan okomprimerat till `sk.data`, sedan `sk.arch` och till sist den lilla `sk.data`. Stängs appen mitt i finns allt kvar.
 - `sk.pwd`: sparat backup-lösenord, sparas första gången det skrivs (på som standard; `sk.pwdoff` = `1` när användaren bockat ur – då glöms det). Bara på enheten, aldrig i `sk.data` eller i backup-filen; Radera all data tar bort det.
@@ -56,15 +46,10 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 
 ## Exempel
 ```json
-{ "version": 12, "alertDays": 7,
-  "people": [{ "id": "p1", "name": "Anna", "h": 30 }],
-  "cats": [{ "id": "e", "name": "Ekonomi", "color": "green" }],
-  "types": [{ "id": "eco", "name": "Ekonomi", "icon": "💸", "cat": "e", "on": 1,
-              "fields": [{ "id": "wh", "name": "Vad", "kind": "text" }, { "id": "du", "name": "Förfaller", "kind": "date", "due": 1 }] }],
-  "cases": [{ "id": "c1", "t": "eco", "title": "Bilskatt", "p": "p1", "c": "2026-11-01", "u": "2026-11-01", "r": "y",
-              "f": { "wh": "Skatt", "du": "2026-11-30" }, "s": [["Betala", 0, "2026-11-28"]], "l": [["2026-11-01", "Fick avin"]] }],
-  "backup": { "remind": "month" } }
+{ "version": 20,
+  "people": [{ "id": "p1", "name": "Anna" }],
+  "tpls": [{ "id": "t1", "title": "Boka tandläkare", "s": ["Ring", "Gå dit"] }],
+  "cases": [{ "id": "c1", "title": "Fixa markisen", "d": "Klammer i kassetten", "due": "2026-12-01T09:00", "p": "p1",
+    "c": "2026-11-10", "u": "2026-11-12", "s": [["Ring firman", 1], ["Boka tid", 0]], "l": [["2026-11-12", "Fick offert"]] }],
+  "trash": [], "trashDays": 30, "backup": { "remind": "month" } }
 ```
-
-## Export och import
-Exportfilen (krypterad med `backup.js`) innehåller `app: "stress-kontroll"`, `format: 1`, `exported`, `appVersion`, `readme`, `schema`, `example` och `data` (modellen ovan). Import ersätter all data, med Ångra.

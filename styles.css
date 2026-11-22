@@ -655,3 +655,19 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 /* Sammanfattning (2026-11-22) */
 .case-desc { width: 100%; min-width: 0; margin: 8px 0; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; line-height: 1.45; resize: vertical; box-sizing: border-box; }
 .rv-desc { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; margin: 8px 0 12px; }
+
+/* 2026-11-22: omgjord – deadline, försenade ärenden, namnrader */
+.due-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 4px; }
+.due-label { flex: 0 0 auto; min-width: 72px; }
+.due-row input { min-width: 0; height: 44px; padding: 0 10px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; }
+.due-row .due-date { flex: 1 1 auto; }
+.due-row .due-time { flex: 0 1 110px; }
+.due-row input:disabled { opacity: .4; }
+.due-when { margin: 0 0 6px; }
+.case-li.late .case-info, .case.late .due-when { color: var(--error, #b3261e); font-weight: 600; }
+.case-li.soon .case-info, .case.soon .due-when { color: var(--primary); font-weight: 600; }
+.case-li .case-row { background: var(--surface); }
+.name-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.name-row input { flex: 1; min-width: 0; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.trash-li { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; }

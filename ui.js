@@ -5,22 +5,13 @@ export const today = () => dateKey(new Date());
 // Mutable UI state shared by all views (one object, so modules see changes).
 export const S = {
   state: load(),
-  edit: false,         // the open case is in edit mode (a layer above its view)
   open: null,          // Ärenden/Arkiv: id of the open case (a layer, see nav.js)
-  pick: false,         // Ärenden: type picker for a new case is open (a layer)
+  pick: false,         // Nytt ärende: rubrik + mallar (a layer)
   newTitle: '',        // Nytt ärende: rubrik, kept across re-renders
-  draft: null,         // Nytt ärende: { t, f } – chosen type and field values before Skapa
-  tedit: null,         // Inställningar: case type draft being edited (a layer) or null
-  teditOrig: '',       // JSON copy of the draft when the editor opened (unsaved changes → "Släng ändringarna?")
-  filter: 'all',       // Ärenden: category filter
-  afilter: 'all',      // Arkiv: category filter
-  pfilter: 'all',      // Trådar: person filter ('-' = no one)
-  apfilter: 'all',     // Arkiv: person filter
+  pfilter: 'all',      // Ärenden: person filter ('-' = no one)
   alimit: 100,         // Arkiv: rows shown (Visa fler adds 100)
-  tfilter: 'all',      // Papperskorg: category filter
   trash: false,        // Inställningar: Papperskorg open (a layer)
   q: '',               // Arkiv: search text
-  sel: null,           // Trådar: ids of marked cases (markeringsläge, a layer) or null
   installPrompt: null,
 };
 export const setOpen = new Set();   // Inställningar: open sections (data-sec), kept across re-renders

@@ -15,7 +15,7 @@ export function startImport(text) {
   errText('import-error', '');
   if (r.error) { importError(r.error); return; }
   pendingImport = r.data;
-  $('imp-sum').textContent = `${r.cases} trådar` + (r.exported ? `. Exporterad ${r.exported}.` : '.') + (r.skipped ? ` ${r.skipped} ogiltiga hoppas över.` : '');
+  $('imp-sum').textContent = `${r.cases} ärenden` + (r.exported ? `. Exporterad ${r.exported}.` : '.') + (r.skipped ? ` ${r.skipped} ogiltiga hoppas över.` : '');
   $('import-dialog').showModal();
 }
 const BACKUP_MSG = {
@@ -266,18 +266,10 @@ export function initData(ctx) {
 
 /* ---------- CSV (2026-11-15): en rad per tråd, öppna och arkiverade. Inte krypterad. ---------- */
 export function exportCsv() {
-  const st = S.state, tr = Csv.tr;
-  const typ = new Map(st.types.map((t) => [t.id, t])), cat = new Map(st.cats.map((c) => [c.id, c.name])), ppl = new Map(st.people.map((p) => [p.id, p.name]));
-  const val = (kind, v) => (v == null ? '' : kind === 'check' ? tr('Ja') : kind === 'days' && Array.isArray(v) ? `${v.length} ${tr('dagar')}` : String(v));
-  const rows = st.cases.map((c) => {
-    const t = typ.get(c.t) || { name: '', fields: [] };
-    const f = [...(t.fields || []).filter((x) => c.f && c.f[x.id] != null).map((x) => `${x.name}: ${val(x.kind, c.f[x.id])}`),
-      ...(c.o || []).filter((o) => o[2] != null).map((o) => `${o[0]}: ${val(o[1], o[2])}`)].join(' | ');
-    const steps = c.s || [];
-    return [c.title, t.name, cat.get(t.cat) || '', c.p ? ppl.get(c.p) || '' : '', c.c, c.u, c.x || '',
-      c.r === 'm' ? tr('Varje månad') : c.r === 'y' ? tr('Varje år') : '', steps.filter((x) => x[1]).length, steps.length, f,
-      (c.l || []).map((l) => `${l[0]} ${l[1]}`).join(' | ')];
-  });
-  const text = Csv.build(['Rubrik', 'Typ', 'Kategori', 'Person', 'Skapad', 'Ändrad', 'Stängd', 'Upprepa', 'Delmål klara', 'Delmål totalt', 'Fält', 'Logg'], rows);
+  const st = S.state, ppl = new Map(st.people.map((p) => [p.id, p.name]));
+  const rows = st.cases.map((c) => [c.title, c.d || '', c.due ? c.due.replace('T', ' ') : '', c.p ? ppl.get(c.p) || '' : '', c.c, c.u, c.x || '',
+    (c.s || []).filter((x) => x[1]).length, (c.s || []).length, (c.s || []).map((x) => (x[1] ? '✓ ' : '○ ') + x[0]).join(' | '),
+    (c.l || []).map((l) => `${l[0]} ${l[1]}`).join(' | ')]);
+  const text = Csv.build(['Rubrik', 'Beskrivning', 'Deadline', 'Person', 'Skapad', 'Ändrad', 'Klar', 'Delmål klara', 'Delmål totalt', 'Delmål', 'Anteckningar'], rows);
   snackbar(Csv.download(`${SLUG}-${today()}.csv`, text) ? 'CSV-filen laddas ner' : 'Kunde inte skapa filen', null, null, 3000);
 }

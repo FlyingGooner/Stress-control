@@ -1,6 +1,15 @@
-{ "sk.lang": "sv", "sk.data": { "version": 1,
-  "cases": [
-    { "id": "c1", "t": "sym", "title": "Ont i knät", "c": "2026-11-10", "u": "2026-11-12", "f": { "s1": "Värk i trappor", "s2": "2026-11-08" }, "s": [["Ring vårdcentralen", 1], ["Gå på besöket", 0], ["Följ upp resultatet", 0]], "l": [["2026-11-12", "Ringde, fick tid 18/11"]] },
-    { "id": "c2", "t": "job", "title": "Utvecklare, Acme", "c": "2026-11-11", "u": "2026-11-13", "f": { "co": "Acme", "ap": "2026-11-11" }, "s": [["Skicka ansökan", 1], ["Följ upp", 0], ["Intervju", 0]] },
-    { "id": "c3", "t": "eco", "title": "Bilförsäkringen", "c": "2026-11-01", "u": "2026-11-05", "x": "2026-11-05", "f": { "am": 2450, "pd": 1 } }
-  ], "backup": { "remind": "month", "last": "2026-11-13" } } }
+{
+  "sk.lang": "sv",
+  "sk.data": {
+    "version": 20,
+    "people": [{ "id": "p1", "name": "Anna" }],
+    "tpls": [{ "id": "t1", "title": "Boka tandläkare", "d": "Ring 08-123 45", "s": ["Ring", "Gå dit"] }],
+    "cases": [
+      { "id": "c1", "title": "Ont i knät", "c": "2026-11-10", "u": "2026-11-12", "d": "Värk i trappor", "due": "2026-11-18T10:00", "p": "p1", "s": [["Ring vårdcentralen", 1], ["Gå på besöket", 0], ["Följ upp", 0]], "l": [["2026-11-12", "Ringde, fick tid 18/11"]] },
+      { "id": "c2", "title": "Utvecklare, Acme", "c": "2026-11-11", "u": "2026-11-13", "due": "2026-11-12" },
+      { "id": "c3", "title": "Utan deadline", "c": "2026-11-11", "u": "2026-11-13" },
+      { "id": "c4", "title": "Gammalt", "c": "2026-10-01", "u": "2026-10-05", "x": "2026-10-05" }
+    ],
+    "backup": { "remind": "off" }
+  }
+}

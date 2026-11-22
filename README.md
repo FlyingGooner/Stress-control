@@ -16,20 +16,16 @@
 
 ## Why?
 
-Things spinning in your head take energy. When a symptom, a job application or a house purchase is written down with the next step, you can let go of the thought – the app keeps track of it for you.
+Things spinning in your head take energy. When something is written down with the next step, you can let go of the thought – the app keeps track of it for you.
 
 ## Features
 
 | | |
 |---|---|
-| 📋 **Threads** | Log what worries you or needs doing – with fields in a logical order, steps and a dated log. |
-| 🩺 **Ready-made types** | Symptom, Task, Job application, Finances and Home – and more to switch on: Home purchase, Dental care, Worry, Authority, Insurance, Car, Studies, Calls. |
-| 🧩 **Own types** | Create your own thread types with your own fields: text, date, time, number and checkboxes (e.g. House: Talked to the bank ✓, Mortgage approval ✓). |
-| 🎨 **Categories** | Clear colours: pink Health, green Finances, blue Home, orange Work … – filter with one tap. |
-| 👤 **People** | Who does what in the family, with own properties and working hours. |
-| 🛟 **Social Insurance Agency** | Days at home with a sick child (VAB) or on parental leave, with hours away calculated (Swedish benefits). |
-| 🗄️ **Close and archive** | Finished threads move to Archive and can be reopened. Recurring threads come back every month or year. |
-| 📊 **Overview** | What is coming up, open threads per category and steps left. |
+| 📋 **Tasks** | Title, short description, deadline (date and optional time), sub-goals and notes – nothing more. Nearest deadline first, overdue in red. |
+| 🍲 **Templates** | Save a task as a template and start new ones from it, like the dishes in Fitness buddy. |
+| 👤 **People** | Choose who does a task and filter the list. |
+| 🗄️ **Done and archive** | Done tasks move to Archive and can be reopened. Removed ones go to the Trash first. |
 | 🌍 **Language** | English or Swedish, chosen at the first start and changeable in Settings. |
 | ↩️ **Back** | The phone's back button closes what is open and goes back through the tabs. |
 | 💾 **Backup** | Password-encrypted backup file with reminder. |
@@ -38,7 +34,7 @@ Things spinning in your head take energy. When a symptom, a job application or a
 
 ## Why your data is safer here 🛡️
 
-This app holds your children's names, your health, your worries and your benefit claims. Here is why that is safer than in a typical app:
+This app holds what is on your mind: tasks, contacts and who does what. Here is why that is safer than in a typical app:
 
 **Hacked company database** – the most common way sensitive data leaks
 
