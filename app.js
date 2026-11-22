@@ -252,7 +252,7 @@ app.addEventListener('click', (ev) => {
     case 'lcancel': S.ledit = null; render(); return;
     case 'lsave': {
       const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i];
-      const v = cleanText(tidyNote(document.getElementById('le-text')?.value), 500, true);
+      const v = cleanText(tidyNote(document.getElementById('le-text')?.value), 2000, true);
       if (row && v) { if (v !== row[1]) { row[1] = v; c.u = today(); persist(); } S.ledit = null; render(); snackbar('Anteckningen är ändrad', null, null, 2500); }
       return;
     }
@@ -315,7 +315,7 @@ app.addEventListener('click', (ev) => {
       setStepRepeat(c, i, ({ '': 'w', w: 'm', m: 'y' })[row[4] || ''] || 0, today()); persist(); render(); return; }
     case 'sdel': { const c = cs(), i = Number(t.dataset.i); if (!c?.s?.[i]) return; withUndo(`${c.s[i][0]} togs bort`, () => { c.s.splice(i, 1); if (!c.s.length) delete c.s; touch(c); }); return; }
     case 'ladd': {
-      const c = cs(), x = cleanText(tidyNote(document.getElementById('l-new')?.value), 500, true);
+      const c = cs(), x = cleanText(tidyNote(document.getElementById('l-new')?.value), 2000, true);
       if (!c || !x) { document.getElementById('l-new')?.focus(); return; }
       if ((c.l || []).length >= LIM.log) { errText('c-error', `Max ${LIM.log} anteckningar per tråd – ta bort gamla anteckningar först.`); return; }   // never drops old notes silently
       const ld = document.getElementById('l-date')?.value, d = validDate(ld) && ld <= today() ? ld : today();
