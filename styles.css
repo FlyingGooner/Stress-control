@@ -651,3 +651,7 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 .filter-row { align-items: stretch; }
 .filter-row .filt { box-sizing: border-box; height: 44px; min-height: 44px; max-height: 44px; margin: 0; line-height: 1; border-radius: 22px; }
 .filter-row .filt.sort-btn { display: inline-flex; align-items: center; justify-content: center; }
+
+/* Sammanfattning (2026-11-22) */
+.case-desc { width: 100%; min-width: 0; margin: 8px 0; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: var(--r-sm); background: var(--surface-container-high, transparent); color: inherit; font: inherit; line-height: 1.45; resize: vertical; box-sizing: border-box; }
+.rv-desc { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; margin: 8px 0 12px; }

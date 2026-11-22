@@ -43,6 +43,7 @@ Gemensamt: id är `A–Z a–z 0–9 _ -`, högst 40 tecken (inte `__proto__`, `
 | `f?` | `{ fält-id: värde }` efter typens fält. Värden för fält som inte finns i typen tas bort vid validering. |
 | `o?` | Extra fält bara i ärendet, ≤ 20 × `[namn ≤ 40, kind, värde \| null, från-typ ≤ 30 eller ""]`. Tillagda för hand, kvar från en tidigare typ, eller flyttade hit när ett fält togs bort ur typen. |
 | `s?` | Delmål, ≤ 100 × `[text ≤ 80, 0 \| 1, deadline?, klart?, upprepa?]`. `deadline` är ett datum eller `0` (ingen) och syns i Aktuellt tills delmålet bockats av. `klart` = datum när det bockades av (bara när `1`), annars `0`. Femte delen `w` \| `m` \| `y` = upprepa: avbockning lägger in nästa tur direkt efter. |
+| `d?` | Sammanfattning av tråden, text ≤ 4000 (2026-11-22). |
 | `l?` | Logg, `[datum, text ≤ 2000]`. Nya anteckningar bara upp till 50 per ärende; äldre data med fler (upp till 200) behålls. |
 
 ## Lagring

@@ -208,6 +208,7 @@ export function caseView() {
       el('span', { class: 'cat-chip', text: `${t?.icon || '📌'} ${t?.name ?? 'Okänd typ'}` })),
     el('h1', { class: 'case-h case-h-view', text: c.title }),
     el('p', { class: 'rv-meta', text: [who ? `👤 ${who.name}` : null, `ändrad ${shortDate(c.u)}`, c.x ? `stängd ${shortDate(c.x)}` : null, c.r ? `upprepas ${REPEAT[c.r].toLowerCase()}` : null].filter(Boolean).join(' · ') }),
+    c.d ? el('p', { class: 'rv-desc', text: c.d }) : null,
     fields.length || extra.length ? el('dl', { class: 'rv' }, fields.map((fd) => row(fd.name, showVal(fd, c.f[fd.id]))), extra.map(([n, k, v]) => row(n, showVal({ kind: k }, v)))) : null,
     (t?.fields || []).filter((fd) => fd.kind === 'days').map((fd) => daysBlock(c, fd, 'view')),
     c.s?.length ? [el('h2', { class: 'sub-h', text: `Delmål ${done}/${all}` }),
@@ -230,6 +231,7 @@ export function caseEditor() {
         S.state.types.filter((x) => x.on || x.id === c.t).map((x) => el('option', { value: x.id, selected: x.id === c.t, text: `${x.icon} ${x.name} · ${catOf(S.state, x).name}` })))),
     el('input', { type: 'text', id: 'c-title', class: 'case-h', maxlength: 80, value: c.title, 'aria-label': 'Rubrik', 'data-act': 'ctitle', autocomplete: 'off' }),
     el('p', { class: 'muted small', text: `Skapad ${longDate(c.c)}` + (c.x ? ` · stängd ${longDate(c.x)}` : '') }),
+    el('textarea', { id: 'c-desc', class: 'case-desc', 'data-act': 'cdesc', maxlength: 4000, rows: Math.min(14, Math.max(3, (c.d || '').split('\n').length + Math.floor((c.d || '').length / 40))), placeholder: 'Sammanfattning – vad det gäller, bakgrund, kontakter', 'aria-label': 'Sammanfattning', text: c.d || '' }),
     personSelect(c.p, 'cperson'),
     (t?.fields || []).filter((fd) => shownField(fd, c)).map((fd) => fieldInput(c, fd)),
     el('details', { class: 'old-fields' + (c.o?.length ? '' : ' empty'), 'data-sec': 'extra', open: !!c.o?.length || setOpen.has('extra') },   // folded until used

@@ -1,6 +1,6 @@
 // Stress control – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
-import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX, tidyNote } from './store.js';
+import { save, loadFailed, cleanText, uid, newCase, setField, validDate, changeType, typeChangeLoss, addExtra, setExtra, alerts, ALERT_DAYS, cleanType, LIM, COLORS, KINDS, REPEAT, nextCase, firstDate, SORTS, nextSort, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, trashArchivedBefore, addDays, archReady, cleanStep, setStepDone, setStepRepeat, splitItems, isList, PERSON_KINDS, parseInput, cleanValue, addDay, setDay, delDay, parseHours, addOption, OPTS_MAX, tidyNote, DESC_CHARS } from './store.js';
 // Styr fältet andra fälts synlighet (fields[].if)? Då ritas formuläret om när det ändras.
 const controls = (typeId, fieldId) => !!S.state.types.find((x) => x.id === typeId)?.fields.some((f) => f.if?.[0] === fieldId);
 import { today, S, setOpen, longDate, shortDate, el } from './ui.js';
@@ -599,8 +599,14 @@ app.addEventListener('change', (ev) => {
     }
     case 'ledit': {   // 2026-11-18: ändra en befintlig anteckning; tom = oförändrad (ta bort med ✕)
       const c = S.state.cases.find((x) => x.id === S.open), i = Number(t.dataset.i), row = c?.l?.[i]; if (!row) return;
-      const v = cleanText(tidyNote(t.value), 500, true);
+      const v = cleanText(tidyNote(t.value), 2000, true);
       if (v && v !== row[1]) { row[1] = v; c.u = today(); persist(); } else if (!v) t.value = row[1];
+      return;
+    }
+    case 'cdesc': {   // 2026-11-22: sammanfattning av tråden; tom = borttagen
+      const c = S.state.cases.find((x) => x.id === S.open); if (!c) return;
+      const v = cleanText(tidyNote(t.value), DESC_CHARS, true);
+      if (v !== (c.d || '')) { if (v) c.d = v; else delete c.d; c.u = today(); persist(); }
       return;
     }
     case 'ctitle': {

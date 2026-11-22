@@ -4,7 +4,7 @@ const KEY = 'sk.data';
 export const EXPORT_APP = 'stress-kontroll', EXPORT_FORMAT = 1;
 export const MAX_IMPORT_CHARS = 2000000;
 export const LIM = { cases: 10000, open: 500, trash: 2000, types: 30, cats: 12, fields: 20, steps: 100, log: 50, logKeep: 200, typeSteps: 10, people: 20, pfields: 20 };   // log: new notes per case; logKeep: older data with more is kept, never cut
-export const LOG_CHARS = 2000;   // one log note (was 500 until 0.2.140)
+export const LOG_CHARS = 2000, DESC_CHARS = 4000;   // DESC: a thread's summary (c.d, 2026-11-22)   // one log note (was 500 until 0.2.140)
 export const COLORS = ['pink', 'green', 'blue', 'orange', 'purple', 'teal', 'red', 'gray'];
 export const COLOR_NAMES = { pink: 'Rosa', green: 'Grön', blue: 'Blå', orange: 'Orange', purple: 'Lila', teal: 'Turkos', red: 'Röd', gray: 'Grå' };
 export const KINDS = { text: 'Text', note: 'Lång text', date: 'Datum', dt: 'Datum och tid', num: 'Tal', check: 'Bock', choice: 'Val i lista', days: 'Dagar (VAB m.m.)' };
@@ -162,6 +162,7 @@ function cleanCase(c, types, people) {
   if (validDate(c.x)) out.x = c.x;
   if (REPEAT[c.r]) out.r = c.r;
   if (people?.has(c.p)) out.p = c.p;
+  const d = cleanText(tidyNote(c.d), DESC_CHARS, true); if (d) out.d = d;
   if (isObj(c.f)) {
     const f = {};
     for (const fd of type.fields) { const v = cleanValue(fd.kind, c.f[fd.id]); if (v !== undefined) f[fd.id] = v; }
@@ -702,7 +703,7 @@ export const EXPORT_SCHEMA = {
   sort: `sortering, valfri: { cases?: Trådar, arch?: Arkiv } – kolumn + riktning (+ stigande, - fallande). cases: ${Object.keys(SORTS.cases).join(' | ')}, arch: ${Object.keys(SORTS.arch).join(' | ')} (u ändrad, c skapad, x stängd, d första datum, t rubrik). Standard u- och x-`,
   cats: `lista { id, name ≤ 30, color: ${COLORS.join(' | ')} }, 1–${LIM.cats}`,
   types: `lista { id, name ≤ 30, icon ≤ 8 tecken, cat: kategori-id, on: 0 | 1, fields: [{ id, name ≤ 40, kind: ${Object.keys(KINDS).join(' | ')}, due?: 1 = deadline, visas även när den passerats (bara date/dt), ok?: fält-id = deadlinen är avklarad (visas inte i Aktuellt) när det fältet är ifyllt, done?: 1 = datum för något redan gjort, visas inte i Aktuellt (bara date/dt), opts?: [val ≤ 60] ≤ ${OPTS_MAX} (bara choice), if?: [fält-id, värde] = visas bara när det fältet har värdet }] (≤ ${LIM.fields}), steps?: [text ≤ 80] (≤ ${LIM.typeSteps}), r?: nya ärenden upprepas w | m | y, end?: [fält-id] slutdatum i prioritetsordning (date/dt/days), används för sorteringen Datum }, 1–${LIM.types}`,
-  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), r?: upprepa när det stängs w = varje vecka | m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1, barn? person-id eller 0, vem? person-id (vem som var hemma, annars trådens person)]] (en rad per datum och person) ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? w | m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ ${LOG_CHARS}]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
+  cases: `lista { id, t: typ-id, title ≤ 80, c: skapad datum, u: ändrad datum, x?: stängd datum, p?: person-id (vem som utför), d?: sammanfattning ≤ ${DESC_CHARS}, r?: upprepa när det stängs w = varje vecka | m = varje månad | y = varje år (nytt öppet ärende med datumen flyttade), f?: { fält-id: värde efter fältets kind (text ≤ 200, choice ≤ 60 (ett av opts eller eget), note ≤ 2000, date, dt, num ±1e9, check 1, days [[datum, arbetade timmar 0–24, ansökt 0 | 1, barn? person-id eller 0, vem? person-id (vem som var hemma, annars trådens person)]] (en rad per datum och person) ≤ ${DAYS_MAX}) }, s?: [[delmål ≤ 80, 0 | 1, deadline-datum eller 0?, klart-datum eller 0? (bara när avbockat), upprepa? w | m | y]] (≤ ${LIM.steps}), l?: [[datum, anteckning ≤ ${LOG_CHARS}]] (≤ ${LIM.log} nya, äldre data upp till ${LIM.logKeep} behålls), o?: extra fält bara i ärendet [[fältnamn ≤ 40, kind, värde | null, från typnamn ≤ 30 eller ""]] (≤ ${LIM.fields}) }, max ${LIM.cases} (varav högst ${LIM.open} öppna)`,
   trash: `papperskorg: borttagna trådar, samma form som cases plus d: borttagen datum, max ${LIM.trash}`,
   trashDays: `dagar i papperskorgen innan tråden raderas: ${TRASH_DAYS.join(' | ')} (0 = aldrig, standard 30)`,
   backup: '{ remind: "week" | "month" | "off", last?: datum, asked?: datum }',
