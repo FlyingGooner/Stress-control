@@ -88,7 +88,7 @@ All data skrivs in av användaren och sparas bara i webbläsarens `localStorage`
 Manifest, ikoner, service worker, fungerar offline, installeras på Android och iPhone.
 
 ## Design
-Material Design 3 enligt `../STIL.md` (beslut 2026-11-22, åter efter Apple-stilen 2026-11-21); bara menyraden nertill är genomskinligt glas, tonfärg `#6750a4` (lila). Kategorier i klara färger som i football-not-soccer: färgad kant på kortet och chip i kategorifärgen. Bottenmeny, bara mobil (390 px).
+Material 3 Expressive (Googles senaste Material-version) enligt `../STIL.md` (beslut 2026-11-22, åter efter Apple-stilen 2026-11-21); bara menyraden nertill är genomskinligt glas, tonfärg `#6750a4` (lila). Kategorier i klara färger som i football-not-soccer: färgad kant på kortet och chip i kategorifärgen. Bottenmeny, bara mobil (390 px).
 
 ## Acceptanskriterier
 - Skapa ett Symptom-ärende, fyll i fälten i ordning, bocka delmål, skriv logg, stäng → hamnar i Arkiv; öppna igen → tillbaka bland ärenden.
