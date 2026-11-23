@@ -7,7 +7,7 @@ import { today, S, el, shortDate, cur } from '../ui.js';
 export function dueText(due, t = today()) {
   if (!due) return '';
   const d = dueDay({ due }), n = daysBetween(t, d), time = due.length > 10 ? ' ' + due.slice(11) : '';
-  const day = n < -1 ? `${-n} dagar sen` : n === -1 ? 'igår' : n === 0 ? 'idag' : n === 1 ? 'imorgon'
+  const day = n < -1 ? `${-n} dagar sedan` : n === -1 ? 'igår' : n === 0 ? 'idag' : n === 1 ? 'imorgon'
     : n < 7 ? parseKey(d).toLocaleDateString('sv-SE', { weekday: 'short' }).replace('.', '') : shortDate(d);
   return day + time;
 }
@@ -104,6 +104,11 @@ export function viewCases() {
   const all = openCases(S.state), [psel, mine] = personFilter(all, 'pfilter'), [ksel, list] = catFilter(mine, 'kfilter');
   return [
     el('h1', { class: 'view-title', text: 'Ärenden' }),
+    (() => {   // 2026-11-23: försenade och idag syns direkt
+      const late = all.filter((c) => c.due && dueDay(c) < today()).length, now = all.filter((c) => c.due && dueDay(c) === today()).length;
+      const bits = [late ? `${late} försenade` : null, now ? `${now} idag` : null].filter(Boolean);
+      return bits.length ? el('p', { class: 'muted small due-sum', text: bits.join(' · ') }) : null;
+    })(),
     psel || ksel ? el('div', { class: 'filter-row' }, psel, ksel) : null,
     list.length ? el('ul', { class: 'cases' }, list.map(caseRow))
       : el('p', { class: 'muted', text: all.length ? 'Inga ärenden med det filtret.' : 'Inga öppna ärenden. Tryck + Nytt ärende för att lägga till ett.' }),

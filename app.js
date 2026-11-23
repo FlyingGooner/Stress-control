@@ -239,7 +239,9 @@ app.addEventListener('click', (ev) => {
     case 'ccol': { if (!c) return; if (COLORS.includes(id)) c.k = id; else delete c.k; touch(); persist(); break; }
     case 'pnew': {
       const inp = document.getElementById('p-new'), name = cleanText(inp?.value, 30);
-      if (!name || S.state.people.length >= LIM.people) { inp?.focus(); return; }
+      if (!name) { inp?.focus(); return; }
+      if (S.state.people.length >= LIM.people) { snackbar(`Högst ${LIM.people} personer`, null, null, 3000); return; }   // 2026-11-23
+      if (S.state.people.some((x) => x.name.toLocaleLowerCase('sv') === name.toLocaleLowerCase('sv'))) { snackbar(`${name} finns redan`, null, null, 3000); inp.select(); return; }
       S.state.people.push({ id: uid(), name }); persist(); render(); document.getElementById('p-new')?.focus(); return;
     }
     case 'pdel': {   // removing a person clears it from every case (open, archived, trash) – with Ångra
@@ -324,7 +326,12 @@ app.addEventListener('change', (ev) => {
       if (v) c.due = v; else delete c.due; touch(); persist(); render(); return;
     }
     case 'cperson': { if (!c) return; if (S.state.people.some((x) => x.id === t.value)) c.p = t.value; else delete c.p; touch(); persist(); return; }
-    case 'stog': { const i = Number(t.dataset.i); if (!c?.s?.[i]) return; c.s[i][1] = t.checked ? 1 : 0; touch(); persist(); render(); return; }
+    case 'stog': {
+      const i = Number(t.dataset.i); if (!c?.s?.[i]) return; c.s[i][1] = t.checked ? 1 : 0; touch(); persist(); render();
+      // 2026-11-23: sista delmålet avbockat – erbjud att markera ärendet klart.
+      if (t.checked && !c.x && c !== S.draft && c.s.every((x) => x[1])) snackbar('Alla delmål klara', 'Markera klart', () => app.querySelector('[data-act="cdone"]')?.click(), 6000);
+      return;
+    }
     case 'ledit': {   // empty = unchanged (remove with ✕)
       const row = c?.l?.[Number(t.dataset.i)]; if (!row) return;
       const v = cleanText(tidyNote(t.value), LOG_CHARS, true);

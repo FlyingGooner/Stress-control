@@ -249,6 +249,7 @@ I18N.add({
 ]);
 // 2026-11-22: omgjord app – ärenden med rubrik, beskrivning, deadline, delmål och anteckningar; mallar.
 I18N.add({
+  'Alla delmål klara': 'All steps done', 'Markera klart': 'Mark done', 'Sök i klara ärenden, delmål och anteckningar': 'Search done tasks, steps and notes',
   'Ärenden': 'Tasks', 'Ärende': 'Task', 'Nytt ärende': 'New task', '+ Nytt ärende': '+ New task', 'Skapa': 'Create', 'Rubrik': 'Title',
   'Rubrik, t.ex. Fixa markisen': 'Title, e.g. Fix the awning', 'Skriv en rubrik först.': 'Write a title first.', 'Eller från en mall': 'Or from a template',
   'bara rubrik': 'title only', 'beskrivning': 'description',
@@ -286,6 +287,8 @@ I18N.add({
   'Rubrik': 'Title', 'Beskrivning': 'Description', 'Klar': 'Done', 'Skapad': 'Created', 'Ändrad': 'Changed', 'Delmål klara': 'Sub-goals done', 'Delmål totalt': 'Sub-goals in all',
 }, [
   [/^📅 (.+)$/, (g, tr) => `📅 ${tr(g[1])}`],
+  [/^(\d+) dagar sedan( \d\d:\d\d)?$/, (g) => `${g[1]} days ago${g[2] || ''}`],
+  [/^(\d+) försenade$/, '$1 overdue'], [/^(\d+) idag$/, '$1 today'], [/^Högst (\d+) personer$/, 'At most $1 people'], [/^(.+) finns redan$/, '$1 already exists'],
   [/^(\d+) dagar sen( \d\d:\d\d)?$/, (g) => `${g[1]} days ago${g[2] || ''}`],
   [/^(idag|imorgon|igår|mån|tis|ons|tors|fre|lör|sön)( \d\d:\d\d)$/, (g, tr) => `${tr(g[1])}${g[2]}`],
   [/^✓ (?:k|K)lar (\d+\/\d+)$/, '✓ done $1'],
