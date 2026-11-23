@@ -249,7 +249,7 @@ I18N.add({
 ]);
 // 2026-11-22: omgjord app – ärenden med rubrik, beskrivning, deadline, delmål och anteckningar; mallar.
 I18N.add({
-  'Alla delmål klara': 'All steps done', 'Markera klart': 'Mark done', 'Sök i klara ärenden, delmål och anteckningar': 'Search done tasks, steps and notes',
+  'Alla delmål klara': 'All sub-goals done', 'Markera klart': 'Mark done', 'Sök i klara ärenden, delmål och anteckningar': 'Search done tasks, sub-goals and notes',
   'Ärenden': 'Tasks', 'Ärende': 'Task', 'Nytt ärende': 'New task', '+ Nytt ärende': '+ New task', 'Skapa': 'Create', 'Rubrik': 'Title',
   'Rubrik, t.ex. Fixa markisen': 'Title, e.g. Fix the awning', 'Skriv en rubrik först.': 'Write a title first.', 'Eller från en mall': 'Or from a template',
   'bara rubrik': 'title only', 'beskrivning': 'description',

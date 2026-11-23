@@ -28,9 +28,9 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 
 ## Done and archive
 - When the task is solved: tap ✓ Done. It moves to Archive. Undo is available right after.
-- When you tick the last step, the app offers to mark the task done (Mark done).
+- When you tick the last sub-goal, the app offers to mark the task done (Mark done).
 - At the top of Tasks you see how many tasks are overdue and how many are due today.
-- In Archive you can search titles, descriptions, steps and notes, and reopen a task with Reopen (Undo is available).
+- In Archive you can search titles, descriptions, sub-goals and notes, and reopen a task with Reopen (Undo is available).
 - Remove moves the task to the Trash (Settings → Tasks → Trash). There you can restore it or delete it for good. You choose how long tasks stay before they are deleted automatically.
 
 ## People
