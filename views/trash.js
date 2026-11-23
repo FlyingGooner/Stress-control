@@ -13,7 +13,7 @@ export function viewTrash() {
       el('div', { class: 'case-main' }, el('span', { class: 'case-title', text: c.title }),
         el('small', { class: 'case-info', text: `borttaget ${shortDate(c.del)}` + (days ? ` · raderas ${shortDate(purgeDate(S.state, c))}` : '') })),
       el('div', { class: 'row-actions' },
-        el('button', { class: 'link danger', 'data-act': 'tpurge', 'data-id': c.id, text: 'Radera' }),
-        el('button', { class: 'link', 'data-act': 'trest', 'data-id': c.id, text: 'Återställ' }))))) : el('p', { class: 'muted', text: 'Papperskorgen är tom.' }),
+        el('button', { class: 'link', 'data-act': 'trest', 'data-id': c.id, text: 'Återställ' }),
+        el('button', { class: 'link danger', 'data-act': 'tpurge', 'data-id': c.id, text: 'Radera' }))))) : el('p', { class: 'muted', text: 'Papperskorgen är tom.' }),
     all.length ? el('div', { class: 'row-actions' }, el('button', { class: 'link danger', 'data-act': 'tempty', text: 'Töm papperskorgen' })) : null);
 }

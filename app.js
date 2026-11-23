@@ -192,7 +192,7 @@ app.addEventListener('click', (ev) => {
       withUndo(`${c.title} är klart – finns i Arkiv`, () => { c.x = today(); touch(); S.open = null; });
       return;
     }
-    case 'creopen': if (!c) return; delete c.x; touch(); persist(true); snackbar(`${c.title} är öppet igen`, null, null, 2500); break;
+    case 'creopen': if (!c) return; withUndo(`${c.title} är öppet igen`, () => { delete c.x; touch(); }); persist(true); return;   // 2026-11-23: Ångra
     case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
       if (!c) return;
       if (c === S.draft) { S.draft = null; S.open = null; break; }
@@ -201,9 +201,12 @@ app.addEventListener('click', (ev) => {
     }
     case 'tsave': {   // Spara som mall
       if (!c) return;
-      const r = saveTemplate(S.state, c);
+      const before = JSON.stringify(S.state), r = saveTemplate(S.state, c);
       if (!r) { snackbar(`Högst ${LIM.tpls} mallar`, null, null, 3000); return; }
-      persist(); snackbar(r.replaced ? `Mallen ${r.tpl.title} uppdaterad` : `Sparad som mall: ${r.tpl.title}`, null, null, 3000); return;
+      persist();
+      if (r.replaced) snackbar(`Mallen ${r.tpl.title} uppdaterad`, 'Ångra', () => { S.state = JSON.parse(before); persist(); render(); });   // 2026-11-23: den gamla mallen skrevs över
+      else snackbar(`Sparad som mall: ${r.tpl.title}`, null, null, 3000);
+      return;
     }
     case 'sadd': {
       const inp = document.getElementById('s-new'), x = cleanText(inp?.value, STEP_CHARS);

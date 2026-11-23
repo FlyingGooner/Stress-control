@@ -94,8 +94,8 @@ export function caseView() {
     isNew ? el('p', { class: 'muted small center', text: 'Ärendet sparas när det har en rubrik.' }) : [
       el('button', { class: 'primary save-case', 'data-act': c.x ? 'creopen' : 'cdone', text: c.x ? 'Öppna igen' : '✓ Klar' }),
       el('div', { class: 'row-actions case-actions' },
-        el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' }),
-        el('button', { class: 'link', 'data-act': 'tsave', text: 'Spara som mall' })),
+        el('button', { class: 'link', 'data-act': 'tsave', text: 'Spara som mall' }),
+        el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' })),   // 2026-11-23: ta bort sist
       el('p', { class: 'muted small center', text: 'Allt sparas direkt.' })]);
 }
 
