@@ -28,7 +28,9 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Klart och arkiv
 - När ärendet är löst: tryck ✓ Klar. Det flyttas till Arkiv. Ångra finns direkt efteråt.
-- I Arkiv kan du söka i rubrik och beskrivning, och öppna ett ärende igen med Öppna igen.
+- När du bockar av det sista delmålet frågar appen om ärendet ska markeras klart (Markera klart).
+- Överst i Ärenden står hur många ärenden som är försenade och hur många som ska vara klara idag.
+- I Arkiv kan du söka i rubrik, beskrivning, delmål och anteckningar, och öppna ett ärende igen med Öppna igen (Ångra finns).
 - Ta bort flyttar ärendet till Papperskorgen (Inställningar → Ärenden → Papperskorg). Där kan du återställa det eller radera det för gott. Du väljer hur länge ärenden ligger kvar innan de raderas automatiskt.
 
 ## Personer

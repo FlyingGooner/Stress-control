@@ -288,7 +288,7 @@ I18N.add({
 }, [
   [/^📅 (.+)$/, (g, tr) => `📅 ${tr(g[1])}`],
   [/^(\d+) dagar sedan( \d\d:\d\d)?$/, (g) => `${g[1]} days ago${g[2] || ''}`],
-  [/^(\d+) försenade$/, '$1 overdue'], [/^(\d+) idag$/, '$1 today'], [/^Högst (\d+) personer$/, 'At most $1 people'], [/^(.+) finns redan$/, '$1 already exists'],
+  [/^(\d+) försenade$/, '$1 overdue'], [/^(\d+) idag$/, '$1 today'], [/^Högst (\d+) personer$/, 'At most $1 people'], [/^(.+) finns redan$/, '$1 already exists'], [/^(.+) finns redan\.$/, '$1 already exists.'],
   [/^(\d+) dagar sen( \d\d:\d\d)?$/, (g) => `${g[1]} days ago${g[2] || ''}`],
   [/^(idag|imorgon|igår|mån|tis|ons|tors|fre|lör|sön)( \d\d:\d\d)$/, (g, tr) => `${tr(g[1])}${g[2]}`],
   [/^✓ (?:k|K)lar (\d+\/\d+)$/, '✓ done $1'],

@@ -212,6 +212,7 @@ app.addEventListener('click', (ev) => {
       const inp = document.getElementById('s-new'), x = cleanText(inp?.value, STEP_CHARS);
       if (!c || !x) { inp?.focus(); return; }
       if ((c.s || []).length >= LIM.steps) { errText('c-error', `Högst ${LIM.steps} delmål.`); return; }
+      if ((c.s || []).some((s) => s[0].toLocaleLowerCase('sv') === x.toLocaleLowerCase('sv'))) { errText('c-error', `${x} finns redan.`); inp.select(); return; }   // 2026-11-23
       (c.s ||= []).push([x, 0]); touch(); persist(); render(); document.getElementById('s-new')?.focus(); return;
     }
     case 'sdel': {
@@ -340,6 +341,8 @@ app.addEventListener('change', (ev) => {
     }
     case 'tname': {
       const tp = S.state.tpls.find((x) => x.id === t.dataset.id), v = cleanText(t.value, TITLE_CHARS);
+      // 2026-11-23: två mallar med samma namn går inte att skilja åt
+      if (tp && v && S.state.tpls.some((x) => x !== tp && x.title.toLocaleLowerCase('sv') === v.toLocaleLowerCase('sv'))) { snackbar(`${v} finns redan`, null, null, 3000); t.value = tp.title; return; }
       if (tp && v) { tp.title = v; persist(); } else if (tp) t.value = tp.title;
       return;
     }
