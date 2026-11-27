@@ -116,6 +116,8 @@ function syncHistory() {
     history.go(-k);
   }
 }
+// Flikbyte stänger lagren i vyn (ärende, papperskorg, menyer). 2026-11-27: även sorteringsmenyn och ett osparat utkast.
+function closeLayers() { S.open = null; S.draft = null; S.pick = false; S.trash = false; S.showPwd = false; S.sortOpen = false; }
 function go(v, push = true) {
   if (!Object.hasOwn(VIEWS, v)) v = CONFIG.startView;
   if (push && ownNav) { pendingView = v; return; }
@@ -146,7 +148,7 @@ addEventListener('popstate', (e) => {
   }
   histDepth = target;
   const v = location.hash.slice(1);
-  if (Object.hasOwn(VIEWS, v) && v !== view) { S.open = null; S.pick = false; S.trash = false; S.showPwd = false; go(v, false); }
+  if (Object.hasOwn(VIEWS, v) && v !== view) { closeLayers(); go(v, false); }
   else syncHistory();   // a stale layer step: go back past it
 });
 // "Släng" on the button itself (not the close event): two quick closes must never go back twice.
@@ -154,22 +156,23 @@ tabbar.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-view]');
   if (!t) return;
   ev.preventDefault();
-  S.open = null; S.pick = false; S.trash = false; S.showPwd = false;
+  closeLayers();
   go(t.dataset.view);
 });
 
 // The draft (Nytt ärende) becomes a saved case once it has a title. persist() saves nothing while it is a draft.
 function commit() { persist(); }
-/* ---------- Actions: one click handler, data-act on the element ---------- */
 // 2026-11-18: sorteringsmenyn stängs vid ett tryck utanför den.
 document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closest?.('.sort-wrap')) { S.sortOpen = false; ev.stopPropagation(); ev.preventDefault(); render(); } }, true);
 
 /* ---------- Actions: one click handler, data-act on the element ---------- */
+const archWait = () => snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500);
+const refreshArch = () => document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean));
 const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'tsave', 'tdel']);
 const openCase = (id) => { S.open = id; S.pick = false; render(); scrollTo(0, 0); };
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
-  if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; }
+  if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { archWait(); return; }
   if (!t || (S.navPending && ev.isTrusted)) return;
   const { act, id } = t.dataset;
   const c = cur();
@@ -195,7 +198,9 @@ app.addEventListener('click', (ev) => {
       withUndo(`${c.title} är klart – finns i Arkiv`, () => { c.x = today(); touch(); S.open = null; });
       return;
     }
-    case 'creopen': if (!c) return; withUndo(`${c.title} är öppet igen`, () => { delete c.x; touch(); }); persist(true); return;   // 2026-11-23: Ångra
+    case 'creopen': if (!c) return;
+      if (c.x && S.state.cases.filter((x) => !x.x).length >= LIM.open) { snackbar(`Högst ${LIM.open} öppna ärenden – markera några som klara först.`, null, null, 4000); return; }   // 2026-11-27: samma gräns som Nytt ärende
+      withUndo(`${c.title} är öppet igen`, () => { delete c.x; touch(); }); persist(true); return;   // 2026-11-23: Ångra
     case 'cdel': {   // to the Papperskorg – can be restored there, so no question first
       if (!c) return;
       if (c === S.draft) { S.draft = null; S.open = null; break; }
@@ -233,7 +238,7 @@ app.addEventListener('click', (ev) => {
       withUndo('Anteckningen togs bort', () => { c.l.splice(i, 1); if (!c.l.length) delete c.l; touch(); });
       return;
     }
-    case 'amore': S.alimit = (S.alimit || 100) + 100; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return;
+    case 'amore': S.alimit = (S.alimit || 100) + 100; refreshArch(); return;
     // Inställningar
     case 'tdel': {
       const tp = S.state.tpls.find((x) => x.id === id); if (!tp) return;
@@ -292,7 +297,7 @@ app.addEventListener('click', (ev) => {
 app.addEventListener('input', (ev) => {
   const t = ev.target;
   if (t.id === 'new-title') { S.newTitle = t.value; errText('new-error', ''); return; }
-  if (t.id === 'arch-q') { S.q = t.value; document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean)); return; }
+  if (t.id === 'arch-q') { S.q = t.value; refreshArch(); return; }
   if (t.matches?.('textarea.case-desc, textarea.log-edit')) t.rows = Math.min(14, Math.max(t.classList.contains('case-desc') ? 3 : 1, t.value.split('\n').length + Math.floor(t.value.length / 38)));
 });
 app.addEventListener('keydown', (ev) => {
@@ -310,7 +315,7 @@ app.addEventListener('change', (ev) => {
   const t = ev.target, c = cur(), touch = () => { c.u = today(); };
   if (t.type === 'date' || t.type === 'time') t.classList.toggle('empty', !t.value);
   switch (t.dataset.act) {
-    case 'importfile': if (!archReady()) { t.value = ''; snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500); return; } readBackup(t); return;
+    case 'importfile': if (!archReady()) { t.value = ''; archWait(); return; } readBackup(t); return;
     case 'pfilter': S.pfilter = t.value; render(); return;
     case 'kfilter': S.kfilter = t.value; render(); return;
     case 'akfilter': S.akfilter = t.value; S.alimit = 100; render(); return;

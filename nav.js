@@ -12,7 +12,7 @@ export const layerDepth = (S) => (S.pick ? 1 : 0) + (S.open ? 1 : 0) + (S.trash 
 export function closeTop(S) {
   const l = topLayer(S);
   if (l === 'pick') S.pick = false;
-  else if (l === 'open') S.open = null;
+  else if (l === 'open') { S.open = null; S.draft = null; }   // an unsaved Nytt ärende is dropped with it
   else if (l === 'trash') S.trash = false;
   return l !== null;
 }

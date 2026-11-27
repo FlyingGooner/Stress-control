@@ -17,3 +17,7 @@ test('bakåt: ett lager i taget, sedan inget mer', () => {
   assert.equal(closeTop(S), false, 'dubbeltryck på Bakåt stänger inget mer');
   assert.equal(layerDepth(S), 0);
 });
+test('bakåt: ett osparat Nytt ärende släpps när det stängs', () => {
+  const S = { open: 'd1', draft: { id: 'd1', title: '' } };
+  assert.equal(closeTop(S), true); assert.equal(S.draft, null);
+});

@@ -89,3 +89,9 @@ T.test('kalender: prickar för deadlines, tryck på en dag, byt månad', async (
   T.ok(cell('2026-11-14').classList.contains('sel'), 'tillbaka till idag');
   await tab('cases');
 });
+T.test('flikbyte och Bakåt stänger ett osparat Nytt ärende', async () => {
+  q('[data-act="pickopen"]').click(); await T.wait();
+  T.ok(q('#c-title'), 'utkast öppet');
+  await tab('calendar'); await tab('cases');
+  T.ok(!q('#c-title') && q('.case-row'), 'listan, inte utkastet');
+});
