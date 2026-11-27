@@ -1,7 +1,7 @@
 // Unit tests for store.js (ES module), run in Node: node tools/node-unit.mjs tools/tests/unit.test.js. Same T API as test-harness.js.
 // 2026-11-22: omgjord app (version 20) – ärenden med rubrik, beskrivning, deadline, delmål och anteckningar; mallar.
 import { defaults, validate, cleanText, exportText, importText, newCase, saveTemplate, progress, openCases, closedCases, dueNow, makeDue, validDue,
-  trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, archReady, tidyNote, VERSION } from '../../store.js';
+  trashCase, restoreCase, purgeTrash, pack, unpack, save, load, loadFull, archReady, tidyNote, shiftMonth, monthDays, VERSION } from '../../store.js';
 
 const mem = new Map();
 globalThis.localStorage ??= { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
@@ -117,4 +117,10 @@ T.test('lagring: gammalt komprimerat arkiv görs om när det läses in', async (
   T.eq(JSON.parse(localStorage.getItem('sk.data')).version, VERSION);
   const again = await loadFull(load());
   T.eq(again, full, 'efter sparning läses samma data in igen');
+});
+T.test('kalender: månad framåt/bakåt över årsskiftet, dagar och tomma rutor före den 1:a', () => {
+  T.eq([shiftMonth('2026-11', 1), shiftMonth('2026-12', 1), shiftMonth('2026-01', -1), shiftMonth('2026-11', 0)], ['2026-12', '2027-01', '2025-12', '2026-11']);
+  const n = monthDays('2026-11'), f = monthDays('2028-02');
+  T.eq([n.lead, n.days.length, n.days[0], n.days[29]], [6, 30, '2026-11-01', '2026-11-30']);
+  T.eq([f.lead, f.days.length], [1, 29]);
 });

@@ -1,12 +1,12 @@
 // Task buddy – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
 // 2026-11-22: omgjord – ärenden med rubrik, beskrivning, deadline, person, delmål och logg; mallar som rätterna i Fitness buddy.
-import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, roomFor, LIM, COLORS, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
+import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, shiftMonth, roomFor, LIM, COLORS, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
 import { today, S, setOpen, el, cur } from './ui.js';
 import { topLayer, layerDepth, closeTop } from './nav.js';
 import { viewCases } from './views/cases.js';
 import { viewArchive, archiveList } from './views/archive.js';
-import { viewCalendar, shiftMonth } from './views/calendar.js';
+import { viewCalendar } from './views/calendar.js';
 import { viewTrash } from './views/trash.js';
 import { viewSettings } from './views/settings.js';
 import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, copyPassword, ownPassword, exportCsv } from './views/data.js';

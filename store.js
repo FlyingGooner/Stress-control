@@ -30,6 +30,12 @@ const p2 = (n) => String(n).padStart(2, '0');
 export const dateKey = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
 export function parseKey(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); }
 export function addDays(k, n) { const d = parseKey(k); d.setDate(d.getDate() + n); return dateKey(d); }
+// Kalender: månad 'YYYY-MM' flyttad n månader; dagarna i månaden och hur många tomma rutor före den 1:a (veckan börjar måndag).
+export function shiftMonth(m, n) { const d = parseKey(m + '-01'); d.setMonth(d.getMonth() + n); return dateKey(d).slice(0, 7); }
+export function monthDays(m) {
+  const first = m + '-01', d = parseKey(first), len = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return { lead: (d.getDay() + 6) % 7, days: Array.from({ length: len }, (_, i) => addDays(first, i)) };
+}
 export const daysBetween = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 86400000);
 export function validDate(k) {
   if (typeof k !== 'string' || !DATE_RE.test(k) || k < '2000-01-01' || k > '2100-12-31') return false;

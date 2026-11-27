@@ -73,3 +73,19 @@ T.test('ta bort → papperskorg, återställ', async () => {
   q('[data-act="trest"][data-id="c3"]').click(); await T.wait();
   T.ok(stored().cases.some((c) => c.id === 'c3'), 'tillbaka bland öppna');
 });
+T.test('kalender: prickar för deadlines, tryck på en dag, byt månad', async () => {
+  await tab('calendar');
+  const cell = (k) => q(`.cal-cell[data-id="${k}"]`);
+  T.ok(cell('2026-11-14').classList.contains('today') && cell('2026-11-14').classList.contains('sel'), 'idag vald');
+  T.eq(qa(`.cal-cell[data-id="2026-11-18"] .cal-dot`).length, 1);
+  T.ok(cell('2026-11-12').classList.contains('late'), 'försenad');
+  cell('2026-11-18').click(); await T.wait();
+  T.eq(qa('.case-row .case-title').map((x) => x.textContent), ['Ont i knät']);
+  q('[data-act="cmonth"][data-id="1"]').click(); await T.wait();
+  T.ok(cell('2026-12-01') && !cell('2026-11-18'), 'december');
+  q('[data-act="cmonth"][data-id="-1"]').click(); q('[data-act="cmonth"][data-id="-1"]').click(); await T.wait();
+  T.ok(cell('2026-10-05'), 'oktober');
+  q('[data-act="cmonth"][data-id="0"]').click(); await T.wait();
+  T.ok(cell('2026-11-14').classList.contains('sel'), 'tillbaka till idag');
+  await tab('cases');
+});
