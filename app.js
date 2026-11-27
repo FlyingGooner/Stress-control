@@ -6,6 +6,7 @@ import { today, S, setOpen, el, cur } from './ui.js';
 import { topLayer, layerDepth, closeTop } from './nav.js';
 import { viewCases } from './views/cases.js';
 import { viewArchive, archiveList } from './views/archive.js';
+import { viewCalendar, shiftMonth } from './views/calendar.js';
 import { viewTrash } from './views/trash.js';
 import { viewSettings } from './views/settings.js';
 import { initData, saveBackup, maybeAskBackup, readBackup, openImport, rememberPassword, copyPassword, ownPassword, exportCsv } from './views/data.js';
@@ -80,7 +81,7 @@ document.getElementById('del-ok').addEventListener('click', () => { const a = de
 document.getElementById('del-dialog').addEventListener('close', () => { delAction = null; });
 
 /* ---------- Router (mobile only, see ../STIL.md) ---------- */
-const VIEWS = { cases: viewCases, archive: viewArchive, settings: () => (S.trash ? viewTrash() : viewSettings()) };
+const VIEWS = { cases: viewCases, calendar: viewCalendar, archive: viewArchive, settings: () => (S.trash ? viewTrash() : viewSettings()) };
 let view = CONFIG.startView;
 function render() {
   app.dataset.view = view;
@@ -185,6 +186,8 @@ app.addEventListener('click', (ev) => {
       commit(); break;
     }
     case 'copen': openCase(id); return;
+    case 'cmonth': S.cmonth = id === '0' ? today().slice(0, 7) : shiftMonth(S.cmonth || today().slice(0, 7), Number(id)); if (id === '0') S.cday = today(); break;   // Kalender (2026-11-27)
+    case 'cday': S.cday = id; break;
     case 'cclose': S.open = null; S.draft = null; break;
     case 'cdueclr': if (!c) return; delete c.due; touch(); persist(); break;
     case 'cdone': {

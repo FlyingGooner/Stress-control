@@ -15,6 +15,10 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 - Delmål: skriv och tryck Lägg till. Bocka av när de är klara. Siffran i listan (t.ex. 1/3) visar hur många som är klara.
 - Anteckningar: skriv vad som hänt, t.ex. Ringde, fick tid 18/11. Den får dagens datum och hamnar överst. Du kan ändra en anteckning direkt i rutan.
 
+## Kalender
+- Fliken Kalender visar en månad i taget. Varje ärende med deadline syns som en prick i ärendets färg på sin dag. Klara ärenden är en tom ring, försenade dagar har rött datum.
+- Tryck på en dag för att se ärendena med deadline den dagen, och på ett ärende för att öppna det. ◀ och ▶ byter månad, tryck på månadens namn för att komma tillbaka till idag.
+
 ## Färg
 - Tryck på 🎨 (eller färgpricken) uppe till höger i ärendet och välj en färg. ⊘ tar bort färgen.
 - Skriv vad färgen betyder i rutan under färgerna (t.ex. Hem), eller under Inställningar → Ärenden → Färger. Det gäller alla ärenden med den färgen och syns i listan och i filtret.

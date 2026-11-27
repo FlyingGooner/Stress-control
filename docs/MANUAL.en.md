@@ -15,6 +15,10 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 - Sub-goals: type and tap Add. Tick them off when done. The number in the list (e.g. 1/3) shows how many are done.
 - Notes: write what happened, e.g. Called, got an appointment 18/11. It gets today's date and goes on top. You can edit a note right in its box.
 
+## Calendar
+- The Calendar tab shows one month at a time. Each task with a deadline is a dot in the task's colour on its day. Done tasks are an empty ring, overdue days have a red date.
+- Tap a day to see the tasks due that day, and a task to open it. ◀ and ▶ change month, tap the month's name to go back to today.
+
 ## Colour
 - Tap 🎨 (or the colour dot) at the top right of the task and pick a colour. ⊘ removes the colour.
 - Write what the colour means in the box below the colours (e.g. Home), or under Settings → Tasks → Colours. It applies to every task with that colour and shows in the list and the filter.
