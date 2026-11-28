@@ -94,6 +94,18 @@ T.test('kalender: prickar för deadlines, tryck på en dag, byt månad', async (
   T.ok(cell('2026-10-05'), 'oktober');
   q('[data-act="cmonth"][data-id="0"]').click(); await T.wait();
   T.ok(cell('2026-11-14') && !q('.cal-cell.sel'), 'tillbaka till idag');
+  // Nytt ärende på vald dag (2026-11-28)
+  cell('2026-11-20').click(); await T.wait();
+  T.eq(q('.new-case').textContent, '+ Nytt ärende 20/11');
+  q('.new-case').click(); await T.wait();
+  T.ok(q('#c-title') && q('.due-date').value === '2026-11-20', 'deadline förifylld');
+  change(q('#c-title'), 'Från kalendern'); await T.wait();
+  T.eq(stored().cases.find((c) => c.title === 'Från kalendern')?.due, '2026-11-20');
+  q('[data-act="cclose"]').click(); await T.wait();
+  T.ok(q('.cal-grid') && q('.cal-cell[data-id="2026-11-20"] .cal-dot'), 'tillbaka i kalendern med prick');
+  change(q('select[data-act="cpfilter"]'), 'p1'); await T.wait();
+  T.ok(!q('.cal-cell[data-id="2026-11-20"] .cal-dot'), 'personfilter döljer ärenden utan personen');
+  change(q('select[data-act="cpfilter"]'), 'all'); await T.wait();
   await tab('cases');
 });
 T.test('flikbyte och Bakåt stänger ett osparat Nytt ärende', async () => {

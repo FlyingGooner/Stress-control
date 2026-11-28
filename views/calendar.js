@@ -3,7 +3,7 @@
 // Ett ärende öppnas i samma lager som från Ärenden. Klara ärenden (arkivet) visas som en tunn ring när arkivet är inläst.
 import { openCases, closedCases, archReady, dueDay, parseKey, monthDays } from '../store.js';
 import { today, S, el, shortDate, longDate } from '../ui.js';
-import { caseRow, caseView } from './cases.js';
+import { caseRow, caseView, personFilter, catFilter } from './cases.js';
 
 const WD = () => (self.I18N?.lang() === 'en' ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['M', 'T', 'O', 'T', 'F', 'L', 'S']);
 const monthName = (m) => { const s = parseKey(m + '-01').toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' }); return s[0].toUpperCase() + s.slice(1); };
@@ -13,7 +13,10 @@ export function viewCalendar() {
   const t = today();
   S.cmonth ??= t.slice(0, 7);
   const m = S.cmonth, { lead, days } = monthDays(m);
-  const open = openCases(S.state).filter((c) => c.due), done = archReady() ? closedCases(S.state).filter((c) => c.due) : [];
+  // Filter (2026-11-28): samma person- och färgfilter som Ärenden, egna val i Kalender.
+  const all = [...openCases(S.state), ...(archReady() ? closedCases(S.state) : [])].filter((c) => c.due);
+  const [psel, mine] = personFilter(all, 'cpfilter'), [ksel, shown] = catFilter(mine, 'ckfilter');
+  const open = shown.filter((c) => !c.x), done = shown.filter((c) => c.x);
   const byDay = (k) => [...open.filter((c) => dueDay(c) === k), ...done.filter((c) => dueDay(c) === k)];
   const sel = S.cday && S.cday.startsWith(m) ? S.cday : null;
   const inMonth = [...open, ...done].filter((c) => dueDay(c).startsWith(m)).sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0));
@@ -25,6 +28,8 @@ export function viewCalendar() {
       el('button', { class: 'icon', 'data-act': 'cmonth', 'data-id': '-1', 'aria-label': 'Föregående månad', text: '◀' }),
       el('button', { class: 'cal-month link', 'data-act': 'cmonth', 'data-id': '0', 'aria-label': 'Till idag', text: monthName(m) }),
       el('button', { class: 'icon', 'data-act': 'cmonth', 'data-id': '1', 'aria-label': 'Nästa månad', text: '▶' })),
+    psel || ksel || m !== t.slice(0, 7) ? el('div', { class: 'filter-row' }, psel, ksel,
+      m !== t.slice(0, 7) ? el('button', { class: 'chip cal-today', 'data-act': 'cmonth', 'data-id': '0', text: 'Idag' }) : null) : null,
     late ? el('p', { class: 'muted small due-sum', text: `${late} försenade` }) : null,
     el('div', { class: 'cal-grid', 'aria-label': monthName(m) },
       WD().map((d) => el('span', { class: 'cal-wd', 'aria-hidden': 'true', text: d })),
@@ -43,6 +48,8 @@ export function viewCalendar() {
       ((list) => list.length ? el('ul', { class: 'cases' }, list.map(caseRow)) : el('p', { class: 'muted small', text: 'Inga ärenden med deadline den dagen.' }))(byDay(sel))]
       : [el('h2', { class: 'sub-h', text: `Deadline i ${monthName(m).split(' ')[0].toLowerCase()} (${inMonth.length})` }),
         inMonth.length ? el('ul', { class: 'cases' }, inMonth.map(caseRow)) : el('p', { class: 'muted small', text: 'Inga ärenden med deadline den här månaden.' })],
+    // Nytt ärende från Kalender (2026-11-28): med vald dag som deadline.
+    el('button', { class: 'primary new-case', 'data-act': 'pickopen', 'data-id': sel || '', text: sel ? `+ Nytt ärende ${shortDate(sel)}` : '+ Nytt ärende' }),
     !open.length && !done.length ? el('p', { class: 'muted small center', text: 'Ge ett ärende en deadline så syns det här.' }) : null,
   ];
 }

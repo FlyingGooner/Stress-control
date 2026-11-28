@@ -181,7 +181,7 @@ app.addEventListener('click', (ev) => {
     // Ärenden
     case 'pickopen': {   // Nytt ärende (2026-11-22): öppnas direkt som ett tomt ärende; sparas när det får en rubrik
       if (!roomFor(S.state)) { snackbar(`Högst ${LIM.open} öppna ärenden – markera några som klara först.`, null, null, 4000); return; }
-      S.draft = { id: uid(), title: '', c: today(), u: today() }; S.open = S.draft.id; render(); scrollTo(0, 0); document.getElementById('c-title')?.focus(); return;
+      S.draft = { id: uid(), title: '', c: today(), u: today() }; if (/^\d{4}-\d\d-\d\d$/.test(id || '')) S.draft.due = id; /* från Kalender: vald dag som deadline */ S.open = S.draft.id; render(); scrollTo(0, 0); document.getElementById('c-title')?.focus(); return;
     }
     case 'cfromtpl': {
       const tpl = S.state.tpls.find((x) => x.id === id); if (!c || c !== S.draft || !tpl) return;
@@ -320,6 +320,8 @@ app.addEventListener('change', (ev) => {
     case 'importfile': if (!archReady()) { t.value = ''; archWait(); return; } readBackup(t); return;
     case 'pfilter': S.pfilter = t.value; render(); return;
     case 'kfilter': S.kfilter = t.value; render(); return;
+    case 'cpfilter': S.cpfilter = t.value; render(); return;   // Kalender
+    case 'ckfilter': S.ckfilter = t.value; render(); return;
     case 'akfilter': S.akfilter = t.value; S.alimit = 100; render(); return;
     case 'apfilter': S.apfilter = t.value; S.alimit = 100; render(); return;
     case 'ctitle': { if (!c) return; const v = cleanText(t.value, TITLE_CHARS), was = c === S.draft; if (v) { c.title = v; touch(); persist(); if (was) render(); } else t.value = c.title; return; }
