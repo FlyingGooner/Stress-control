@@ -17,7 +17,8 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 
 ## Calendar
 - The Calendar tab shows one month at a time. Each task with a deadline is a dot in the task's colour on its day. Done tasks are an empty ring, overdue days have a red date.
-- Tap a day to see the tasks due that day, and a task to open it. ◀ and ▶ change month, tap the month's name to go back to today.
+- Below the calendar you see every task due that month, in date order. Tap a day to see only that day, and tap it again (or Whole month) to see the whole month. Tap a task to open it.
+- Swipe sideways on the calendar, or tap ◀ and ▶, to change month. Tap the month's name to go back to today.
 
 ## Colour
 - Tap 🎨 (or the colour dot) at the top right of the task and pick a colour. ⊘ removes the colour.

@@ -17,7 +17,8 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Kalender
 - Fliken Kalender visar en månad i taget. Varje ärende med deadline syns som en prick i ärendets färg på sin dag. Klara ärenden är en tom ring, försenade dagar har rött datum.
-- Tryck på en dag för att se ärendena med deadline den dagen, och på ett ärende för att öppna det. ◀ och ▶ byter månad, tryck på månadens namn för att komma tillbaka till idag.
+- Under kalendern står alla ärenden med deadline den månaden, i datumordning. Tryck på en dag för att bara se den dagen, och tryck på dagen igen (eller Hela månaden) för att se hela månaden. Tryck på ett ärende för att öppna det.
+- Svep åt sidan på kalendern, eller tryck ◀ och ▶, för att byta månad. Tryck på månadens namn för att komma tillbaka till idag.
 
 ## Färg
 - Tryck på 🎨 (eller färgpricken) uppe till höger i ärendet och välj en färg. ⊘ tar bort färgen.

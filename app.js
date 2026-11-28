@@ -189,8 +189,8 @@ app.addEventListener('click', (ev) => {
       commit(); break;
     }
     case 'copen': openCase(id); return;
-    case 'cmonth': S.cmonth = id === '0' ? today().slice(0, 7) : shiftMonth(S.cmonth || today().slice(0, 7), Number(id)); if (id === '0') S.cday = today(); break;   // Kalender (2026-11-27)
-    case 'cday': S.cday = id; break;
+    case 'cmonth': S.cmonth = id === '0' ? today().slice(0, 7) : shiftMonth(S.cmonth || today().slice(0, 7), Number(id)); S.cday = null; break;   // Kalender (2026-11-27); 2026-11-28: månadsbyte visar hela månaden
+    case 'cday': S.cday = id && id !== S.cday ? id : null; break;   // tryck igen = hela månaden
     case 'cclose': S.open = null; S.draft = null; break;
     case 'cdueclr': if (!c) return; delete c.due; touch(); persist(); break;
     case 'cdone': {
@@ -408,6 +408,17 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   });
 }
 
+// Kalender (2026-11-28): svep åt sidan på månaden byter månad.
+(() => {
+  let t0 = null;
+  app.addEventListener('touchstart', (e) => { const t = e.touches[0]; t0 = e.touches.length === 1 && e.target.closest('.cal-grid, .cal-nav') ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+  app.addEventListener('touchend', (e) => {
+    if (!t0) return;
+    const t = e.changedTouches[0], dx = t.clientX - t0.x, dy = t.clientY - t0.y; t0 = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < 1.5 * Math.abs(dy) || S.open) return;
+    S.cmonth = shiftMonth(S.cmonth || today().slice(0, 7), dx < 0 ? 1 : -1); S.cday = null; render();
+  });
+})();
 // Swipe sideways on the bottom menu → the next/previous view (2026-11-17, same in all apps).
 (function navSwipe(nav, item, on) {
   if (!nav) return;

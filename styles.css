@@ -763,3 +763,6 @@ body { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cc, var(--primary)); }
 .cal-dot.done { background: transparent; box-shadow: inset 0 0 0 1.5px var(--cc, var(--outline, #999)); }
 .cal-more { font-size: .625rem; line-height: 6px; color: var(--on-surface-variant, #777); }
+
+.cal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.cal-grid { touch-action: pan-y; }
