@@ -35,7 +35,7 @@ export function viewCalendar() {
       el('div', { class: 'cal-step' },
         el('button', { class: 'icon sm', 'data-act': 'cmonth', 'data-id': '-1', 'aria-label': 'Föregående månad', text: '◀' }),
         // I en annan månad: ↺ efter namnet visar att ett tryck går tillbaka till idag (ersätter Idag-knappen, får plats på raden).
-        el('button', { class: 'cal-month link', 'data-act': 'cmonth', 'data-id': '0', 'aria-label': 'Till idag', title: 'Till idag', text: monthName(m) + (m !== t.slice(0, 7) ? ' ↺' : '') }),
+        el('button', { class: 'cal-month link', 'data-act': 'cmonth', 'data-id': '0', 'aria-label': 'Till idag', title: 'Till idag' }, el('span', { class: 'cal-mname', text: m.slice(0, 4) === t.slice(0, 4) ? monthName(m).split(' ')[0] : monthName(m) })   /* året bara när det inte är i år (får plats på smal skärm) */, m !== t.slice(0, 7) ? el('span', { class: 'cal-back', 'aria-hidden': 'true', text: '↺' }) : null),
         el('button', { class: 'icon sm', 'data-act': 'cmonth', 'data-id': '1', 'aria-label': 'Nästa månad', text: '▶' })),
       psel || ksel ? el('div', { class: 'cal-tools' }, psel, ksel) : null),
     late ? el('p', { class: 'muted small due-sum', text: `${late} försenade` }) : null,
