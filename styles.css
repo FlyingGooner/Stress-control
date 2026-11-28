@@ -683,7 +683,7 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 .case-li[class*=" c-"] .case-main small { color: var(--cc-on); opacity: .8; }
 .case-li[class*=" c-"].late .case-info, .case-li[class*=" c-"].soon .case-info { opacity: 1; }
 .case-li[class*=" c-"] .case-prog { background: var(--surface); color: var(--on-surface); }
-.case.card { box-shadow: none; border-top: 6px solid var(--cc, transparent); }
+.case.card { box-shadow: inset 0 0 0 3px var(--cc, transparent); }   /* 2026-11-28: färgen som ram runt om, inte en kant upptill */
 .case-li .case-main small { min-height: 0; } /* inga tomma rader under texten */
 .case-li.late .case-main small.case-info { color: #b3261e; opacity: 1; }
 @media (prefers-color-scheme: dark) { .case-li.late .case-main small.case-info { color: #ffb4ab; } }
