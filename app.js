@@ -25,7 +25,7 @@ let saves = 0;
 // archTouched: a closed case is open in the editor, or types changed (cases updated in place) – see store.js save().
 function persist(archTouched = false) {
   const d = S.draft;   // Nytt ärende: saved first when it has a title
-  if (d && S.open === d.id && cleanText(d.title, TITLE_CHARS)) { S.draft = null; S.state.cases.unshift(d); }
+  if (d && S.open === d.id && cleanText(d.title, TITLE_CHARS)) { S.draft = null; S.edit = true; S.state.cases.unshift(d); }   // nytt ärende stannar i redigeringsläget
   const oc = S.open && S.state.cases.find((x) => x.id === S.open);
   if (!save(S.state, archTouched || !!oc?.x)) { status(SAVE_MSG, true); return; }
   if (saveFailed) updateOnline();
@@ -117,7 +117,7 @@ function syncHistory() {
   }
 }
 // Flikbyte stänger lagren i vyn (ärende, papperskorg, menyer). 2026-11-27: även sorteringsmenyn och ett osparat utkast.
-function closeLayers() { S.open = null; S.draft = null; S.pick = false; S.trash = false; S.showPwd = false; S.sortOpen = false; }
+function closeLayers() { S.edit = false; S.open = null; S.draft = null; S.pick = false; S.trash = false; S.showPwd = false; S.sortOpen = false; }
 function go(v, push = true) {
   if (!Object.hasOwn(VIEWS, v)) v = CONFIG.startView;
   if (push && ownNav) { pendingView = v; return; }
@@ -169,7 +169,7 @@ document.addEventListener('click', (ev) => { if (S.sortOpen && !ev.target.closes
 const archWait = () => snackbar('Arkivet läses in – försök igen om en stund', null, null, 2500);
 const refreshArch = () => document.getElementById('arch-list')?.replaceChildren(...[archiveList()].flat().filter(Boolean));
 const NEEDS_ARCH = new Set(['backupsave', 'import', 'wipe', 'trashopen', 'tempty', 'csv', 'pdel', 'tsave', 'tdel']);
-const openCase = (id) => { S.open = id; S.pick = false; render(); scrollTo(0, 0); };
+const openCase = (id) => { S.open = id; S.pick = false; S.edit = false; render(); scrollTo(0, 0); };
 app.addEventListener('click', (ev) => {
   const t = ev.target.closest('[data-act]');
   if (t && !archReady() && NEEDS_ARCH.has(t.dataset.act)) { archWait(); return; }
@@ -191,7 +191,9 @@ app.addEventListener('click', (ev) => {
     case 'copen': openCase(id); return;
     case 'cmonth': S.cmonth = id === '0' ? today().slice(0, 7) : shiftMonth(S.cmonth || today().slice(0, 7), Number(id)); S.cday = null; break;   // Kalender (2026-11-27); 2026-11-28: månadsbyte visar hela månaden
     case 'cday': S.cday = id && id !== S.cday ? id : null; break;   // tryck igen = hela månaden
-    case 'cclose': S.open = null; S.draft = null; break;
+    case 'cclose': S.open = null; S.draft = null; S.edit = false; break;
+    case 'cedit': S.edit = true; render(); document.getElementById('c-title')?.focus(); return;   // läsläge → redigera (2026-11-28)
+    case 'cview': S.edit = false; render(); scrollTo(0, 0); return;
     case 'cdueclr': if (!c) return; delete c.due; touch(); persist(); break;
     case 'cdone': {
       if (!c) return;

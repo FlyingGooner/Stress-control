@@ -59,12 +59,16 @@ T.test('klar → arkiv, öppna igen', async () => {
   await tab('archive');
   T.ok(qa('.case-row .case-title').some((x) => x.textContent === 'Boka tandläkare'));
   q('.case-row').click(); await T.wait();
+  T.ok(q('.case.read') && !q('#c-title'), 'klart ärende öppnas i läsläge');
   q('[data-act="creopen"]').click(); await T.wait();
   T.eq(stored().cases.find((c) => c.title === 'Boka tandläkare')?.x, undefined);
   q('[data-act="cclose"]').click(); await tab('cases');
 });
 T.test('ta bort → papperskorg, återställ', async () => {
   q('.case-row[data-id="c3"]').click(); await T.wait();
+  T.ok(q('.case.read .read-title')?.textContent === 'Utan deadline' && !q('[data-act="cdel"]'), 'läsläge: rubrik, ingen Ta bort');
+  q('[data-act="cedit"]').click(); await T.wait();
+  T.ok(q('#c-title'), 'Ändra ger redigeringsläget');
   q('[data-act="cdel"]').click(); await T.wait();
   T.ok(!stored().cases.some((c) => c.id === 'c3'), 'borta från öppna');
   await tab('settings');

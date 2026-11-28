@@ -10,6 +10,7 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 ## Tasks
 - The list shows open tasks with the nearest deadline first. Overdue deadlines are red, today's are purple. Tasks without a deadline come last.
 - The red number on the Tasks tab shows how many are due today or overdue.
+- A task opens in read mode: title, deadline, who, description, sub-goals and notes as a clear summary. You can tick sub-goals and add a note right away. Tap ✎ Edit to change the rest, and Done editing to go back to read mode. A new task opens straight in edit mode.
 - Description: feel free to paste a longer text, e.g. a summary with phone numbers and prices. The box grows with the text.
 - Deadline: pick a date. The time is optional. ✕ removes the deadline.
 - Sub-goals: type and tap Add. Tick them off when done. The number in the list (e.g. 1/3) shows how many are done.

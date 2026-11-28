@@ -1,7 +1,7 @@
 // Vy: Ärenden (öppna ärenden, närmast deadline först), Nytt ärende (rubrik + mallar) och ärendet (lager – Bakåt stänger).
 // Ärendet används också från Arkiv. 2026-11-22: omgjord – rubrik, beskrivning, deadline, person, delmål och logg; allt sparas direkt.
 import { openCases, personOf, catOf, colorName, COLORS, COLOR_DOTS, progress, daysBetween, parseKey, dueDay, LOG_CHARS, DESC_CHARS, TITLE_CHARS, STEP_CHARS } from '../store.js';
-import { today, S, el, shortDate, cur } from '../ui.js';
+import { today, S, el, shortDate, longDate, cur } from '../ui.js';
 
 // Deadline som text: "idag 14:00", "imorgon", "fre", "28/11", "3 dagar sen".
 export function dueText(due, t = today()) {
@@ -45,9 +45,38 @@ export function personFilter(list, key) {
 }
 
 const rows = (x, min = 1, max = 14) => Math.min(max, Math.max(min, x.split('\n').length + Math.floor(x.length / 38)));
+// Läsläge (2026-11-28): ett sparat ärende öppnas som en överskådlig sammanfattning; ✎ Ändra ger redigeringsläget.
+// Delmål går att bocka av och anteckningar att lägga till direkt, utan att gå till Ändra.
+function readView(c) {
+  const col = catOf(S.state, c), who = personOf(S.state, c), [done, all] = progress(c);
+  const when = c.due ? `${longDate(c.due.slice(0, 10))}${c.due.length > 10 ? ' ' + c.due.slice(11) : ''}` : null;
+  return el('section', { class: 'card case read' + dueClass(c) + (col ? ` c-${col.color}` : '') },
+    el('div', { class: 'add-top' },
+      el('button', { class: 'icon', 'data-act': 'cclose', 'aria-label': 'Stäng', text: '✕' }),
+      col?.label ? el('span', { class: 'color-chip', text: col.label }) : null,
+      el('button', { class: 'weigh-save edit-btn', 'data-act': 'cedit', text: '✎ Ändra' })),
+    el('h2', { class: 'read-title', text: c.title }),
+    el('dl', { class: 'read-meta' },
+      c.x ? [el('dt', { text: 'Klar' }), el('dd', { text: longDate(c.x) })] : null,
+      el('dt', { text: 'Deadline' }), el('dd', { class: 'read-due', text: when ? (c.x ? when : `${when} · ${dueText(c.due.slice(0, 10))}`) : '–' }),
+      who ? [el('dt', { text: 'Vem' }), el('dd', { text: who.name })] : null,
+      all ? [el('dt', { text: 'Delmål' }), el('dd', { text: `${done} av ${all} klara` })] : null),
+    c.d ? el('p', { class: 'read-desc', text: c.d }) : null,
+    all ? [el('h2', { class: 'sub-h', text: 'Delmål' }),
+      el('ul', { class: 'steps' }, c.s.map(([x, d], i) => el('li', { class: d ? 'done' : '' },
+        el('label', {}, el('input', { type: 'checkbox', checked: !!d, 'data-act': 'stog', 'data-i': i }), el('span', { text: x })))))] : null,
+    el('h2', { class: 'sub-h', text: 'Anteckningar' }),
+    el('textarea', { id: 'l-new', rows: 1, maxlength: LOG_CHARS, placeholder: 'Ny anteckning, t.ex. Ringde, fick tid 18/11', 'aria-label': 'Ny anteckning' }),
+    el('div', { class: 'save-row log-add' }, el('button', { class: 'link', 'data-act': 'ladd', text: '+ Lägg till anteckning' })),
+    c.l?.length ? el('ul', { class: 'log read-log' }, [...c.l].reverse().map(([d, x]) => el('li', {},
+      el('span', { class: 'log-d', text: shortDate(d) }), el('p', { class: 'read-note', text: x })))) : null,
+    el('button', { class: 'primary save-case', 'data-act': c.x ? 'creopen' : 'cdone', text: c.x ? 'Öppna igen' : '✓ Klar' }));
+}
+
 export function caseView() {
   const c = cur();
   if (!c) return null;
+  if (c !== S.draft && !S.edit) return readView(c);
   const isNew = c === S.draft, col = catOf(S.state, c);
   const [done, all] = progress(c), dd = c.due ? c.due.slice(0, 10) : '', tt = c.due && c.due.length > 10 ? c.due.slice(11) : '';
   return el('section', { class: 'card case' + dueClass(c) + (catOf(S.state, c) ? ` c-${catOf(S.state, c).color}` : '') },
@@ -101,6 +130,7 @@ export function caseView() {
       el('div', { class: 'row-actions case-actions' },
         el('button', { class: 'link', 'data-act': 'tsave', text: 'Spara som mall' }),
         el('button', { class: 'link danger', 'data-act': 'cdel', text: 'Ta bort' })),   // 2026-11-23: ta bort sist
+      el('button', { class: 'weigh-save view-btn', 'data-act': 'cview', text: 'Klar med ändringarna' }),
       el('p', { class: 'muted small center', text: 'Allt sparas direkt.' })]);
 }
 

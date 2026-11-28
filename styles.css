@@ -766,3 +766,15 @@ body { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
 .cal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .cal-grid { touch-action: pan-y; }
+
+/* Läsläge (2026-11-28) */
+.case.read .add-top .edit-btn { margin-left: auto; }
+.case.read .color-chip + .edit-btn { margin-left: 0; }
+.case .read-title { text-transform: none; letter-spacing: normal; color: var(--on-surface, inherit); font-size: 1.375rem; font-weight: 500; margin: 14px 0 10px; overflow-wrap: anywhere; }
+.read-meta { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0 0 12px; }
+.read-meta dt { color: var(--muted); }
+.read-meta dd { margin: 0; overflow-wrap: anywhere; }
+.case.late .read-due { color: var(--error, #b3261e); font-weight: 500; }
+.read-desc { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; margin: 4px 0 8px; padding: 12px 14px; border-radius: var(--r-md, 12px); background: var(--surface-container-high, rgba(0,0,0,.04)); }
+.read-note { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; grid-column: span 2; }
+.view-btn { display: block; width: 100%; margin-top: 8px; }

@@ -10,6 +10,7 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 ## Ärenden
 - Listan visar öppna ärenden med närmast deadline först. Passerade deadlines står i rött, dagens i lila. Ärenden utan deadline hamnar sist.
 - Den röda siffran på fliken Ärenden visar hur många som har deadline idag eller som har passerat.
+- Ett ärende öppnas i läsläge: rubrik, deadline, vem, beskrivning, delmål och anteckningar som en överskådlig sammanfattning. Du kan bocka av delmål och lägga till en anteckning direkt. Tryck ✎ Ändra för att ändra resten, och Klar med ändringarna för att gå tillbaka till läsläget. Ett nytt ärende öppnas direkt i redigeringsläget.
 - Beskrivning: klistra gärna in en längre text, t.ex. en sammanfattning med telefonnummer och pris. Rutan växer med texten.
 - Deadline: välj datum. Klockslaget är valfritt. ✕ tar bort deadline.
 - Delmål: skriv och tryck Lägg till. Bocka av när de är klara. Siffran i listan (t.ex. 1/3) visar hur många som är klara.
