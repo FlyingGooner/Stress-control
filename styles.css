@@ -690,11 +690,17 @@ details[open] > :not(summary) { animation: m3e-in .35s var(--spring); }
 /* 2026-11-22: färgväljare – en prick överst, tryck för att välja */
 .add-top { display: flex; align-items: center; gap: 10px; }
 .color-pick { position: relative; margin-left: auto; }
+.color-chip + .color-pick { margin-left: 0; }
 .color-pick > summary { list-style: none; cursor: pointer; display: grid; place-items: center; width: 40px; height: 40px; }
 .color-pick > summary::-webkit-details-marker { display: none; }
 .color-pick > summary.none { font-size: 1.2rem; }
 .color-pop { position: absolute; right: 0; top: 48px; z-index: 10; width: 248px; padding: 12px; border-radius: var(--r-lg); background: var(--surface-container-high, #ece6f0); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
-.color-pop .color-row { margin: 0 0 8px; gap: 8px; }
+.color-pop .color-row { margin: 0 0 8px; gap: 2px; flex-direction: column; flex-wrap: nowrap; }
+.color-opt { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 8px; border: 0; border-radius: var(--r-md, 12px); background: transparent; color: inherit; font: inherit; text-align: left; }
+.color-opt.on { background: var(--secondary-container, rgba(103,80,164,.16)); }
+.color-opt .color-dot { width: 26px; height: 26px; }
+.color-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.color-chip { margin-left: auto; padding: 4px 12px; border-radius: var(--r-full, 999px); background: var(--cc-c, var(--surface-container-high)); color: var(--cc-on, inherit); font-size: .875rem; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .color-pop .color-row:last-child { margin: 0; }
 .color-pop .color-label { margin: 0; }
 .tpl-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 10px; }

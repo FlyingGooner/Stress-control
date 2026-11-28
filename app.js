@@ -1,7 +1,7 @@
 // Task buddy – no external calls, localStorage only. See CLAUDE.md. Views in views/*.js, shared state in ui.js,
 // Bakåt-logic in nav.js. Same structure as simple-nutrition/app.js. Rendering: el()/textContent only – never innerHTML.
 // 2026-11-22: omgjord – ärenden med rubrik, beskrivning, deadline, person, delmål och logg; mallar som rätterna i Fitness buddy.
-import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, shiftMonth, roomFor, LIM, COLORS, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
+import { save, loadFailed, cleanText, tidyNote, uid, newCase, saveTemplate, makeDue, dueNow, trashCase, restoreCase, purgeTrash, TRASH_DAYS, loadFull, setSaveErrorHandler, storageUsed, STORAGE_QUOTA, archReady, shiftMonth, roomFor, LIM, COLORS, colorName, DESC_CHARS, LOG_CHARS, TITLE_CHARS, STEP_CHARS } from './store.js';
 import { today, S, setOpen, el, cur } from './ui.js';
 import { topLayer, layerDepth, closeTop } from './nav.js';
 import { viewCases } from './views/cases.js';
@@ -357,7 +357,13 @@ app.addEventListener('change', (ev) => {
     case 'clabel': {   // what a colour means – shared by every case with that colour
       const k = t.dataset.id; if (!COLORS.includes(k)) return;
       const v = cleanText(t.value, 30); if (v) S.state.labels[k] = v; else delete S.state.labels[k];
-      t.value = v; persist(); return;
+      t.value = v; persist();
+      // 2026-11-28: namnet i färglistan och etiketten bredvid pricken uppdateras direkt (utan omritning, fokus behålls).
+      const nm = document.querySelector(`.color-opt[data-id="${k}"] .color-name`);
+      if (nm) { nm.textContent = colorName(S.state, k); nm.classList.toggle('muted', !v); }
+      const top = t.closest('.add-top'), chip = top?.querySelector('.color-chip');
+      if (v && !chip) top?.querySelector('.color-pick')?.before(el('span', { class: 'color-chip', text: v })); else if (chip) { if (v) chip.textContent = v; else chip.remove(); }
+      return;
     }
     case 'pname': {
       const p = S.state.people.find((x) => x.id === t.dataset.id), v = cleanText(t.value, 30);

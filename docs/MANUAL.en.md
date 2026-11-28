@@ -21,7 +21,8 @@ Help in the app (Settings → Help and manual) is built from this file with `too
 
 ## Colour
 - Tap 🎨 (or the colour dot) at the top right of the task and pick a colour. ⊘ removes the colour.
-- Write what the colour means in the box below the colours (e.g. Home), or under Settings → Tasks → Colours. It applies to every task with that colour and shows in the list and the filter.
+- Write what the colour means in the box below the colours (e.g. Home), or under Settings → Tasks → Colours. It applies to every task with that colour and shows next to the colour in the picker, next to the dot in the task, in the list and in the filter.
+- The task has the colour as a frame all around.
 - The list can be filtered by colour.
 
 ## Templates

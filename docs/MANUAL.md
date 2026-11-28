@@ -21,7 +21,8 @@ Hjälp i appen (Inställningar → Hjälp och manual) byggs från den här filen
 
 ## Färg
 - Tryck på 🎨 (eller färgpricken) uppe till höger i ärendet och välj en färg. ⊘ tar bort färgen.
-- Skriv vad färgen betyder i rutan under färgerna (t.ex. Hem), eller under Inställningar → Ärenden → Färger. Det gäller alla ärenden med den färgen och syns i listan och i filtret.
+- Skriv vad färgen betyder i rutan under färgerna (t.ex. Hem), eller under Inställningar → Ärenden → Färger. Det gäller alla ärenden med den färgen och syns bredvid färgen i väljaren, bredvid pricken i ärendet, i listan och i filtret.
+- Ärendet har färgen som ram runt om.
 - Listan kan filtreras på färg.
 
 ## Mallar
