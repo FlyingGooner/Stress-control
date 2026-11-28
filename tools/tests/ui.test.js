@@ -82,6 +82,7 @@ T.test('kalender: prickar för deadlines, tryck på en dag, byt månad', async (
   const cell = (k) => q(`.cal-cell[data-id="${k}"]`);
   T.ok(cell('2026-11-14').classList.contains('today') && !q('.cal-cell.sel'), 'idag markerad, ingen dag vald');
   T.ok(qa('.case-row').length >= 2, 'månadens ärenden under kalendern');
+  T.ok(qa('.sub-h').some((h) => h.textContent.startsWith('Försenade och kommande')), 'rubrik för denna månad');
   T.eq(qa(`.cal-cell[data-id="2026-11-18"] .cal-dot`).length, 1);
   T.ok(cell('2026-11-12').classList.contains('late'), 'försenad');
   cell('2026-11-18').click(); await T.wait();

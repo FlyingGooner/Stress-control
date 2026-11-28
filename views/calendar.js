@@ -19,7 +19,13 @@ export function viewCalendar() {
   const open = shown.filter((c) => !c.x), done = shown.filter((c) => c.x);
   const byDay = (k) => [...open.filter((c) => dueDay(c) === k), ...done.filter((c) => dueDay(c) === k)];
   const sel = S.cday && S.cday.startsWith(m) ? S.cday : null;
-  const inMonth = [...open, ...done].filter((c) => dueDay(c).startsWith(m)).sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0));
+  // Listan under kalendern (2026-11-28): denna månad = försenade och kommande öppna ärenden oavsett månad;
+  // en senare månad = öppna från den månadens början; en tidigare månad = den månadens ärenden (även klara).
+  const byDue = (a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0), cm = t.slice(0, 7);
+  const inMonth = (m < cm ? [...open, ...done].filter((c) => dueDay(c).startsWith(m))
+    : open.filter((c) => m === cm || dueDay(c) >= m + '-01')).sort(byDue);
+  const listHead = m < cm ? `Deadline i ${monthName(m).split(' ')[0].toLowerCase()} (${inMonth.length})`
+    : m === cm ? `Försenade och kommande (${inMonth.length})` : `Kommande från ${monthName(m).split(' ')[0].toLowerCase()} (${inMonth.length})`;
   const cells = [...Array(lead).fill(null), ...days];
   const late = open.filter((c) => dueDay(c) < t).length;
   return [
@@ -46,8 +52,8 @@ export function viewCalendar() {
     sel ? [el('div', { class: 'cal-head' }, el('h2', { class: 'sub-h', text: sel === t ? `Idag ${shortDate(sel)}` : longDate(sel) }),
         el('button', { class: 'link', 'data-act': 'cday', 'data-id': '', text: 'Hela månaden' })),
       ((list) => list.length ? el('ul', { class: 'cases' }, list.map(caseRow)) : el('p', { class: 'muted small', text: 'Inga ärenden med deadline den dagen.' }))(byDay(sel))]
-      : [el('h2', { class: 'sub-h', text: `Deadline i ${monthName(m).split(' ')[0].toLowerCase()} (${inMonth.length})` }),
-        inMonth.length ? el('ul', { class: 'cases' }, inMonth.map(caseRow)) : el('p', { class: 'muted small', text: 'Inga ärenden med deadline den här månaden.' })],
+      : [el('h2', { class: 'sub-h', text: listHead }),
+        inMonth.length ? el('ul', { class: 'cases' }, inMonth.map(caseRow)) : el('p', { class: 'muted small', text: m < cm ? 'Inga ärenden med deadline den här månaden.' : 'Inga kommande ärenden med deadline.' })],
     // Nytt ärende från Kalender (2026-11-28): med vald dag som deadline.
     el('button', { class: 'primary new-case', 'data-act': 'pickopen', 'data-id': sel || '', text: sel ? `+ Nytt ärende ${shortDate(sel)}` : '+ Nytt ärende' }),
     !open.length && !done.length ? el('p', { class: 'muted small center', text: 'Ge ett ärende en deadline så syns det här.' }) : null,

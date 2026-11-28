@@ -263,7 +263,7 @@ I18N.add({
   '✓ Klar': '✓ Done', 'Öppna igen': 'Reopen', 'Ta bort': 'Remove', 'Spara som mall': 'Save as template', 'Allt sparas direkt.': 'Everything is saved at once.',
   'Stäng': 'Close', 'Ogiltigt datum eller klockslag.': 'Invalid date or time.',
   'Inga ärenden för den personen.': 'No tasks for that person.', 'Inga öppna ärenden. Tryck + Nytt ärende för att lägga till ett.': 'No open tasks. Tap + New task to add one.',
-  'Hela månaden': 'Whole month', 'Idag': 'Today', 'Inga ärenden med deadline den här månaden.': 'No tasks due this month.',
+  'Hela månaden': 'Whole month', 'Inga kommande ärenden med deadline.': 'No upcoming tasks with a deadline.', 'Idag': 'Today', 'Inga ärenden med deadline den här månaden.': 'No tasks due this month.',
   '✎ Ändra': '✎ Edit', 'Klar med ändringarna': 'Done editing',
   'Kalender': 'Calendar', 'Föregående månad': 'Previous month', 'Nästa månad': 'Next month', 'Till idag': 'Go to today', 'Inga ärenden med deadline den dagen.': 'No tasks due that day.', 'Tryck på en dag för att se ärendena.': 'Tap a day to see its tasks.', 'Ge ett ärende en deadline så syns det här.': 'Give a task a deadline and it shows here.',
   'Arkiv': 'Archive', 'Sök': 'Search', 'Sök i klara ärenden': 'Search done tasks', 'Ingen träff.': 'No match.', 'Läser in arkivet…': 'Loading the archive…',
@@ -293,6 +293,7 @@ I18N.add({
   [/^(\d+) dagar sedan( \d\d:\d\d)?$/, (g) => `${g[1]} days ago${g[2] || ''}`],
   [/^(.+), (\d+) ärenden?$/, (g, tr) => `${tr(g[1])}, ${g[2]} task${g[2] === '1' ? '' : 's'}`], [/^Idag (\d+\/\d+)$/, 'Today $1'],   // Kalender 2026-11-27
   [/^\+ Nytt ärende (\d+\/\d+)$/, '+ New task $1'],
+  [/^Försenade och kommande \((\d+)\)$/, 'Overdue and upcoming ($1)'], [/^Kommande från (\S+) \((\d+)\)$/, (g, tr) => `Upcoming from ${tr(g[1])} (${g[2]})`],
   [/^Deadline i (\S+) \((\d+)\)$/, (g, tr) => `Due in ${tr(g[1])} (${g[2]})`],   // 2026-11-28
   [/^(\d+) av (\d+) klara$/, '$1 of $2 done'],   // läsläge 2026-11-28
   [/^(\d+) försenade$/, '$1 overdue'], [/^(\d+) idag$/, '$1 today'], [/^Högst (\d+) personer$/, 'At most $1 people'], [/^(.+) finns redan$/, '$1 already exists'], [/^(.+) finns redan\.$/, '$1 already exists.'],
